@@ -13,30 +13,30 @@ const Header = ({ setIsOpen, isOpen }) => {
   const [isCompact, setIsCompact] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScroll = window.scrollY;
-      if (currentScroll > 50) {
-        setIsCompact(true);
-      } else {
-        setIsCompact(false);
-      }
+  //   useEffect(() => {
+  //     const handleScroll = () => {
+  //       const currentScroll = window.scrollY;
+  //       if (currentScroll > 50) {
+  //         setIsCompact(true);
+  //       } else {
+  //         setIsCompact(false);
+  //       }
 
-      if (currentScroll > lastScroll && currentScroll > 80) {
-        setIsVisible(false);
-      } else {
-        setIsVisible(true);
-      }
+  //       if (currentScroll > lastScroll && currentScroll > 80) {
+  //         setIsVisible(false);
+  //       } else {
+  //         setIsVisible(true);
+  //       }
 
-      setLastScroll(currentScroll);
-    };
+  //       setLastScroll(currentScroll);
+  //     };
 
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [lastScroll]);
+  //     window.addEventListener("scroll", handleScroll);
+  //     return () => window.removeEventListener("scroll", handleScroll);
+  //   }, [lastScroll]);
 
   return (
-    <header 
+    <header
       className={`fixed z-40 top-0 right-0 left-0 transition-all duration-300
         border-b border-gray-700/50 bg-[#0F172A]
         ${isVisible ? "translate-y-0" : "-translate-y-full"}
@@ -45,7 +45,7 @@ const Header = ({ setIsOpen, isOpen }) => {
     >
       <div className="flex items-center justify-between px-4 h-full w-full">
         {/* Left side - Menu button for mobile */}
-        <button 
+        <button
           onClick={() => setIsOpen(!isOpen)}
           className="lg:hidden p-2 rounded-lg hover:bg-[#1E293B]"
         >
@@ -72,11 +72,10 @@ const Header = ({ setIsOpen, isOpen }) => {
               className="flex items-center gap-3 p-2 rounded-lg hover:bg-[#1E293B]"
             >
               <img
-                src="https://ui-avatars.com/api/?name=John+Doe"
+                src="https://ui-avatars.com/api/?name=Shailesh+Bhosale"
                 alt="Profile"
                 className="w-8 h-8 rounded-full border-2 border-gray-700"
               />
-              <span className="hidden md:block text-sm font-medium text-gray-300">John Doe</span>
             </button>
 
             {/* Dropdown Menu */}
