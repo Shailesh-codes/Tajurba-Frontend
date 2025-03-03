@@ -11,11 +11,11 @@ import Logo from "../assets/images/Tajurba-Logo-Golden.png";
 
 const SideBar = ({ isOpen, setIsOpen }) => {
   const navLinkClass = ({ isActive }) =>
-    `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors
+    `flex items-center gap-4 px-4 py-3 rounded-lg transition-all duration-200
      ${
        isActive
-         ? "bg-[#1E293B] text-white"
-         : "text-gray-300 hover:bg-[#1E293B] hover:text-white"
+         ? "bg-[#27DA68]/10 text-[#27DA68] font-medium border-l-4 border-[#27DA68]"
+         : "text-gray-400 hover:bg-[#1E293B]/50 hover:text-white border-l-4 border-transparent"
      }`;
 
   return (
@@ -30,22 +30,22 @@ const SideBar = ({ isOpen, setIsOpen }) => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed lg:sticky top-0 left-0 h-screen w-64 bg-[#0F172A] z-50
+        className={`fixed lg:sticky top-0 left-0 h-screen w-72 bg-[#0F172A] z-50
         transition-transform duration-300 ease-in-out shadow-xl flex flex-col
         ${isOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}
       >
         {/* Fixed Logo Section */}
-        <div className="h-26 flex items-center justify-center px-4 border-b border-gray-700/50">
-          <img src={Logo} alt="Tajurba" className="h-20" />
+        <div className="h-26 flex items-center justify-center px-6 py-6 border-b border-gray-700/50">
+          <img src={Logo} alt="Tajurba" className="h-16" />
         </div>
 
         {/* Scrollable Navigation Section */}
         <div className="flex-1 overflow-y-auto scrollbar-hide">
-          <nav className="px-4 py-4 space-y-1">
+          <nav className="px-3 py-6 space-y-1.5">
             {/* Main Menu Items */}
-            <span className="text-white/80 text-xs font-semibold uppercase tracking-wider px-3 py-2 ">
+            <span className="text-white/80 text-xs font-semibold uppercase tracking-wider px-3 mb-4 block">
               Main Menu
-              <hr className="border-gray-700/50" />
+              <hr className="border-gray-700/50 mt-2" />
             </span>
             <NavLink to="/" className={navLinkClass}>
               <RiDashboardLine className="text-xl" />
@@ -104,10 +104,10 @@ const SideBar = ({ isOpen, setIsOpen }) => {
             </NavLink>
 
             {/* Others Section */}
-            <div className="mt-4">
-              <span className="text-white/80 text-xs font-semibold uppercase tracking-wider px-3 py-2">
+            <div className="mt-8">
+              <span className="text-white/80 text-xs font-semibold uppercase tracking-wider px-3 mb-4 block">
                 Others
-                <hr className="border-gray-700/50" />
+                <hr className="border-gray-700/50 mt-2" />
               </span>
 
               <NavLink to="/calendar" className={navLinkClass}>
@@ -127,11 +127,11 @@ const SideBar = ({ isOpen, setIsOpen }) => {
             </div>
 
             {/* Footer Section */}
-            <div className="pt-4 mt-4 space-y-1 border-t border-gray-700/50">
+            <div className="pt-6 mt-6 space-y-1 border-t border-gray-700/50">
               <button
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg 
+                className="w-full flex items-center gap-4 px-4 py-3 rounded-lg 
                 text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-200
-                font-medium"
+                font-medium border-l-4 border-transparent hover:border-red-400"
               >
                 <FiLogOut className="text-xl" />
                 <span className="text-sm">Logout</span>
