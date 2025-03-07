@@ -1,6 +1,10 @@
-@import "tailwindcss";
 @import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+@import "tailwindcss";
 
+:root {
+  font-family: "Poppins", sans-serif;
+  /* other rules... */
+}
 :root {
   font-family: "Poppins", sans-serif;
   line-height: 1.5;
@@ -14,4 +18,93 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.attendance-radio,
+.venue-fee-radio {
+  appearance: none;
+  width: 1.2rem;
+  height: 1.2rem;
+  border: 2px solid #374151;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.attendance-radio:checked,
+.venue-fee-radio:checked {
+  border-width: 5px;
+}
+
+.attendance-radio[value="present"] {
+  background-color: #1f2937;
+}
+.attendance-radio[value="present"]:checked {
+  border-color: #22c55e;
+  background-color: #22c55e;
+}
+
+.attendance-radio[value="absent"] {
+  background-color: #1f2937;
+}
+.attendance-radio[value="absent"]:checked {
+  border-color: #ef4444;
+  background-color: #ef4444;
+}
+
+.attendance-radio[value="late"] {
+  background-color: #1f2937;
+}
+.attendance-radio[value="late"]:checked {
+  border-color: #f97316;
+  background-color: #f97316;
+}
+
+.venue-fee-radio[value="paid"] {
+  background-color: #1f2937;
+}
+.venue-fee-radio[value="paid"]:checked {
+  border-color: #22c55e;
+  background-color: #22c55e;
+}
+
+.venue-fee-radio[value="unpaid"] {
+  background-color: #1f2937;
+}
+.venue-fee-radio[value="unpaid"]:checked {
+  border-color: #ef4444;
+  background-color: #ef4444;
+}
+
+.substitute-checkbox {
+  appearance: none;
+  width: 1.2rem;
+  height: 1.2rem;
+  border: 2px solid #374151;
+  border-radius: 0.25rem;
+  background-color: #1f2937;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.substitute-checkbox:checked {
+  background-color: #22c55e;
+  border-color: #22c55e;
+}
+
+.substitute-checkbox:checked::after {
+  content: "✓";
+  color: white;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.substitute-checkbox:focus {
+  outline: none;
+  ring: 2px;
+  ring-color: #22c55e;
 }

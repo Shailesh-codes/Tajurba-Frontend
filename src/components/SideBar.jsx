@@ -72,7 +72,7 @@ const SideBar = ({ isOpen, setIsOpen }) => {
               <span className="text-sm">Chapters List</span>
             </NavLink>
 
-            <NavLink to="/creative-sliders" className={navLinkClass}>
+            <NavLink to="/creative-list" className={navLinkClass}>
               <BsSliders className="text-xl" />
               <span className="text-sm">Creative Sliders List</span>
             </NavLink>

@@ -1,0 +1,29 @@
+.venue-fee-radio {
+    appearance: none;
+    width: 1.2rem;
+    height: 1.2rem;
+    border: 2px solid #374151;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .venue-fee-radio:checked {
+    border-width: 5px;
+  }
+  
+  .venue-fee-radio[value="paid"] {
+    background-color: #1F2937;
+  }
+  .venue-fee-radio[value="paid"]:checked {
+    border-color: #22C55E;
+    background-color: #22C55E;
+  }
+  
+  .venue-fee-radio[value="unpaid"] {
+    background-color: #1F2937;
+  }
+  .venue-fee-radio[value="unpaid"]:checked {
+    border-color: #EF4444;
+    background-color: #EF4444;
+  }

@@ -1,0 +1,87 @@
+@font-face {
+    font-family: 'Greates-Draken';
+    src: url('../fonts/Greates-Draken.otf') format('opentype');
+}
+
+body{
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+.name, .MDPname {
+    font-family: 'Greates-Draken', sans-serif;
+}
+
+
+/* Common Design For All Pages */
+.TempContainer{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #404040;
+    height: 100vh;
+}
+
+.subCont{
+    position: relative;
+}
+
+.TempImage{
+    width: 850px;
+}
+
+
+
+/* Business, Elevator, Visitor & Refferal Template Designs */
+.name{
+    position: absolute;
+    top: 185px;
+    left: 125px;
+    min-width: 417px;
+    font-size: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.date{
+    position: absolute;
+    top: 282px;
+    left: 215px;
+    min-width: 217px;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+
+/* mdp Template Designs */
+.MDPname{
+    /* border: 1px solid black; */
+    position: absolute;
+    top: 300px;
+    left: 161px;
+    min-width: 527px;
+    font-size: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.MDPdate{
+    /* border: 1px solid black; */
+    position: absolute;
+    top: 387px;
+    left: 320px;
+    min-width: 217px;
+    font-size: 14px;
+    padding: 7px 0px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #fff;
+    color: #595959;
+}
+
+
