@@ -54,26 +54,13 @@ const BusinessReceived = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [businessToDelete, setBusinessToDelete] = useState(null);
 
-  const confirmDelete = () => {
-    if (!businessToDelete) return;
+  const handleView = (id) => {
+    navigate(`/view-res-business/${id}`);
+  };
 
-    // Filter out the deleted business from the data
-    const updatedBusinessData = businessData.filter(
-      (business) => business.id !== businessToDelete
-    );
-    setBusinessData(updatedBusinessData);
-    setIsDeleteModalOpen(false);
-    setBusinessToDelete(null);
-
-    // You would typically make an API call here
-    // Example:
-    // try {
-    //   await axios.delete(`/api/business-received/${businessToDelete}`);
-    //   // Show success message
-    // } catch (error) {
-    //   console.error('Error deleting business:', error);
-    //   // Show error message
-    // }
+  const handleEdit = (id) => {
+    const businessToEdit = businessData.find((business) => business.id === id);
+    navigate("/add-received-business", { state: { businessToEdit } });
   };
 
   const handleDelete = (id) => {
@@ -81,18 +68,30 @@ const BusinessReceived = () => {
     setIsDeleteModalOpen(true);
   };
 
+  const confirmDelete = async () => {
+    if (!businessToDelete) return;
+
+    try {
+      setLoading(true);
+      const updatedBusinessData = businessData.filter(
+        (business) => business.id !== businessToDelete
+      );
+      setBusinessData(updatedBusinessData);
+      setIsDeleteModalOpen(false);
+      setBusinessToDelete(null);
+      alert("Business entry deleted successfully");
+    } catch (error) {
+      console.error("Error deleting business:", error);
+      alert("Failed to delete business entry");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const getPaginatedData = () => {
     const startIndex = (currentPage - 1) * resultsPerPage;
     const endIndex = startIndex + resultsPerPage;
     return businessData.slice(startIndex, endIndex);
-  };
-
-  const handleView = (id) => {
-    navigate(`/view-business-received/${id}`);
-  };
-
-  const handleEdit = (id) => {
-    navigate(`/add-business-received/${id}`);
   };
 
   return (
