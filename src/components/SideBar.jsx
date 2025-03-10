@@ -107,6 +107,14 @@ const SideBar = ({ isOpen, setIsOpen }) => {
               <img src={business} alt="" />
               <span className="text-sm">BDM's Done</span>
             </NavLink>
+            <NavLink to="/business-given" className={navLinkClass}>
+              <img src={business} alt="" />
+              <span className="text-sm">Business Given</span>
+            </NavLink>
+            <NavLink to="/business-received" className={navLinkClass}>
+              <img src={business} alt="" />
+              <span className="text-sm">Business Received</span>
+            </NavLink>
 
             {/* Others Section */}
             <div className="mt-8">

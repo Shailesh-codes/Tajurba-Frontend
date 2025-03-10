@@ -25,6 +25,11 @@ import MemberStatistics from "./components/MemberStatistics";
 import "./styles/styles.css";
 import BDM from "./pages/BDM";
 import AddBDM from "./components/AddBDM";
+import ViewBDM from "./components/ViewBDM";
+import BusinessGiven from "./pages/BusinessGiven";
+import AddBusiness from "./components/AddBusiness";
+import ViewBusiness from "./components/ViewBusiness";
+import BusinessReceived from "./pages/BusinessReceived";
 
 function App() {
   return (
@@ -53,6 +58,11 @@ function App() {
         {/* Members Routes */}
         <Route path="/bdm" element={<BDM />} />
         <Route path="/add-bdm" element={<AddBDM />} />
+        <Route path="/view-bdm/:id" element={<ViewBDM />} />
+        <Route path="/business-given" element={<BusinessGiven />} />
+        <Route path="/add-business" element={<AddBusiness />} />
+        <Route path="view-business/:id" element={<ViewBusiness />} />
+        <Route path="business-received" element={<BusinessReceived />} />
       </Route>
       <Route path="/signin" element={<SignIn />} />
     </Routes>
