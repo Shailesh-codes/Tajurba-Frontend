@@ -1,6 +1,7 @@
 @font-face {
     font-family: 'Greates-Draken';
     src: url('../fonts/Greates-Draken.otf') format('opentype');
+    font-display: swap;
 }
 
 body{
@@ -82,6 +83,32 @@ body{
     justify-content: center;
     background-color: #fff;
     color: #595959;
+}
+
+/* Add a test class to verify font loading */
+.font-test {
+  font-family: 'Greates-Draken', sans-serif;
+}
+
+/* Debug styles */
+.debug-border {
+  border: 1px solid red;
+}
+
+@media print {
+  @page {
+    size: landscape;
+    margin: 0;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+  }
+  
+  button {
+    display: none;
+  }
 }
 
 

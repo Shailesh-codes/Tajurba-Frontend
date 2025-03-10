@@ -23,6 +23,8 @@ import VisitorList from "./pages/VisitorList";
 import MonthlyReward from "./pages/MonthlyReward";
 import MemberStatistics from "./components/MemberStatistics";
 import "./styles/styles.css";
+import BDM from "./pages/BDM";
+import AddBDM from "./components/AddBDM";
 
 function App() {
   return (
@@ -48,7 +50,9 @@ function App() {
         <Route path="/visitor-list" element={<VisitorList />} />
         <Route path="/monthly-reward" element={<MonthlyReward />} />
         <Route path="/member-levels" element={<MemberStatistics />} />
-        
+        {/* Members Routes */}
+        <Route path="/bdm" element={<BDM />} />
+        <Route path="/add-bdm" element={<AddBDM />} />
       </Route>
       <Route path="/signin" element={<SignIn />} />
     </Routes>

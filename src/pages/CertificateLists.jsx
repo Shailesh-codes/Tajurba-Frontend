@@ -5,6 +5,7 @@ import Swal from "sweetalert2";
 import certificatesIcon from "../assets/images/icons/certi.svg";
 import calendarIcon from "../assets/images/icons/calender-icon.svg";
 import download from "../assets/images/icons/download.svg";
+import Certificate from "../Certificates/components/Certificate";
 
 const CertificatesList = () => {
   const navigate = useNavigate();
@@ -78,11 +79,12 @@ const CertificatesList = () => {
     }, 1000); // Simulate 1 second loading time
   }, []);
 
-  const handleDownload = async (certificateId) => {
+  const handleDownload = async (certificate) => {
     try {
-      // Show loading state
+      console.log("Handling download for certificate:", certificate);
+
       const loadingAlert = Swal.fire({
-        title: 'Downloading...',
+        title: 'Generating...',
         text: 'Please wait while we generate your certificate',
         allowOutsideClick: false,
         showConfirmButton: false,
@@ -93,23 +95,31 @@ const CertificatesList = () => {
         color: '#fff',
       });
 
-      // Simulate download delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Create a modal to show the certificate
+      const result = await Swal.fire({
+        html: <Certificate 
+          name={certificate.member_name}
+          date={certificate.issued_date}
+          certificateType={certificate.certificate_type}
+        />,
+        width: '900px',
+        background: '#404040',
+        showConfirmButton: true,
+        confirmButtonText: 'Close',
+        customClass: {
+          confirmButton: 'bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded',
+          popup: 'certificate-modal', // Add custom class for styling
+        },
+        didOpen: (modal) => {
+          console.log("Modal opened with certificate:", certificate);
+        }
+      });
+
       await loadingAlert.close();
 
-      // Show success message
-      Swal.fire({
-        icon: 'success',
-        title: 'Certificate Downloaded!',
-        text: 'The certificate has been downloaded successfully.',
-        background: '#111827',
-        color: '#fff',
-        timer: 2000,
-        showConfirmButton: false,
-      });
     } catch (error) {
-      console.error("Error downloading certificate:", error);
-      showAlert("error", "Failed to download certificate");
+      console.error("Error generating certificate:", error);
+      showAlert("error", "Failed to generate certificate");
     }
   };
 
@@ -408,7 +418,7 @@ const CertificatesList = () => {
                     <td className="p-4 text-center whitespace-nowrap">
                       <div className="inline-flex gap-2">
                         <button
-                          onClick={() => handleDownload(cert.certificate_id)}
+                          onClick={() => handleDownload(cert)}
                           className="group flex items-center justify-center w-8 h-8 bg-gradient-to-r from-blue-600 to-blue-900 hover:from-blue-700 hover:to-blue-950 text-white/90 hover:text-white rounded-xl transition-all duration-300 shadow hover:shadow-lg hover:shadow-blue-900/30 hover:-translate-y-0.5"
                           title="Download Certificate"
                         >

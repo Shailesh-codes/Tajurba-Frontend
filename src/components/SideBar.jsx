@@ -8,6 +8,7 @@ import { IoSettingsOutline, IoCalendarOutline } from "react-icons/io5";
 import { FiLogOut } from "react-icons/fi";
 import { AiOutlineSecurityScan } from "react-icons/ai";
 import Logo from "../assets/images/Tajurba-Logo-Golden.png";
+import business from "../assets/sidebar-icon/business.svg";
 
 const SideBar = ({ isOpen, setIsOpen }) => {
   const navLinkClass = ({ isActive }) =>
@@ -101,6 +102,10 @@ const SideBar = ({ isOpen, setIsOpen }) => {
             <NavLink to="/monthly-reward" className={navLinkClass}>
               <AiOutlineSecurityScan className="text-xl" />
               <span className="text-sm">Monthly Reward</span>
+            </NavLink>
+            <NavLink to="/bdm" className={navLinkClass}>
+              <img src={business} alt="" />
+              <span className="text-sm">BDM's Done</span>
             </NavLink>
 
             {/* Others Section */}
