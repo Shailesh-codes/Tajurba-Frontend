@@ -30,6 +30,7 @@ import BusinessGiven from "./pages/BusinessGiven";
 import AddBusiness from "./components/AddBusiness";
 import ViewBusiness from "./components/ViewBusiness";
 import BusinessReceived from "./pages/BusinessReceived";
+import ViewResBusiness from "./components/ViewReceivedBusiness";
 
 function App() {
   return (
@@ -63,6 +64,7 @@ function App() {
         <Route path="/add-business" element={<AddBusiness />} />
         <Route path="view-business/:id" element={<ViewBusiness />} />
         <Route path="business-received" element={<BusinessReceived />} />
+        <Route path="view-res-business/:id" element={<ViewResBusiness />} />
       </Route>
       <Route path="/signin" element={<SignIn />} />
     </Routes>
