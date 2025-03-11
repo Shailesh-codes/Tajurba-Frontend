@@ -33,6 +33,9 @@ import BusinessReceived from "./pages/BusinessReceived";
 import ViewResBusiness from "./components/ViewReceivedBusiness";
 import AddEditBusinessReceived from "./components/AddEditBusinessReceived";
 import MemberCertificate from "./pages/MemberCertificate";
+import ChapterMembers from "./pages/ChapterMembers";
+import MeetingsMDP from "./pages/MeetingsMDP";
+import MembersMDPEvents from "./components/MembersMDPEvents";
 
 function App() {
   return (
@@ -69,6 +72,9 @@ function App() {
         <Route path="view-res-business/:id" element={<ViewResBusiness />} />
         <Route path="add-res-business" element={<AddEditBusinessReceived />} />
         <Route path="member-certificate" element={<MemberCertificate />} />
+        <Route path="chapter-members" element={<ChapterMembers />} />
+        <Route path="meetings-mdp-socials" element={<MeetingsMDP />} />
+        <Route path="members-mdp-events" element={<MembersMDPEvents />} />
       </Route>
       <Route path="/signin" element={<SignIn />} />
     </Routes>

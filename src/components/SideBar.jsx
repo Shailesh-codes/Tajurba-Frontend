@@ -10,6 +10,11 @@ import { AiOutlineSecurityScan } from "react-icons/ai";
 import Logo from "../assets/images/Tajurba-Logo-Golden.png";
 import business from "../assets/sidebar-icon/business.svg";
 import certificate from "../assets/images/icons/certificate.svg";
+import members from "../assets/images/icons/members.svg";
+import monthly_reward from "../assets/images/icons/mem-award.svg";
+import ref_given from "../assets/images/icons/ref-given.svg";
+import request_received from "../assets/images/icons/request.svg";
+import visitors_invited from "../assets/images/icons/visitors_invited.svg";
 
 const SideBar = ({ isOpen, setIsOpen }) => {
   const navLinkClass = ({ isActive }) =>
@@ -119,6 +124,32 @@ const SideBar = ({ isOpen, setIsOpen }) => {
             <NavLink to="/member-certificate" className={navLinkClass}>
               <img src={certificate} alt="" />
               <span className="text-sm">Member Certificate</span>
+            </NavLink>
+            <NavLink to="/chapter-members" className={navLinkClass}>
+              <img src={members} alt="" />
+              <span className="text-sm">Chapter Members</span>
+            </NavLink>
+            <NavLink to="/meetings-mdp-socials" className={navLinkClass}>
+              <img src={members} alt="" />
+              <span className="text-sm">
+                Meetings / MDP / Socials & Training Attendance & Venue Fees
+              </span>
+            </NavLink>
+            <NavLink to="/member-monthly-reward" className={navLinkClass}>
+              <img src={monthly_reward} alt="" />
+              <span className="text-sm">Member Monthly Reward</span>
+            </NavLink>
+            <NavLink to="/ref-given" className={navLinkClass}>
+              <img src={ref_given} alt="" />
+              <span className="text-sm">Referral Given</span>
+            </NavLink>
+            <NavLink to="/request-received" className={navLinkClass}>
+              <img src={request_received} alt="" />
+              <span className="text-sm">Request Received</span>
+            </NavLink>
+            <NavLink to="/visitors-invited" className={navLinkClass}>
+              <img src={visitors_invited} alt="" />
+              <span className="text-sm">Visitors Invited</span>
             </NavLink>
 
             {/* Others Section */}
