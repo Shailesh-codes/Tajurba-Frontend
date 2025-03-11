@@ -5,7 +5,6 @@ import {
   FiMapPin,
   FiClock,
   FiInfo,
-  FiDollarSign,
 } from "react-icons/fi";
 import {
   BsQrCodeScan,
@@ -15,6 +14,7 @@ import {
   BsBuilding,
 } from "react-icons/bs";
 import events from "../assets/images/icons/events.svg";
+import { IndianRupee } from "lucide-react";
 
 const EventDetails = () => {
   const [selectedMonth, setSelectedMonth] = useState(() => {
@@ -237,7 +237,7 @@ const EventDetails = () => {
 
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
-                  <FiDollarSign className="w-5 h-5 text-amber-500" />
+                  <IndianRupee className="w-5 h-5 text-amber-500" />
                   <div>
                     <p className="text-sm text-gray-400">UPI ID</p>
                     <p className="text-white">example@upi</p>
