@@ -31,6 +31,8 @@ import AddBusiness from "./components/AddBusiness";
 import ViewBusiness from "./components/ViewBusiness";
 import BusinessReceived from "./pages/BusinessReceived";
 import ViewResBusiness from "./components/ViewReceivedBusiness";
+import AddEditBusinessReceived from "./components/AddEditBusinessReceived";
+import MemberCertificate from "./pages/MemberCertificate";
 
 function App() {
   return (
@@ -65,6 +67,8 @@ function App() {
         <Route path="view-business/:id" element={<ViewBusiness />} />
         <Route path="business-received" element={<BusinessReceived />} />
         <Route path="view-res-business/:id" element={<ViewResBusiness />} />
+        <Route path="add-res-business" element={<AddEditBusinessReceived />} />
+        <Route path="member-certificate" element={<MemberCertificate />} />
       </Route>
       <Route path="/signin" element={<SignIn />} />
     </Routes>

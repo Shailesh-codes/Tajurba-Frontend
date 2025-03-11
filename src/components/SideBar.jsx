@@ -9,6 +9,7 @@ import { FiLogOut } from "react-icons/fi";
 import { AiOutlineSecurityScan } from "react-icons/ai";
 import Logo from "../assets/images/Tajurba-Logo-Golden.png";
 import business from "../assets/sidebar-icon/business.svg";
+import certificate from "../assets/images/icons/certificate.svg";
 
 const SideBar = ({ isOpen, setIsOpen }) => {
   const navLinkClass = ({ isActive }) =>
@@ -114,6 +115,10 @@ const SideBar = ({ isOpen, setIsOpen }) => {
             <NavLink to="/business-received" className={navLinkClass}>
               <img src={business} alt="" />
               <span className="text-sm">Business Received</span>
+            </NavLink>
+            <NavLink to="/member-certificate" className={navLinkClass}>
+              <img src={certificate} alt="" />
+              <span className="text-sm">Member Certificate</span>
             </NavLink>
 
             {/* Others Section */}
