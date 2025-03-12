@@ -36,6 +36,11 @@ import MemberCertificate from "./pages/MemberCertificate";
 import ChapterMembers from "./pages/ChapterMembers";
 import MeetingsMDP from "./pages/MeetingsMDP";
 import MembersMDPEvents from "./components/MembersMDPEvents";
+import MemberMonthlyReward from "./pages/MemberMonthlyReward";
+import MemberReferGiven from "./pages/MemberReferGiven";
+import MemberReferView from "./components/MemberReferView";
+import MemberReferEditAdd from "./components/MemberReferEditAdd";
+import ChapterMemberView from "./components/ChapterMemberView";
 
 function App() {
   return (
@@ -73,8 +78,14 @@ function App() {
         <Route path="add-res-business" element={<AddEditBusinessReceived />} />
         <Route path="member-certificate" element={<MemberCertificate />} />
         <Route path="chapter-members" element={<ChapterMembers />} />
+        <Route path="view-chapter-member/:id" element={<ChapterMemberView />} />
         <Route path="meetings-mdp-socials" element={<MeetingsMDP />} />
         <Route path="members-mdp-events" element={<MembersMDPEvents />} />
+        <Route path="member-monthly-reward" element={<MemberMonthlyReward />} />
+        <Route path="ref-given" element={<MemberReferGiven />} />
+        <Route path="view-ref-given/:id" element={<MemberReferView />} />
+        <Route path="add-edit-ref-given" element={<MemberReferEditAdd />} />
+        <Route path="add-edit-ref-given/:id" element={<MemberReferEditAdd />} />
       </Route>
       <Route path="/signin" element={<SignIn />} />
     </Routes>

@@ -3,8 +3,10 @@ import { motion } from "framer-motion";
 // import { BsUsers } from "react-icons/bs";
 import { FiEye } from "react-icons/fi";
 import users from "../assets/images/icons/members.svg";
+import { useNavigate } from "react-router-dom";
 
 const ChapterMembers = () => {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [selectedChapter, setSelectedChapter] = useState("");
 
@@ -189,7 +191,10 @@ const ChapterMembers = () => {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-center">
-                        <button className="relative group/btn flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-r from-amber-600/90 to-amber-800/90 hover:from-amber-600 hover:to-amber-800 transition-all duration-300 shadow-lg hover:shadow-amber-900/30">
+                        <button
+                          className="relative group/btn flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-r from-amber-600/90 to-amber-800/90 hover:from-amber-600 hover:to-amber-800 transition-all duration-300 shadow-lg hover:shadow-amber-900/30"
+                          onClick={() => navigate("/view-chapter-member/:id")}
+                        >
                           <div className="absolute inset-0 rounded-xl bg-amber-600 opacity-0 group-hover/btn:opacity-20 blur-lg transition-opacity" />
                           <FiEye className="w-5 h-5 text-white/90 group-hover/btn:text-white transition-colors relative z-10" />
                         </button>
