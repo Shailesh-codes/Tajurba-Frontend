@@ -125,7 +125,7 @@ const MonthlyReward = () => {
           <div className="flex items-center gap-4">
             <motion.div
               whileHover={{ scale: 1.05, rotate: 5 }}
-              className="p-3 bg-gradient-to-r from-gray-800 to-gray-900 rounded-xl shadow-lg"
+              className="p-3  bg-gradient-to-r from-amber-500 to-amber-800 rounded-xl shadow-lg"
             >
               <img
                 src={reward}

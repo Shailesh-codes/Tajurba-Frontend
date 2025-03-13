@@ -41,6 +41,8 @@ import MemberReferGiven from "./pages/MemberReferGiven";
 import MemberReferView from "./components/MemberReferView";
 import MemberReferEditAdd from "./components/MemberReferEditAdd";
 import ChapterMemberView from "./components/ChapterMemberView";
+import MemberReqReceived from "./pages/MemberReqReceived";
+import MemberVisitorsInvite from "./pages/MemberVisitorsInvite";
 
 function App() {
   return (
@@ -86,6 +88,8 @@ function App() {
         <Route path="view-ref-given/:id" element={<MemberReferView />} />
         <Route path="add-edit-ref-given" element={<MemberReferEditAdd />} />
         <Route path="add-edit-ref-given/:id" element={<MemberReferEditAdd />} />
+        <Route path="request-received" element={<MemberReqReceived />} />
+        <Route path="visitors-invited" element={<MemberVisitorsInvite />} />
       </Route>
       <Route path="/signin" element={<SignIn />} />
     </Routes>

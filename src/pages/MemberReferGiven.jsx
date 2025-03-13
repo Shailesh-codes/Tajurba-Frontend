@@ -63,7 +63,7 @@ const MemberReferGiven = () => {
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
         <div className="flex items-center gap-4">
-          <div className="p-3 bg-gradient-to-r from-gray-800 to-gray-900 rounded-xl">
+          <div className="p-3 bg-gradient-to-r from-amber-500 to-amber-800 rounded-xl">
             <img src={referralIcon} alt="referrals" className="w-6 h-6" />
           </div>
           <div>

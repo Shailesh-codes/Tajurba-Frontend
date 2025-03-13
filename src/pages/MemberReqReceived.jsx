@@ -1,72 +1,71 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import meetings from "../assets/images/icons/meeting.svg";
-import { FiEye } from "react-icons/fi";
+import { 
+  Eye, 
+  ChevronLeft, 
+  Briefcase, 
+  IndianRupee, 
+  FileText,
+  Check,
+  X
+} from "lucide-react";
+import requestIcon from "../assets/images/icons/request.svg";
 import { useNavigate } from "react-router-dom";
 
-const MeetingsMDP = () => {
+const MemberReqReceived = () => {
   const navigate = useNavigate();
-  const [selectedType, setSelectedType] = useState("meetings");
+  const [selectedType, setSelectedType] = useState("bdm");
   const [selectedStatus, setSelectedStatus] = useState("all");
-  const [selectedVenueFee, setSelectedVenueFee] = useState("all");
+  const [selectedChapter, setSelectedChapter] = useState("all");
 
   // Dummy data for demonstration
   const stats = {
-    meetings: { total: 12, present: 8, late: 2, absent: 2 },
-    mdp: { total: 4, present: 3, late: 1, absent: 0 },
-    social: { total: 6, present: 5, late: 0, absent: 1 },
+    bdm: { total: 16, verified: 12, pending: 2, rejected: 2 },
+    business: { total: 14, verified: 10, pending: 3, rejected: 1 },
+    referral: { total: 18, verified: 13, pending: 4, rejected: 1 },
   };
 
-  const meetings_data = [
+  const requests_data = [
     {
       id: 1,
-      title: "Weekly Business Meeting",
-      date_time: "2024-03-20 09:00 AM",
-      venue: "Hotel Grand Plaza",
-      status: "present",
-      venue_fee: { amount: 250, status: "paid" },
+      member_name: "John Doe",
+      chapter: "Mumbai Central",
+      request_type: "bdm",
+      date: "2024-03-20",
+      status: "pending",
     },
     {
       id: 2,
-      title: "Monthly Chapter Meeting",
-      date_time: "2024-03-15 10:00 AM",
-      venue: "Business Center",
-      status: "late_less",
-      venue_fee: { amount: 300, status: "not paid" },
+      member_name: "Jane Smith",
+      chapter: "Delhi North",
+      request_type: "business",
+      amount: 25000,
+      date: "2024-03-15",
+      status: "verified",
     },
   ];
 
-  // Helper functions for status display
   const getStatusClass = (status) => {
     const classes = {
-      present: "bg-green-500/10 text-green-500",
-      late_less: "bg-amber-500/10 text-amber-500",
-      late_more: "bg-amber-500/10 text-amber-500",
-      absent: "bg-red-500/10 text-red-500",
+      verified: "bg-green-500/10 text-green-500",
+      pending: "bg-amber-500/10 text-amber-500",
+      rejected: "bg-red-500/10 text-red-500",
     };
     return classes[status] || "bg-gray-500/10 text-gray-500";
   };
 
-  const getVenueFeeClass = (status) => {
-    return status === "paid"
-      ? "bg-green-500/10 text-green-500"
-      : "bg-red-500/10 text-red-500";
-  };
-
   return (
     <div className="mt-32 flex flex-col space-y-5">
-      {/* Header Section with Back Button */}
+      {/* Header Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
         <div className="flex items-center gap-4">
           <div className="p-3 bg-gradient-to-r from-amber-500 to-amber-800 rounded-xl">
-            <img src={meetings} alt="meetings" className="w-6 h-6" />
+            <img src={requestIcon} alt="requests" className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-white">
-              Meeting Attendance & Venue Fees
-            </h2>
+            <h2 className="text-2xl font-bold text-white">Requests Received</h2>
             <p className="text-sm text-gray-400">
-              View your meeting attendance records
+              View and verify member requests
             </p>
           </div>
         </div>
@@ -74,155 +73,107 @@ const MeetingsMDP = () => {
           onClick={() => navigate(-1)}
           className="w-full sm:w-auto group flex items-center justify-center sm:justify-start gap-2.5 px-5 py-2.5 bg-gray-800 text-gray-300 hover:text-amber-500 rounded-xl transition-all duration-300 border border-gray-700"
         >
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 20 20"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
+          <ChevronLeft 
+            size={18}
             className="transition-transform duration-300 group-hover:-translate-x-1"
-          >
-            <path
-              d="M12.5 5L7.5 10L12.5 15"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          />
           <span className="font-semibold tracking-wide text-sm">Back</span>
         </button>
       </div>
 
       {/* Stats Overview */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {/* Meetings Stats */}
+        {/* BDM Stats */}
         <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <p className="text-gray-400">Meetings</p>
+              <p className="text-gray-400">BDM Requests</p>
               <h3 className="text-2xl font-bold text-white mt-1">
-                {stats.meetings.total}
+                {stats.bdm.total}
               </h3>
             </div>
             <div className="p-3 bg-amber-500/10 rounded-xl">
-              <svg
-                className="w-6 h-6 text-amber-500"
-                viewBox="0 0 24 24"
-                fill="none"
-              >
-                <path
-                  d="M19 11H5M19 11C20.1046 11 21 11.8954 21 13V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V13C3 11.8954 3.89543 11 5 11M19 11V9C19 7.89543 18.1046 7 17 7M5 11V9C5 7.89543 5.89543 7 7 7M7 7V5C7 3.89543 7.89543 3 9 3H15C16.1046 3 17 3.89543 17 5V7M7 7H17"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+              <Briefcase className="w-6 h-6 text-amber-500" />
             </div>
           </div>
           <div className="flex items-center gap-3">
             <div className="px-2.5 py-1 bg-green-500/10 rounded-lg">
               <span className="text-sm text-green-500">
-                {stats.meetings.present} Present
+                {stats.bdm.verified} Verified
               </span>
             </div>
             <div className="px-2.5 py-1 bg-amber-500/10 rounded-lg">
               <span className="text-sm text-amber-500">
-                {stats.meetings.late} Late
+                {stats.bdm.pending} Pending
               </span>
             </div>
             <div className="px-2.5 py-1 bg-red-500/10 rounded-lg">
               <span className="text-sm text-red-500">
-                {stats.meetings.absent} Absent
+                {stats.bdm.rejected} Rejected
               </span>
             </div>
           </div>
         </div>
 
-        {/* MDP Stats */}
+        {/* Business Stats */}
         <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <p className="text-gray-400">MDP</p>
+              <p className="text-gray-400">Business Requests</p>
               <h3 className="text-2xl font-bold text-white mt-1">
-                {stats.mdp.total}
+                {stats.business.total}
               </h3>
             </div>
-            <div className="p-3 bg-blue-500/10 rounded-xl">
-              <svg
-                className="w-6 h-6 text-blue-500"
-                viewBox="0 0 24 24"
-                fill="none"
-              >
-                <path
-                  d="M12 14L12 4M12 14L9 11M12 14L15 11M3 12V19C3 20.1046 3.89543 21 5 21H19C20.1046 21 21 20.1046 21 19V12"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+            <div className="p-3 bg-amber-500/10 rounded-xl">
+              <IndianRupee className="w-6 h-6 text-amber-500" />
             </div>
           </div>
           <div className="flex items-center gap-3">
             <div className="px-2.5 py-1 bg-green-500/10 rounded-lg">
               <span className="text-sm text-green-500">
-                {stats.mdp.present} Present
+                {stats.business.verified} Verified
               </span>
             </div>
             <div className="px-2.5 py-1 bg-amber-500/10 rounded-lg">
               <span className="text-sm text-amber-500">
-                {stats.mdp.late} Late
+                {stats.business.pending} Pending
               </span>
             </div>
             <div className="px-2.5 py-1 bg-red-500/10 rounded-lg">
               <span className="text-sm text-red-500">
-                {stats.mdp.absent} Absent
+                {stats.business.rejected} Rejected
               </span>
             </div>
           </div>
         </div>
 
-        {/* Social & Training Stats */}
+        {/* Referral Stats */}
         <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <p className="text-gray-400">Social & Training</p>
+              <p className="text-gray-400">Referral Requests</p>
               <h3 className="text-2xl font-bold text-white mt-1">
-                {stats.social.total}
+                {stats.referral.total}
               </h3>
             </div>
-            <div className="p-3 bg-purple-500/10 rounded-xl">
-              <svg
-                className="w-6 h-6 text-purple-500"
-                viewBox="0 0 24 24"
-                fill="none"
-              >
-                <path
-                  d="M17 20H7M17 20C18.1046 20 19 19.1046 19 18V8.82843C19 8.29799 18.7893 7.78929 18.4142 7.41421L14.5858 3.58579C14.2107 3.21071 13.702 3 13.1716 3H7C5.89543 3 5 3.89543 5 5V18C5 19.1046 5.89543 20 7 20M17 20H7M9 9H13M9 13H15M9 17H15"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+            <div className="p-3 bg-amber-500/10 rounded-xl">
+              <FileText className="w-6 h-6 text-amber-500" />
             </div>
           </div>
           <div className="flex items-center gap-3">
             <div className="px-2.5 py-1 bg-green-500/10 rounded-lg">
               <span className="text-sm text-green-500">
-                {stats.social.present} Present
+                {stats.referral.verified} Verified
               </span>
             </div>
             <div className="px-2.5 py-1 bg-amber-500/10 rounded-lg">
               <span className="text-sm text-amber-500">
-                {stats.social.late} Late
+                {stats.referral.pending} Pending
               </span>
             </div>
             <div className="px-2.5 py-1 bg-red-500/10 rounded-lg">
               <span className="text-sm text-red-500">
-                {stats.social.absent} Absent
+                {stats.referral.rejected} Rejected
               </span>
             </div>
           </div>
@@ -232,19 +183,19 @@ const MeetingsMDP = () => {
       {/* Filters Section */}
       <div className="border-b border-gray-700 pb-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {/* Meeting Type Filter */}
+          {/* Request Type Filter */}
           <div className="relative">
             <select
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value)}
               className="w-full appearance-none bg-gray-800 text-gray-300 pl-10 pr-10 py-2.5 rounded-xl border border-gray-700 focus:outline-none focus:border-amber-500 text-sm"
             >
-              <option value="meetings">Meetings</option>
-              <option value="mdp">MDP</option>
-              <option value="social">Social & Training</option>
+              <option value="bdm">BDM Requests</option>
+              <option value="business">Business Requests</option>
+              <option value="referral">Referral Requests</option>
             </select>
-            {/* ... icons ... */}
           </div>
+
           {/* Status Filter */}
           <div className="relative">
             <select
@@ -253,22 +204,22 @@ const MeetingsMDP = () => {
               className="w-full appearance-none bg-gray-800 text-gray-300 pl-10 pr-10 py-2.5 rounded-xl border border-gray-700 focus:outline-none focus:border-amber-500 text-sm"
             >
               <option value="all">All Status</option>
-              <option value="present">Present</option>
-              <option value="late">Late</option>
-              <option value="absent">Absent</option>
+              <option value="verified">Verified</option>
+              <option value="pending">Pending</option>
+              <option value="rejected">Rejected</option>
             </select>
           </div>
 
-          {/* Venue Fee Filter */}
+          {/* Chapter Filter */}
           <div className="relative">
             <select
-              value={selectedVenueFee}
-              onChange={(e) => setSelectedVenueFee(e.target.value)}
+              value={selectedChapter}
+              onChange={(e) => setSelectedChapter(e.target.value)}
               className="w-full appearance-none bg-gray-800 text-gray-300 pl-10 pr-10 py-2.5 rounded-xl border border-gray-700 focus:outline-none focus:border-amber-500 text-sm"
             >
-              <option value="all">All Venue Fees</option>
-              <option value="paid">Paid</option>
-              <option value="not_paid">Not Paid</option>
+              <option value="all">All Chapters</option>
+              <option value="mumbai">Mumbai Central</option>
+              <option value="delhi">Delhi North</option>
             </select>
           </div>
         </div>
@@ -289,27 +240,27 @@ const MeetingsMDP = () => {
                 <tr className="bg-gradient-to-r from-gray-800/95 via-gray-800/98 to-gray-800/95 backdrop-blur-xl">
                   <th className="px-6 py-4 text-left border-b border-gray-700">
                     <span className="text-sm font-semibold text-gray-300">
-                      Title
+                      Member Name
                     </span>
                   </th>
                   <th className="px-6 py-4 text-left border-b border-gray-700">
                     <span className="text-sm font-semibold text-gray-300">
-                      Date & Time
+                      Chapter
                     </span>
                   </th>
                   <th className="px-6 py-4 text-left border-b border-gray-700">
                     <span className="text-sm font-semibold text-gray-300">
-                      Venue
+                      Request Type
+                    </span>
+                  </th>
+                  <th className="px-6 py-4 text-left border-b border-gray-700">
+                    <span className="text-sm font-semibold text-gray-300">
+                      Date
                     </span>
                   </th>
                   <th className="px-6 py-4 text-left border-b border-gray-700">
                     <span className="text-sm font-semibold text-gray-300">
                       Status
-                    </span>
-                  </th>
-                  <th className="px-6 py-4 text-right border-b border-gray-700">
-                    <span className="text-sm font-semibold text-gray-300">
-                      Venue Fee
                     </span>
                   </th>
                   <th className="px-6 py-4 text-center border-b border-gray-700">
@@ -320,59 +271,63 @@ const MeetingsMDP = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-700/50">
-                {(meetings_data || []).map((meeting, index) => (
+                {requests_data.map((request, index) => (
                   <motion.tr
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
-                    key={meeting.id}
+                    key={request.id}
                     className="group hover:bg-gradient-to-r hover:from-gray-700/30 hover:via-gray-700/40 hover:to-gray-700/30 transition-all duration-300"
                   >
                     <td className="px-6 py-4">
                       <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
-                        {meeting.title}
+                        {request.member_name}
                       </span>
                     </td>
                     <td className="px-6 py-4">
                       <span className="text-sm text-gray-300">
-                        {meeting.date_time}
+                        {request.chapter}
                       </span>
                     </td>
                     <td className="px-6 py-4">
                       <span className="text-sm text-gray-300">
-                        {meeting.venue}
+                        {request.request_type.toUpperCase()}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-sm text-gray-300">
+                        {request.date}
                       </span>
                     </td>
                     <td className="px-6 py-4">
                       <span
                         className={`px-2.5 py-1 rounded-lg text-sm ${getStatusClass(
-                          meeting.status
+                          request.status
                         )}`}
                       >
-                        {meeting.status
-                          .replace("_", " ")
-                          .charAt(0)
-                          .toUpperCase() + meeting.status.slice(1)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getVenueFeeClass(
-                          meeting.venue_fee.status
-                        )}`}
-                      >
-                        ₹{meeting.venue_fee.amount} - {meeting.venue_fee.status}
+                        {request.status.charAt(0).toUpperCase() +
+                          request.status.slice(1)}
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <div
-                        className="flex items-center justify-center"
-                        onClick={() => navigate("/members-mdp-events")}
-                      >
-                        <button className="relative group/btn flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-r from-amber-600/90 to-amber-800/90 hover:from-amber-600 hover:to-amber-800 transition-all duration-300 shadow-lg hover:shadow-amber-900/30">
-                          <div className="absolute inset-0 rounded-xl bg-amber-600 opacity-0 group-hover/btn:opacity-20 blur-lg transition-opacity" />
-                          <FiEye className="w-5 h-5 text-white/90 group-hover/btn:text-white transition-colors relative" />
-                        </button>
+                      <div className="flex items-center justify-center gap-2">
+                        {request.status === "pending" ? (
+                          <>
+                            <button className="px-3 py-1 bg-green-500/10 text-green-500 hover:bg-green-500/20 rounded-lg text-sm transition-all duration-300 flex items-center gap-1">
+                              <Check size={16} />
+                              Verify
+                            </button>
+                            <button className="px-3 py-1 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg text-sm transition-all duration-300 flex items-center gap-1">
+                              <X size={16} />
+                              Reject
+                            </button>
+                            <button className="px-3 py-1 bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 rounded-lg text-sm transition-all duration-300">
+                              <Eye size={16} />
+                            </button>
+                          </>
+                        ) : (
+                          <span className="text-sm text-gray-400">No actions needed</span>
+                        )}
                       </div>
                     </td>
                   </motion.tr>
@@ -381,7 +336,7 @@ const MeetingsMDP = () => {
             </table>
 
             {/* Empty State */}
-            {(!meetings_data || meetings_data.length === 0) && (
+            {requests_data.length === 0 && (
               <div className="flex flex-col items-center justify-center py-8">
                 <div className="p-3 bg-gray-800/50 rounded-xl mb-4">
                   <svg
@@ -398,7 +353,7 @@ const MeetingsMDP = () => {
                     />
                   </svg>
                 </div>
-                <p className="text-gray-400 text-center">No meetings found</p>
+                <p className="text-gray-400 text-center">No requests found</p>
               </div>
             )}
           </div>
@@ -408,4 +363,4 @@ const MeetingsMDP = () => {
   );
 };
 
-export default MeetingsMDP;
+export default MemberReqReceived;
