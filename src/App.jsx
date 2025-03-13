@@ -43,6 +43,9 @@ import MemberReferEditAdd from "./components/MemberReferEditAdd";
 import ChapterMemberView from "./components/ChapterMemberView";
 import MemberReqReceived from "./pages/MemberReqReceived";
 import MemberVisitorsInvite from "./pages/MemberVisitorsInvite";
+import VisitorInviteAddEdit from "./components/VisitorInviteAddEdit";
+import ViewMemberVisitor from "./components/ViewMemberVisitor";
+import MemberDashboard from "./pages/MemberDashboard";
 
 function App() {
   return (
@@ -69,6 +72,7 @@ function App() {
         <Route path="/monthly-reward" element={<MonthlyReward />} />
         <Route path="/member-levels" element={<MemberStatistics />} />
         {/* Members Routes */}
+        <Route path="/member-dashboard" element={<MemberDashboard />} />
         <Route path="/bdm" element={<BDM />} />
         <Route path="/add-bdm" element={<AddBDM />} />
         <Route path="/view-bdm/:id" element={<ViewBDM />} />
@@ -90,6 +94,9 @@ function App() {
         <Route path="add-edit-ref-given/:id" element={<MemberReferEditAdd />} />
         <Route path="request-received" element={<MemberReqReceived />} />
         <Route path="visitors-invited" element={<MemberVisitorsInvite />} />
+        <Route path="add-visitor" element={<VisitorInviteAddEdit />} />
+        <Route path="edit-visitor/:id" element={<VisitorInviteAddEdit />} />
+        <Route path="view-visitor/:id" element={<ViewMemberVisitor />} />
       </Route>
       <Route path="/signin" element={<SignIn />} />
     </Routes>

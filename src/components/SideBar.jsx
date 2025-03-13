@@ -14,6 +14,7 @@ import members from "../assets/images/icons/members.svg";
 import monthly_reward from "../assets/images/icons/mem-award.svg";
 import ref_given from "../assets/images/icons/ref-given.svg";
 import request_received from "../assets/images/icons/request.svg";
+import dashboard from "../assets/images/icons/dashboard.svg";
 import visitors_invited from "../assets/images/icons/visitors_invited.svg";
 
 const SideBar = ({ isOpen, setIsOpen }) => {
@@ -21,7 +22,7 @@ const SideBar = ({ isOpen, setIsOpen }) => {
     `flex items-center gap-4 px-4 py-3 rounded-lg transition-all duration-200
      ${
        isActive
-         ? "bg-[#27DA68]/10 text-[#27DA68] font-medium border-l-4 border-[#27DA68]"
+         ? "bg-[#f69100]/10 text-[#f69100] font-medium border-l-4 border-[#f69100]"
          : "text-gray-400 hover:bg-[#1E293B]/50 hover:text-white border-l-4 border-transparent"
      }`;
 
@@ -109,6 +110,13 @@ const SideBar = ({ isOpen, setIsOpen }) => {
               <AiOutlineSecurityScan className="text-xl" />
               <span className="text-sm">Monthly Reward</span>
             </NavLink>
+
+            {/* Members routes */}
+            <NavLink to="/member-dashboard" className={navLinkClass}>
+              <img src={dashboard} alt="" />
+              <span className="text-sm">Member Dashboard</span>
+            </NavLink>
+
             <NavLink to="/bdm" className={navLinkClass}>
               <img src={business} alt="" />
               <span className="text-sm">BDM's Done</span>
