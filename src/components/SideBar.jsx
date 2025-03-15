@@ -1,9 +1,5 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { RiDashboardLine, RiTeamLine, RiFileList3Line } from "react-icons/ri";
-import { HiOutlineSpeakerphone } from "react-icons/hi";
-import { BsListCheck, BsSliders } from "react-icons/bs";
-import { MdOutlineEventNote, MdOutlinePeople } from "react-icons/md";
 import { IoSettingsOutline, IoCalendarOutline } from "react-icons/io5";
 import { FiLogOut } from "react-icons/fi";
 import { AiOutlineSecurityScan } from "react-icons/ai";
@@ -16,6 +12,17 @@ import ref_given from "../assets/images/icons/ref-given.svg";
 import request_received from "../assets/images/icons/request.svg";
 import dashboard from "../assets/images/icons/dashboard.svg";
 import visitors_invited from "../assets/images/icons/visitors_invited.svg";
+import DashboardIcon from "../assets/SVGComponents/DashboardIcon";
+import AddMemberIcon from "../assets/SVGComponents/AddMemberIcon";
+import AssignCertificateIcon from "../assets/SVGComponents/AssignCertificateIcon";
+import BroadcastIcon from "../assets/SVGComponents/BroadcastIcon";
+import ChapterListIcon from "../assets/SVGComponents/ChapterListIcon";
+import SliderIcon from "../assets/SVGComponents/SliderIcon";
+import MarkAttandance from "../assets/SVGComponents/MarkAttendanceIcon";
+import MeetingsIcon from "../assets/SVGComponents/EventIcon";
+import UserListIcon from "../assets/SVGComponents/UserListIcon";
+import VisitorIcon from "../assets/SVGComponents/VisitorIcon";
+import MonthlyRewardIcon from "../assets/SVGComponents/MonthlyRewardIcon";
 
 const SideBar = ({ isOpen, setIsOpen }) => {
   const navLinkClass = ({ isActive }) =>
@@ -56,58 +63,58 @@ const SideBar = ({ isOpen, setIsOpen }) => {
               <hr className="border-gray-700/50 mt-2" />
             </span>
             <NavLink to="/" className={navLinkClass}>
-              <RiDashboardLine className="text-xl" />
+              <DashboardIcon color="currentColor" />
               <span className="text-sm">Dashboard</span>
             </NavLink>
 
             <NavLink to="/add-member" className={navLinkClass}>
-              <RiTeamLine className="text-xl" />
+              <AddMemberIcon color="currentColor" />
               <span className="text-sm">Add Member</span>
             </NavLink>
 
             <NavLink to="/assign-certificates" className={navLinkClass}>
-              <RiFileList3Line className="text-xl" />
+              <AssignCertificateIcon color="currentColor" />
               <span className="text-sm">Assign Certificates</span>
             </NavLink>
 
             <NavLink to="/broadcast" className={navLinkClass}>
-              <HiOutlineSpeakerphone className="text-xl" />
+              <BroadcastIcon color="currentColor" />
               <span className="text-sm">Broadcast</span>
             </NavLink>
 
             <NavLink to="/chapters-list" className={navLinkClass}>
-              <BsListCheck className="text-xl" />
+              <ChapterListIcon color="currentColor" />
               <span className="text-sm">Chapters List</span>
             </NavLink>
 
             <NavLink to="/creative-list" className={navLinkClass}>
-              <BsSliders className="text-xl" />
+              <SliderIcon color="currentColor" />
               <span className="text-sm">Creative Sliders List</span>
             </NavLink>
 
             <NavLink to="/mark-attendance" className={navLinkClass}>
-              <MdOutlineEventNote className="text-xl" />
+              <MarkAttandance color="currentColor" />
               <span className="text-sm">Mark Attendance & Venue Fees</span>
             </NavLink>
 
             <NavLink to="/member-list" className={navLinkClass}>
-              <MdOutlinePeople className="text-xl" />
+              <UserListIcon color="currentColor" />
               <span className="text-sm">Member List</span>
             </NavLink>
 
             <NavLink to="/meetings" className={navLinkClass}>
-              <IoCalendarOutline className="text-xl" />
+              <MeetingsIcon color="currentColor" />
               <span className="text-sm">
                 Meetings / MDP / Socials & Training List
               </span>
             </NavLink>
 
             <NavLink to="/visitor-list" className={navLinkClass}>
-              <AiOutlineSecurityScan className="text-xl" />
+              <VisitorIcon color="currentColor" />
               <span className="text-sm">Visitor List</span>
             </NavLink>
             <NavLink to="/monthly-reward" className={navLinkClass}>
-              <AiOutlineSecurityScan className="text-xl" />
+              <MonthlyRewardIcon color="currentColor" />
               <span className="text-sm">Monthly Reward</span>
             </NavLink>
 

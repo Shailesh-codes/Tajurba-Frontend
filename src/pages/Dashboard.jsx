@@ -8,6 +8,7 @@ import {
   GraduationCap,
   Calendar,
   ArrowUpRight,
+  TrendingUp,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Line } from "react-chartjs-2";
@@ -132,7 +133,9 @@ const Dashboard = () => {
               <div className="p-3.5 rounded-xl bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] shadow-lg shadow-[#D4B86A]/20 group-hover:shadow-[#D4B86A]/40 transition-all duration-500">
                 <Handshake className="w-6 h-6 text-gray-900" />
               </div>
-              <h3 className="text-[#D4B86A] font-medium tracking-wide">Referrals Exchanged</h3>
+              <h3 className="text-[#D4B86A] font-medium tracking-wide">
+                Referrals Exchanged
+              </h3>
             </div>
 
             <div className="space-y-3 relative">
@@ -160,7 +163,9 @@ const Dashboard = () => {
               <div className="p-3.5 rounded-xl bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] shadow-lg shadow-[#D4B86A]/20 group-hover:shadow-[#D4B86A]/40 transition-all duration-500">
                 <Briefcase className="w-6 h-6 text-gray-900" />
               </div>
-              <h3 className="text-[#D4B86A] font-medium tracking-wide">Total Business Revenue</h3>
+              <h3 className="text-[#D4B86A] font-medium tracking-wide">
+                Total Business Revenue
+              </h3>
             </div>
 
             <div className="space-y-3 relative">
@@ -188,7 +193,9 @@ const Dashboard = () => {
               <div className="p-3.5 rounded-xl bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] shadow-lg shadow-[#D4B86A]/20 group-hover:shadow-[#D4B86A]/40 transition-all duration-500">
                 <Users className="w-6 h-6 text-gray-900" />
               </div>
-              <h3 className="text-[#D4B86A] font-medium tracking-wide">Total BDMs</h3>
+              <h3 className="text-[#D4B86A] font-medium tracking-wide">
+                Total BDMs
+              </h3>
             </div>
 
             <div className="space-y-3 relative">
@@ -216,7 +223,9 @@ const Dashboard = () => {
               <div className="p-3.5 rounded-xl bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] shadow-lg shadow-[#D4B86A]/20 group-hover:shadow-[#D4B86A]/40 transition-all duration-500">
                 <UserPlus className="w-6 h-6 text-gray-900" />
               </div>
-              <h3 className="text-[#D4B86A] font-medium tracking-wide">Total Guests</h3>
+              <h3 className="text-[#D4B86A] font-medium tracking-wide">
+                Total Guests
+              </h3>
             </div>
 
             <div className="space-y-3 relative">
@@ -239,11 +248,11 @@ const Dashboard = () => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5"
+        transition={{ delay: 0.2 }}
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
       >
         {/* Card 1 - Meetings & Attendance */}
-        <div className="group relative overflow-hidden p-5 rounded-xl bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-500">
+        <div className="group relative overflow-hidden p-6 rounded-xl bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-500 hover:transform hover:scale-[1.02]">
           <div className="absolute inset-0">
             <div className="absolute inset-0 bg-gradient-to-r from-[#D4B86A]/10 via-purple-500/5 to-[#D4B86A]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl" />
           </div>
@@ -253,12 +262,16 @@ const Dashboard = () => {
               <div className="p-2.5 rounded-lg bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] shadow-lg shadow-[#D4B86A]/20 group-hover:shadow-[#D4B86A]/40 transition-all duration-500">
                 <Users className="w-4 h-4 text-gray-900" />
               </div>
-              <h3 className="text-[#D4B86A] font-medium text-sm">Meetings & Attendance</h3>
+              <h3 className="text-[#D4B86A] font-medium text-sm">
+                Meetings & Attendance
+              </h3>
             </div>
 
             <div className="space-y-4">
               <div className="flex flex-col">
-                <span className="text-3xl font-bold text-white group-hover:text-[#D4B86A] transition-colors duration-500">4</span>
+                <span className="text-3xl font-bold text-white group-hover:text-[#D4B86A] transition-colors duration-500">
+                  4
+                </span>
                 <div className="flex items-center gap-2 mt-2">
                   <span className="text-emerald-400 text-xs flex items-center gap-1 bg-emerald-400/10 px-2 py-0.5 rounded-full">
                     <ArrowUpRight className="w-3 h-3" />
@@ -268,7 +281,9 @@ const Dashboard = () => {
                 </div>
               </div>
               <div className="flex flex-col pt-3 border-t border-gray-800">
-                <span className="text-2xl font-bold text-white group-hover:text-[#D4B86A] transition-colors duration-500">54.5%</span>
+                <span className="text-2xl font-bold text-white group-hover:text-[#D4B86A] transition-colors duration-500">
+                  54.5%
+                </span>
                 <div className="flex items-center gap-2 mt-2">
                   <span className="text-emerald-400 text-xs flex items-center gap-1 bg-emerald-400/10 px-2 py-0.5 rounded-full">
                     <ArrowUpRight className="w-3 h-3" />
@@ -282,7 +297,7 @@ const Dashboard = () => {
         </div>
 
         {/* Card 2 - MDP & Attendance */}
-        <div className="group relative overflow-hidden p-5 rounded-xl bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-500">
+        <div className="group relative overflow-hidden p-6 rounded-xl bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-500 hover:transform hover:scale-[1.02]">
           <div className="absolute inset-0">
             <div className="absolute inset-0 bg-gradient-to-r from-[#D4B86A]/10 via-purple-500/5 to-[#D4B86A]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl" />
           </div>
@@ -292,12 +307,16 @@ const Dashboard = () => {
               <div className="p-2.5 rounded-lg bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] shadow-lg shadow-[#D4B86A]/20 group-hover:shadow-[#D4B86A]/40 transition-all duration-500">
                 <Medal className="w-4 h-4 text-gray-900" />
               </div>
-              <h3 className="text-[#D4B86A] font-medium text-sm">MDP & Attendance</h3>
+              <h3 className="text-[#D4B86A] font-medium text-sm">
+                MDP & Attendance
+              </h3>
             </div>
 
             <div className="space-y-4">
               <div className="flex flex-col">
-                <span className="text-3xl font-bold text-white group-hover:text-[#D4B86A] transition-colors duration-500">1</span>
+                <span className="text-3xl font-bold text-white group-hover:text-[#D4B86A] transition-colors duration-500">
+                  1
+                </span>
                 <div className="flex items-center gap-2 mt-2">
                   <span className="text-emerald-400 text-xs flex items-center gap-1 bg-emerald-400/10 px-2 py-0.5 rounded-full">
                     <ArrowUpRight className="w-3 h-3" />
@@ -307,7 +326,9 @@ const Dashboard = () => {
                 </div>
               </div>
               <div className="flex flex-col pt-3 border-t border-gray-800">
-                <span className="text-2xl font-bold text-white group-hover:text-[#D4B86A] transition-colors duration-500">33.3%</span>
+                <span className="text-2xl font-bold text-white group-hover:text-[#D4B86A] transition-colors duration-500">
+                  33.3%
+                </span>
                 <div className="flex items-center gap-2 mt-2">
                   <span className="text-emerald-400 text-xs flex items-center gap-1 bg-emerald-400/10 px-2 py-0.5 rounded-full">
                     <ArrowUpRight className="w-3 h-3" />
@@ -321,7 +342,7 @@ const Dashboard = () => {
         </div>
 
         {/* Card 3 - Socials & Training */}
-        <div className="group relative overflow-hidden p-5 rounded-xl bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-500">
+        <div className="group relative overflow-hidden p-6 rounded-xl bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-500 hover:transform hover:scale-[1.02]">
           <div className="absolute inset-0">
             <div className="absolute inset-0 bg-gradient-to-r from-[#D4B86A]/10 via-purple-500/5 to-[#D4B86A]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl" />
           </div>
@@ -331,12 +352,16 @@ const Dashboard = () => {
               <div className="p-2.5 rounded-lg bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] shadow-lg shadow-[#D4B86A]/20 group-hover:shadow-[#D4B86A]/40 transition-all duration-500">
                 <GraduationCap className="w-4 h-4 text-gray-900" />
               </div>
-              <h3 className="text-[#D4B86A] font-medium text-sm">Socials & Training</h3>
+              <h3 className="text-[#D4B86A] font-medium text-sm">
+                Socials & Training
+              </h3>
             </div>
 
             <div className="space-y-4">
               <div className="flex flex-col">
-                <span className="text-3xl font-bold text-white group-hover:text-[#D4B86A] transition-colors duration-500">1</span>
+                <span className="text-3xl font-bold text-white group-hover:text-[#D4B86A] transition-colors duration-500">
+                  1
+                </span>
                 <div className="flex items-center gap-2 mt-2">
                   <span className="text-emerald-400 text-xs flex items-center gap-1 bg-emerald-400/10 px-2 py-0.5 rounded-full">
                     <ArrowUpRight className="w-3 h-3" />
@@ -346,7 +371,9 @@ const Dashboard = () => {
                 </div>
               </div>
               <div className="flex flex-col pt-3 border-t border-gray-800">
-                <span className="text-2xl font-bold text-white group-hover:text-[#D4B86A] transition-colors duration-500">33.3%</span>
+                <span className="text-2xl font-bold text-white group-hover:text-[#D4B86A] transition-colors duration-500">
+                  33.3%
+                </span>
                 <div className="flex items-center gap-2 mt-2">
                   <span className="text-emerald-400 text-xs flex items-center gap-1 bg-emerald-400/10 px-2 py-0.5 rounded-full">
                     <ArrowUpRight className="w-3 h-3" />
@@ -360,7 +387,7 @@ const Dashboard = () => {
         </div>
 
         {/* Card 4 - Total Members */}
-        <div className="group relative overflow-hidden p-5 rounded-xl bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-500">
+        <div className="group relative overflow-hidden p-6 rounded-xl bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-500 hover:transform hover:scale-[1.02]">
           <div className="absolute inset-0">
             <div className="absolute inset-0 bg-gradient-to-r from-[#D4B86A]/10 via-purple-500/5 to-[#D4B86A]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl" />
           </div>
@@ -370,41 +397,16 @@ const Dashboard = () => {
               <div className="p-2.5 rounded-lg bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] shadow-lg shadow-[#D4B86A]/20 group-hover:shadow-[#D4B86A]/40 transition-all duration-500">
                 <Users className="w-4 h-4 text-gray-900" />
               </div>
-              <h3 className="text-[#D4B86A] font-medium text-sm">Total Members</h3>
+              <h3 className="text-[#D4B86A] font-medium text-sm">
+                Total Members
+              </h3>
             </div>
 
             <div className="space-y-4">
               <div className="flex flex-col">
-                <span className="text-3xl font-bold text-white group-hover:text-[#D4B86A] transition-colors duration-500">4</span>
-                <div className="flex items-center gap-2 mt-2">
-                  <span className="text-emerald-400 text-xs flex items-center gap-1 bg-emerald-400/10 px-2 py-0.5 rounded-full">
-                    <ArrowUpRight className="w-3 h-3" />
-                    +0
-                  </span>
-                  <span className="text-gray-400 text-xs">this month</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 5 - Events */}
-        <div className="group relative overflow-hidden p-5 rounded-xl bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-500">
-          <div className="absolute inset-0">
-            <div className="absolute inset-0 bg-gradient-to-r from-[#D4B86A]/10 via-purple-500/5 to-[#D4B86A]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl" />
-          </div>
-
-          <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2.5 rounded-lg bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] shadow-lg shadow-[#D4B86A]/20 group-hover:shadow-[#D4B86A]/40 transition-all duration-500">
-                <Calendar className="w-4 h-4 text-gray-900" />
-              </div>
-              <h3 className="text-[#D4B86A] font-medium text-sm">Events</h3>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex flex-col">
-                <span className="text-3xl font-bold text-white group-hover:text-[#D4B86A] transition-colors duration-500">1</span>
+                <span className="text-3xl font-bold text-white group-hover:text-[#D4B86A] transition-colors duration-500">
+                  4
+                </span>
                 <div className="flex items-center gap-2 mt-2">
                   <span className="text-emerald-400 text-xs flex items-center gap-1 bg-emerald-400/10 px-2 py-0.5 rounded-full">
                     <ArrowUpRight className="w-3 h-3" />
@@ -419,72 +421,197 @@ const Dashboard = () => {
       </motion.div>
 
       {/* Statistics Chart */}
-      <div className="lg:col-span-3 bg-gray-900/80 backdrop-blur-sm rounded-2xl p-6">
-        <h3 className="text-white font-medium mb-6">Statistics Overview</h3>
-        <div className="h-[300px]">
-          <Line
-            data={{
-              labels: generateLabels(),
-              datasets: [
-                {
-                  label: "Referrals Exchanged",
-                  data: generateData(),
-                  borderColor: "#D4B86A",
-                  backgroundColor: "#D4B86A",
-                  tension: 0.4,
-                },
-                {
-                  label: "Business Revenue (₹)",
-                  data: generateData(),
-                  borderColor: "#10B981",
-                  backgroundColor: "#10B981",
-                  tension: 0.4,
-                },
-                {
-                  label: "BDMs",
-                  data: generateData(),
-                  borderColor: "#60A5FA",
-                  backgroundColor: "#60A5FA",
-                  tension: 0.4,
-                },
-              ],
-            }}
-            options={{
-              responsive: true,
-              maintainAspectRatio: false,
-              scales: {
-                y: {
-                  beginAtZero: true,
-                  grid: {
-                    color: "#334155",
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-[#0A0F1C] to-[#1A1F2C] p-8 mt-8 border border-[#D4B86A]/20 hover:border-[#D4B86A]/40 transition-all duration-500"
+      >
+        {/* Glowing background effects */}
+        <div className="absolute top-0 left-1/4 w-1/2 h-1/2 bg-[#D4B86A]/10 blur-[120px] rounded-full" />
+        <div className="absolute bottom-0 right-1/4 w-1/2 h-1/2 bg-blue-500/10 blur-[120px] rounded-full" />
+
+        <div className="relative">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-gradient-to-r from-[#D4B86A] to-[#B88746] shadow-lg shadow-[#D4B86A]/20">
+                <TrendingUp className="w-5 h-5 text-gray-900" />
+              </div>
+              <h3 className="text-xl font-semibold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+                Statistics Overview
+              </h3>
+            </div>
+
+            <select className="px-4 py-2 bg-white/5 rounded-xl border border-white/10 hover:border-[#D4B86A]/50 focus:border-[#D4B86A] text-white text-sm transition-all duration-300 outline-none backdrop-blur-sm">
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+              <option value="yearly">Yearly</option>
+            </select>
+          </div>
+
+          {/* Chart */}
+          <div className="bg-white/[0.02] rounded-xl p-6 border border-white/10 backdrop-blur-sm hover:border-[#D4B86A]/30 transition-all duration-500">
+            <div className="h-[400px] w-full">
+              <Line
+                data={{
+                  labels: generateLabels(),
+                  datasets: [
+                    {
+                      label: "Referrals",
+                      data: generateData(),
+                      borderColor: "#D4B86A",
+                      backgroundColor: "rgba(212, 184, 106, 0.15)",
+                      fill: true,
+                      tension: 0.3,
+                      borderWidth: 2.5,
+                      pointRadius: 2,
+                      pointBackgroundColor: "#D4B86A",
+                      pointBorderColor: "#D4B86A",
+                      pointHoverRadius: 6,
+                      pointHoverBackgroundColor: "#D4B86A",
+                      pointHoverBorderColor: "#fff",
+                      pointHoverBorderWidth: 2,
+                      pointShadowBlur: 20,
+                    },
+                    {
+                      label: "Revenue",
+                      data: generateData(),
+                      borderColor: "#10B981",
+                      backgroundColor: "rgba(16, 185, 129, 0.15)",
+                      fill: true,
+                      tension: 0.3,
+                      borderWidth: 2.5,
+                      pointRadius: 2,
+                      pointBackgroundColor: "#10B981",
+                      pointBorderColor: "#10B981",
+                      pointHoverRadius: 6,
+                      pointHoverBackgroundColor: "#10B981",
+                      pointHoverBorderColor: "#fff",
+                      pointHoverBorderWidth: 2,
+                      pointShadowBlur: 20,
+                    },
+                    {
+                      label: "BDMs",
+                      data: generateData(),
+                      borderColor: "#3B82F6",
+                      backgroundColor: "rgba(59, 130, 246, 0.15)",
+                      fill: true,
+                      tension: 0.3,
+                      borderWidth: 2.5,
+                      pointRadius: 2,
+                      pointBackgroundColor: "#3B82F6",
+                      pointBorderColor: "#3B82F6",
+                      pointHoverRadius: 6,
+                      pointHoverBackgroundColor: "#3B82F6",
+                      pointHoverBorderColor: "#fff",
+                      pointHoverBorderWidth: 2,
+                      pointShadowBlur: 20,
+                    },
+                  ],
+                }}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  interaction: {
+                    mode: "index",
+                    intersect: false,
                   },
-                  ticks: {
-                    color: "#94A3B8",
+                  scales: {
+                    y: {
+                      beginAtZero: true,
+                      grid: {
+                        color: "rgba(255, 255, 255, 0.03)",
+                        drawBorder: false,
+                        lineWidth: 1,
+                      },
+                      ticks: {
+                        color: "#94A3B8",
+                        padding: 15,
+                        font: {
+                          size: 11,
+                        },
+                      },
+                      border: {
+                        display: false,
+                      },
+                    },
+                    x: {
+                      grid: {
+                        color: "rgba(255, 255, 255, 0.03)",
+                        drawBorder: false,
+                        lineWidth: 1,
+                      },
+                      ticks: {
+                        color: "#94A3B8",
+                        padding: 15,
+                        font: {
+                          size: 11,
+                        },
+                      },
+                      border: {
+                        display: false,
+                      },
+                    },
                   },
-                },
-                x: {
-                  grid: {
-                    display: false,
+                  plugins: {
+                    legend: {
+                      position: "top",
+                      align: "end",
+                      labels: {
+                        color: "#94A3B8",
+                        usePointStyle: true,
+                        pointStyle: "circle",
+                        padding: 25,
+                        font: {
+                          size: 12,
+                          weight: "500",
+                        },
+                        boxWidth: 8,
+                        boxHeight: 8,
+                      },
+                    },
+                    tooltip: {
+                      backgroundColor: "rgba(0, 0, 0, 0.85)",
+                      titleColor: "#fff",
+                      bodyColor: "#fff",
+                      borderColor: "rgba(255, 255, 255, 0.1)",
+                      borderWidth: 1,
+                      padding: {
+                        x: 15,
+                        y: 10,
+                      },
+                      displayColors: true,
+                      usePointStyle: true,
+                      bodyFont: {
+                        size: 12,
+                      },
+                      titleFont: {
+                        size: 13,
+                        weight: "bold",
+                      },
+                      callbacks: {
+                        label: function (context) {
+                          let label = context.dataset.label || "";
+                          if (label) {
+                            label += ": ";
+                          }
+                          if (context.parsed.y !== null) {
+                            label += new Intl.NumberFormat("en-US").format(
+                              context.parsed.y
+                            );
+                          }
+                          return label;
+                        },
+                      },
+                    },
                   },
-                  ticks: {
-                    color: "#94A3B8",
-                    maxRotation: 45,
-                    minRotation: 45,
-                  },
-                },
-              },
-              plugins: {
-                legend: {
-                  position: "bottom",
-                  labels: {
-                    color: "#94A3B8",
-                  },
-                },
-              },
-            }}
-          />
+                }}
+              />
+            </div>
+          </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };
