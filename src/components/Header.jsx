@@ -41,7 +41,7 @@ const Header = ({ setIsOpen, isOpen }) => {
       className={`fixed z-40 top-0 right-0 left-0 transition-all duration-300
         border-b border-gray-700/50 bg-[#0F172A]
         ${isVisible ? "translate-y-0" : "-translate-y-full"}
-        ${isCompact ? "h-20" : "h-26"}
+        ${isCompact ? "h-20" : "h-28"}
         lg:left-64`}
     >
       <div className="flex items-center justify-between px-4 h-full w-full">
