@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import award from "../assets/sidebar-icon/reward.svg";
 import {
   Award,
   Calendar,
@@ -17,7 +18,6 @@ import {
   GraduationCap,
   Briefcase,
 } from "lucide-react";
-import calendarIcon from "../assets/images/icons/calender-icon.svg";
 
 const MetricCard = ({
   title,
@@ -174,11 +174,11 @@ const MemberMonthlyReward = () => {
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-4">
         <div className="flex items-center gap-5">
-          <div className="p-4 bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] rounded-2xl">
-            <Award className="w-8 h-8 text-white" />
+          <div className="p-3 bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] rounded-2xl">
+            <img src={award} alt="award" className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-3xl font-bold text-white">
+            <h2 className="text-2xl font-bold text-white">
               Monthly Reward & Recognition
             </h2>
             <p className="text-sm text-gray-400 mt-1">
@@ -187,7 +187,7 @@ const MemberMonthlyReward = () => {
           </div>
         </div>
         <button
-          onClick={() => (window.location.href = "/certificates")}
+          onClick={() => (window.location.href = "/member-certificate")}
           className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white rounded-xl flex items-center justify-center gap-2 transition-all duration-300 shadow-lg shadow-green-900/20"
         >
           <Award className="w-5 h-5" />
@@ -332,8 +332,10 @@ const MemberMonthlyReward = () => {
 
               <div className="relative z-10">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="p-3 bg-gray-700/50 rounded-xl">
+                  <div className="p-3 bg-gray-700/50 rounded-xl relative">
                     {category.icon}
+                    {/* Add the blinking dot */}
+                    <div className="absolute -top-1 -right-1 w-2 h-2 bg-amber-500 rounded-full animate-ping" />
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-white">
@@ -368,8 +370,10 @@ const MemberMonthlyReward = () => {
               className="p-6 rounded-xl bg-gray-800/40 backdrop-blur-xl border border-gray-700"
             >
               <div className="flex items-center gap-2 mb-6">
-                <div className="p-2 bg-gray-700 rounded-lg">
+                <div className="p-2 bg-gray-700 rounded-lg relative">
                   {recognition.icon}
+                  {/* Add the blinking dot */}
+                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-purple-600 rounded-full animate-ping" />
                 </div>
                 <h3 className="text-lg font-semibold text-white">
                   {recognition.title}

@@ -65,8 +65,8 @@ const ViewReceivedBusiness = () => {
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div className="flex items-center gap-4">
-          <div className="p-3 bg-gradient-to-r from-gray-800 to-gray-900 rounded-xl shadow-lg">
-            <BsClipboardData className="w-6 h-6 text-amber-500" />
+          <div className="p-3 bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] rounded-xl shadow-lg">
+            <BsClipboardData className="w-6 h-6 text-white" />
           </div>
           <div>
             <h2 className="text-2xl font-bold text-white">Business Received Details</h2>
@@ -76,7 +76,7 @@ const ViewReceivedBusiness = () => {
 
         <div className="flex flex-wrap gap-3">
           <button
-            onClick={() => navigate(`/edit-received-business/${id}`)}
+            onClick={() => navigate(`/add-res-business/${id}`)}
             className="group flex items-center gap-2.5 px-5 py-2.5 bg-gradient-to-r from-amber-600 to-amber-800 hover:from-amber-700 hover:to-amber-900 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-amber-900/30 hover:-translate-y-0.5"
           >
             <svg

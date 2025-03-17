@@ -3,8 +3,9 @@ import { IoSettingsOutline } from "react-icons/io5";
 import { FiLogOut, FiMenu } from "react-icons/fi";
 import { MdOutlinePrivacyTip } from "react-icons/md";
 import { BiBell } from "react-icons/bi";
-import { RiMessage2Line } from "react-icons/ri";
 import { useNavigate } from "react-router-dom";
+import reward from "../assets/sidebar-icon/reward.svg";
+import info from "../assets/sidebar-icon/info.svg";
 
 const Header = ({ setIsOpen, isOpen }) => {
   const [showDropdown, setShowDropdown] = useState(false);
@@ -55,13 +56,16 @@ const Header = ({ setIsOpen, isOpen }) => {
         {/* Right side - Notifications and Profile */}
         <div className="flex items-center gap-2 ml-auto">
           <div className="flex items-center space-x-3">
-            <button className="relative p-2 rounded-lg hover:bg-[#1E293B]">
-              <RiMessage2Line className="w-5 h-5 text-gray-300" />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-yellow-400 rounded-full"></span>
+            <button className="relative border border-gray-700 p-3 rounded-xl hover:bg-[#1E293B]">
+              <div className="">
+                <img src={reward} alt="reward" className="w-6 h-6" />
+              </div>
+
+              <span className="absolute top-0 right-0 w-4 h-4 bg-gradient-to-r from-amber-300 to-amber-700 opacity-90 rounded-full animate-bounce"></span>
             </button>
-            <button className="relative p-2 rounded-lg hover:bg-[#1E293B]">
-              <BiBell className="w-5 h-5 text-gray-300" />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-blue-400 rounded-full"></span>
+            <button className="relative border border-gray-700 p-3 rounded-xl hover:bg-[#1E293B]">
+              <img src={info} alt="info" className="w-6 h-6" />
+              <span className="absolute top-0 right-0 w-4 h-4 bg-gradient-to-r from-blue-300 to-blue-700 opacity-90 rounded-full animate-bounce"></span>
             </button>
           </div>
 

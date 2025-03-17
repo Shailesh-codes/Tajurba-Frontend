@@ -329,21 +329,6 @@ const BDM = () => {
                         <span className="text-sm font-semibold text-gray-300 group-hover:text-amber-500 transition-colors">
                           {header}
                         </span>
-                        {header !== "Actions" && (
-                          <svg
-                            className="w-4 h-4 text-gray-500 group-hover:text-amber-500 transition-colors"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="2"
-                              d="M7 16V4m0 0L3 8m4-4l4 4m-4 4v8m0 0l4-4m-4 4l-4-4"
-                            />
-                          </svg>
-                        )}
                       </div>
                     </th>
                   ))}
@@ -461,9 +446,9 @@ const BDM = () => {
                             <>
                               <button
                                 onClick={() => navigate("/add-bdm")}
-                                className="relative group/btn flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-r from-amber-600/90 to-amber-800/90 hover:from-amber-600 hover:to-amber-800 transition-all duration-300 shadow-lg hover:shadow-amber-900/30"
+                                className="relative group/btn flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-r from-green-600/90 to-green-800/90 hover:from-green-600 hover:to-green-800 transition-all duration-300 shadow-lg hover:shadow-amber-900/30"
                               >
-                                <div className="absolute inset-0 rounded-xl bg-amber-600 opacity-0 group-hover/btn:opacity-20 blur-lg transition-opacity" />
+                                <div className="absolute inset-0 rounded-xl bg-green-600 opacity-0 group-hover/btn:opacity-20 blur-lg transition-opacity" />
                                 <FiEdit className="w-5 h-5 text-white/90 group-hover/btn:text-white transition-colors relative" />
                               </button>
                               <button

@@ -46,7 +46,31 @@ const MemberList = () => {
       joining_date: "2024-02-01",
       company_name: "XYZ Ltd",
       business_category: "Marketing"
-    }
+    },
+    {
+      member_id: 1,
+      full_name: "John Doe",
+      mobile: "1234567890",
+      email: "john@example.com",
+      chapter_name: "Chapter One",
+      chapter_id: 1,
+      is_active: "1",
+      joining_date: "2024-01-01",
+      company_name: "ABC Corp",
+      business_category: "Technology"
+    },
+    {
+      member_id: 1,
+      full_name: "John Doe",
+      mobile: "1234567890",
+      email: "john@example.com",
+      chapter_name: "Chapter One",
+      chapter_id: 1,
+      is_active: "1",
+      joining_date: "2024-01-01",
+      company_name: "ABC Corp",
+      business_category: "Technology"
+    },
   ];
 
   const filteredMembers = dummyMembers.filter(member => 
@@ -194,95 +218,118 @@ const MemberList = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden"
+        className="relative bg-gradient-to-b from-gray-800/40 to-gray-900/40 backdrop-blur-xl rounded-xl border border-gray-700 shadow-xl"
       >
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-700">
-                <th className="py-5 px-6 text-left text-base font-medium text-white">SR No.</th>
-                <th className="py-5 px-6 text-left text-base font-medium text-white">Member Name</th>
-                <th className="py-5 px-6 text-left text-base font-medium text-white">Mobile Number</th>
-                <th className="py-5 px-6 text-left text-base font-medium text-white">Email</th>
-                <th className="py-5 px-6 text-left text-base font-medium text-white">Chapter</th>
-                <th className="py-5 px-6 text-left text-base font-medium text-white">Join Date</th>
-                <th className="py-5 px-6 text-left text-base font-medium text-white">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-700">
-              {loading ? (
-                <tr>
-                  <td colSpan="7" className="py-8 text-center text-gray-400">
-                    Loading members...
-                  </td>
+        <div className="relative min-h-[300px] max-h-[calc(100vh-500px)]">
+          <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-transparent to-amber-500/5" />
+          <div className="absolute inset-0 overflow-auto scrollbar-thin scrollbar-track-gray-800/40 scrollbar-thumb-amber-600/50 hover:scrollbar-thumb-amber-500/80 scrollbar-hide">
+            <table className="w-full">
+              <thead className="sticky top-0 z-10">
+                <tr className="bg-gradient-to-r from-gray-800/95 via-gray-800/98 to-gray-800/95 backdrop-blur-xl">
+                  <th className="px-6 py-4 text-left border-b border-gray-700">
+                    <span className="text-sm font-semibold text-gray-300">SR No.</span>
+                  </th>
+                  <th className="px-6 py-4 text-left border-b border-gray-700">
+                    <span className="text-sm font-semibold text-gray-300">Member Name</span>
+                  </th>
+                  <th className="px-6 py-4 text-left border-b border-gray-700">
+                    <span className="text-sm font-semibold text-gray-300">Mobile Number</span>
+                  </th>
+                  <th className="px-6 py-4 text-left border-b border-gray-700">
+                    <span className="text-sm font-semibold text-gray-300">Email</span>
+                  </th>
+                  <th className="px-6 py-4 text-left border-b border-gray-700">
+                    <span className="text-sm font-semibold text-gray-300">Chapter</span>
+                  </th>
+                  <th className="px-6 py-4 text-left border-b border-gray-700">
+                    <span className="text-sm font-semibold text-gray-300">Join Date</span>
+                  </th>
+                  <th className="px-6 py-4 text-left border-b border-gray-700">
+                    <span className="text-sm font-semibold text-gray-300">Actions</span>
+                  </th>
                 </tr>
-              ) : filteredMembers.length === 0 ? (
-                <tr>
-                  <td colSpan="7" className="py-8 text-center text-gray-400">
-                    No members found
-                  </td>
-                </tr>
-              ) : (
-                filteredMembers.map((member, index) => (
-                  <tr key={member.member_id} className="hover:bg-gray-700/50 transition-colors">
-                    <td className="py-5 px-6">
-                      <span className="text-gray-400">{index + 1}</span>
-                    </td>
-                    <td className="py-5 px-6">
-                      <div className="flex items-center gap-2">
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          member.is_active === "1"
-                            ? "bg-amber-500/20 text-amber-500"
-                            : "bg-red-500/20 text-red-500"
-                        }`}>
-                          {member.is_active === "1" ? "Active" : "Inactive"}
-                        </span>
-                        <span className="text-gray-400" title={member.full_name}>
-                          {member.full_name}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="py-5 px-6">
-                      <span className="text-gray-400">{member.mobile}</span>
-                    </td>
-                    <td className="py-5 px-6">
-                      <span className="text-gray-400">{member.email}</span>
-                    </td>
-                    <td className="py-5 px-6">
-                      <span className="text-gray-400">{member.chapter_name}</span>
-                    </td>
-                    <td className="py-5 px-6">
-                      <span className="text-gray-400">{member.joining_date}</span>
-                    </td>
-                    <td className="py-5 px-6">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => navigate(`/member-view/${member.member_id}`)}
-                          className="group flex items-center justify-center w-8 h-8 bg-gradient-to-r from-blue-600 to-blue-900 hover:from-blue-700 hover:to-blue-950 text-white/90 hover:text-white rounded-xl transition-all duration-300 shadow hover:shadow-lg hover:shadow-blue-900/30 hover:-translate-y-0.5"
-                        >
-                          <img src={viewIcon} alt="View" className="w-5 h-5 opacity-70 group-hover:opacity-100" />
-                        </button>
-                        {member.is_active === "1" && (
-                          <button
-                            onClick={() => handleEditClick(member)}
-                            className="group flex items-center justify-center w-8 h-8 bg-gradient-to-r from-amber-600 to-amber-900 hover:from-amber-700 hover:to-amber-950 text-white/90 hover:text-white rounded-xl transition-all duration-300 shadow hover:shadow-lg hover:shadow-amber-900/30 hover:-translate-y-0.5"
-                          >
-                            <img src={editIcon} alt="Edit" className="w-5 h-5 opacity-70 group-hover:opacity-100" />
-                          </button>
-                        )}
-                        <button
-                          onClick={() => {}}
-                          className="group flex items-center justify-center w-8 h-8 bg-gradient-to-r from-yellow-600 to-yellow-900 hover:from-yellow-700 hover:to-yellow-950 text-white/90 hover:text-white rounded-xl transition-all duration-300 shadow hover:shadow-lg hover:shadow-yellow-900/30 hover:-translate-y-0.5"
-                        >
-                          <img src={settingsIcon} alt="Settings" className="w-5 h-5 opacity-70 group-hover:opacity-100" />
-                        </button>
-                      </div>
+              </thead>
+              <tbody className="divide-y divide-gray-700/50">
+                {loading ? (
+                  <tr>
+                    <td colSpan="7" className="px-6 py-8 text-center text-gray-400">
+                      Loading members...
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : filteredMembers.length === 0 ? (
+                  <tr>
+                    <td colSpan="7" className="px-6 py-8 text-center text-gray-400">
+                      No members found
+                    </td>
+                  </tr>
+                ) : (
+                  filteredMembers.map((member, index) => (
+                    <motion.tr
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      key={member.member_id}
+                      className="group hover:bg-gradient-to-r hover:from-gray-700/30 hover:via-gray-700/40 hover:to-gray-700/30 transition-all duration-300"
+                    >
+                      <td className="py-5 px-6">
+                        <span className="text-gray-400">{index + 1}</span>
+                      </td>
+                      <td className="py-5 px-6">
+                        <div className="flex items-center gap-2">
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                            member.is_active === "1"
+                              ? "bg-amber-500/20 text-amber-500"
+                              : "bg-red-500/20 text-red-500"
+                          }`}>
+                            {member.is_active === "1" ? "Active" : "Inactive"}
+                          </span>
+                          <span className="text-gray-400" title={member.full_name}>
+                            {member.full_name}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-5 px-6">
+                        <span className="text-gray-400">{member.mobile}</span>
+                      </td>
+                      <td className="py-5 px-6">
+                        <span className="text-gray-400">{member.email}</span>
+                      </td>
+                      <td className="py-5 px-6">
+                        <span className="text-gray-400">{member.chapter_name}</span>
+                      </td>
+                      <td className="py-5 px-6">
+                        <span className="text-gray-400">{member.joining_date}</span>
+                      </td>
+                      <td className="py-5 px-6">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => navigate(`/member-view/${member.member_id}`)}
+                            className="group flex items-center justify-center w-8 h-8 bg-gradient-to-r from-blue-600 to-blue-900 hover:from-blue-700 hover:to-blue-950 text-white/90 hover:text-white rounded-xl transition-all duration-300 shadow hover:shadow-lg hover:shadow-blue-900/30 hover:-translate-y-0.5"
+                          >
+                            <img src={viewIcon} alt="View" className="w-5 h-5 opacity-70 group-hover:opacity-100" />
+                          </button>
+                          {member.is_active === "1" && (
+                            <button
+                              onClick={() => handleEditClick(member)}
+                              className="group flex items-center justify-center w-8 h-8 bg-gradient-to-r from-amber-600 to-amber-900 hover:from-amber-700 hover:to-amber-950 text-white/90 hover:text-white rounded-xl transition-all duration-300 shadow hover:shadow-lg hover:shadow-amber-900/30 hover:-translate-y-0.5"
+                            >
+                              <img src={editIcon} alt="Edit" className="w-5 h-5 opacity-70 group-hover:opacity-100" />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => {}}
+                            className="group flex items-center justify-center w-8 h-8 bg-gradient-to-r from-yellow-600 to-yellow-900 hover:from-yellow-700 hover:to-yellow-950 text-white/90 hover:text-white rounded-xl transition-all duration-300 shadow hover:shadow-lg hover:shadow-yellow-900/30 hover:-translate-y-0.5"
+                          >
+                            <img src={settingsIcon} alt="Settings" className="w-5 h-5 opacity-70 group-hover:opacity-100" />
+                          </button>
+                        </div>
+                      </td>
+                    </motion.tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </motion.div>
 

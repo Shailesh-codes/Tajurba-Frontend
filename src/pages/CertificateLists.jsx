@@ -356,111 +356,114 @@ const CertificatesList = () => {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-separate border-spacing-0">
-              <thead>
-                <tr className="bg-gray-800">
-                  <th className="sticky top-0 p-4 font-semibold text-gray-300 whitespace-nowrap">
-                    Sr No.
-                  </th>
-                  <th className="sticky top-0 p-4 font-semibold text-gray-300 whitespace-nowrap">
-                    Member Name
-                  </th>
-                  <th className="sticky top-0 p-4 font-semibold text-gray-300 whitespace-nowrap">
-                    Chapter
-                  </th>
-                  <th className="sticky top-0 p-4 font-semibold text-gray-300 whitespace-nowrap">
-                    Certificate Type
-                  </th>
-                  <th className="sticky top-0 p-4 font-semibold text-gray-300 whitespace-nowrap">
-                    Issue Date
-                  </th>
-                  <th className="sticky top-0 p-4 font-semibold text-gray-300 text-center whitespace-nowrap">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-700">
-                {filteredCertificates.map((cert, index) => (
-                  <tr
-                    key={cert.certificate_id}
-                    className="hover:bg-gray-700/50"
-                  >
-                    <td className="p-4 text-white whitespace-nowrap">
-                      {index + 1}
-                    </td>
-                    <td className="p-4 text-white whitespace-nowrap">
-                      {cert.member_name}
-                    </td>
-                    <td className="p-4 text-gray-300 whitespace-nowrap">
-                      {cert.chapter_name}
-                    </td>
-                    <td className="p-4 text-gray-300 whitespace-nowrap">
-                      <span className={`inline-flex px-3 py-1 text-sm font-medium rounded-lg bg-gradient-to-r ${getCertificateTypeStyle(cert.certificate_type)}`}>
-                        {formatCertificateType(cert.certificate_type)}
-                      </span>
-                    </td>
-                    <td className="p-4 text-gray-300 whitespace-nowrap">
-                      <div className="relative">
-                        <input
-                          type="date"
-                          value={cert.issued_date}
-                          readOnly
-                          className="w-full p-3 bg-gray-700 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-0 text-white [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full"
-                        />
-                        <img
-                          src={calendarIcon}
-                          alt="calendar"
-                          className="absolute right-4 top-[50%] -translate-y-[50%] w-6 h-6 pointer-events-none text-white"
-                        />
-                      </div>
-                    </td>
-                    <td className="p-4 text-center whitespace-nowrap">
-                      <div className="inline-flex gap-2">
-                        <button
-                          onClick={() => handleDownload(cert)}
-                          className="group flex items-center justify-center w-8 h-8 bg-gradient-to-r from-blue-600 to-blue-900 hover:from-blue-700 hover:to-blue-950 text-white/90 hover:text-white rounded-xl transition-all duration-300 shadow hover:shadow-lg hover:shadow-blue-900/30 hover:-translate-y-0.5"
-                          title="Download Certificate"
-                        >
-                          <svg
-                            className="w-5 h-5 opacity-70 group-hover:opacity-100"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
+          <div className="relative min-h-[300px] max-h-[calc(100vh-500px)]">
+            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-transparent to-amber-500/5" />
+            <div className="absolute inset-0 overflow-auto scrollbar-thin scrollbar-track-gray-800/40 scrollbar-thumb-amber-600/50 hover:scrollbar-thumb-amber-500/80 scrollbar-hide">
+              <table className="w-full text-left border-separate border-spacing-0">
+                <thead className="relative">
+                  <tr>
+                    <th className="sticky top-0 p-4 font-semibold text-gray-300 whitespace-nowrap bg-gray-800/95 backdrop-blur-sm z-10 border-b border-gray-700">
+                      Sr No.
+                    </th>
+                    <th className="sticky top-0 p-4 font-semibold text-gray-300 whitespace-nowrap bg-gray-800/95 backdrop-blur-sm z-10 border-b border-gray-700">
+                      Member Name
+                    </th>
+                    <th className="sticky top-0 p-4 font-semibold text-gray-300 whitespace-nowrap bg-gray-800/95 backdrop-blur-sm z-10 border-b border-gray-700">
+                      Chapter
+                    </th>
+                    <th className="sticky top-0 p-4 font-semibold text-gray-300 whitespace-nowrap bg-gray-800/95 backdrop-blur-sm z-10 border-b border-gray-700">
+                      Certificate Type
+                    </th>
+                    <th className="sticky top-0 p-4 font-semibold text-gray-300 whitespace-nowrap bg-gray-800/95 backdrop-blur-sm z-10 border-b border-gray-700">
+                      Issue Date
+                    </th>
+                    <th className="sticky top-0 p-4 font-semibold text-gray-300 text-center whitespace-nowrap bg-gray-800/95 backdrop-blur-sm z-10 border-b border-gray-700">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="relative">
+                  {filteredCertificates.map((cert, index) => (
+                    <tr
+                      key={cert.certificate_id}
+                      className="hover:bg-gray-800/30 transition-colors"
+                    >
+                      <td className="p-4 text-white whitespace-nowrap">
+                        {index + 1}
+                      </td>
+                      <td className="p-4 text-white whitespace-nowrap">
+                        {cert.member_name}
+                      </td>
+                      <td className="p-4 text-gray-300 whitespace-nowrap">
+                        {cert.chapter_name}
+                      </td>
+                      <td className="p-4 text-gray-300 whitespace-nowrap">
+                        <span className={`inline-flex px-3 py-1 text-sm font-medium rounded-lg bg-gradient-to-r ${getCertificateTypeStyle(cert.certificate_type)}`}>
+                          {formatCertificateType(cert.certificate_type)}
+                        </span>
+                      </td>
+                      <td className="p-4 text-gray-300 whitespace-nowrap">
+                        <div className="relative">
+                          <input
+                            type="date"
+                            value={cert.issued_date}
+                            readOnly
+                            className="w-full p-3 bg-gray-700 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-0 text-white [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full"
+                          />
+                          <img
+                            src={calendarIcon}
+                            alt="calendar"
+                            className="absolute right-4 top-[50%] -translate-y-[50%] w-6 h-6 pointer-events-none text-white"
+                          />
+                        </div>
+                      </td>
+                      <td className="p-4 text-center whitespace-nowrap">
+                        <div className="inline-flex gap-2">
+                          <button
+                            onClick={() => handleDownload(cert)}
+                            className="group flex items-center justify-center w-8 h-8 bg-gradient-to-r from-blue-600 to-blue-900 hover:from-blue-700 hover:to-blue-950 text-white/90 hover:text-white rounded-xl transition-all duration-300 shadow hover:shadow-lg hover:shadow-blue-900/30 hover:-translate-y-0.5"
+                            title="Download Certificate"
                           >
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                            <polyline points="7 10 12 15 17 10" />
-                            <line x1="12" y1="15" x2="12" y2="3" />
-                          </svg>
-                        </button>
-                        <button
-                          onClick={() => handleDelete(cert.certificate_id)}
-                          className="group flex items-center justify-center w-8 h-8 bg-gradient-to-r from-red-600 to-red-900 hover:from-red-700 hover:to-red-950 text-white/90 hover:text-white rounded-xl transition-all duration-300 shadow hover:shadow-lg hover:shadow-red-900/30 hover:-translate-y-0.5"
-                          title="Delete Certificate"
-                        >
-                          <svg
-                            className="w-5 h-5 opacity-70 group-hover:opacity-100"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
+                            <svg
+                              className="w-5 h-5 opacity-70 group-hover:opacity-100"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
                               strokeLinecap="round"
                               strokeLinejoin="round"
-                              strokeWidth="2"
-                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                            />
-                          </svg>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                            >
+                              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                              <polyline points="7 10 12 15 17 10" />
+                              <line x1="12" y1="15" x2="12" y2="3" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => handleDelete(cert.certificate_id)}
+                            className="group flex items-center justify-center w-8 h-8 bg-gradient-to-r from-red-600 to-red-900 hover:from-red-700 hover:to-red-950 text-white/90 hover:text-white rounded-xl transition-all duration-300 shadow hover:shadow-lg hover:shadow-red-900/30 hover:-translate-y-0.5"
+                            title="Delete Certificate"
+                          >
+                            <svg
+                              className="w-5 h-5 opacity-70 group-hover:opacity-100"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>

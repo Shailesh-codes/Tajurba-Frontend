@@ -46,6 +46,9 @@ import MemberVisitorsInvite from "./pages/MemberVisitorsInvite";
 import VisitorInviteAddEdit from "./components/VisitorInviteAddEdit";
 import ViewMemberVisitor from "./components/ViewMemberVisitor";
 import MemberDashboard from "./pages/MemberDashboard";
+import Setting from "./pages/Settings";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import Calendar from "./pages/Calendar";
 
 function App() {
   return (
@@ -78,10 +81,15 @@ function App() {
         <Route path="/view-bdm/:id" element={<ViewBDM />} />
         <Route path="/business-given" element={<BusinessGiven />} />
         <Route path="/add-business" element={<AddBusiness />} />
+        <Route path="/add-business/:id" element={<AddBusiness />} />
         <Route path="view-business/:id" element={<ViewBusiness />} />
         <Route path="business-received" element={<BusinessReceived />} />
         <Route path="view-res-business/:id" element={<ViewResBusiness />} />
         <Route path="add-res-business" element={<AddEditBusinessReceived />} />
+        <Route
+          path="add-res-business/:id"
+          element={<AddEditBusinessReceived />}
+        />
         <Route path="member-certificate" element={<MemberCertificate />} />
         <Route path="chapter-members" element={<ChapterMembers />} />
         <Route path="view-chapter-member/:id" element={<ChapterMemberView />} />
@@ -97,6 +105,11 @@ function App() {
         <Route path="add-visitor" element={<VisitorInviteAddEdit />} />
         <Route path="edit-visitor/:id" element={<VisitorInviteAddEdit />} />
         <Route path="view-visitor/:id" element={<ViewMemberVisitor />} />
+
+        {/* Other Routes */}
+        <Route path="settings" element={<Setting />} />
+        <Route path="privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="calendar" element={<Calendar />} />
       </Route>
       <Route path="/signin" element={<SignIn />} />
     </Routes>

@@ -2,11 +2,12 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { BsClipboardData } from "react-icons/bs";
 import { FiCalendar, FiUsers, FiHome, FiDollarSign } from "react-icons/fi";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import calendarIcon from "../assets/images/icons/calender-icon.svg";
 
 const AddBusiness = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
   const [formData, setFormData] = useState({
     chapter: "",
     member: "",
@@ -25,12 +26,25 @@ const AddBusiness = () => {
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div className="flex items-center gap-4">
-          <div className="p-3 bg-gradient-to-r from-gray-800 to-gray-900 rounded-xl shadow-lg">
-            <BsClipboardData className="w-6 h-6 text-amber-500" />
+          <div className="p-3 bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] rounded-xl shadow-lg">
+            <BsClipboardData className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-white">Add Business</h2>
-            <p className="text-sm text-gray-400">Fill in the details below</p>
+            {id ? (
+              <>
+                <h2 className="text-2xl font-bold text-white">Edit Business</h2>
+                <p className="text-sm text-gray-400">
+                  Fill in the details below
+                </p>
+              </>
+            ) : (
+              <>
+                <h2 className="text-2xl font-bold text-white">Add Business</h2>
+                <p className="text-sm text-gray-400">
+                  Fill in the details below
+                </p>
+              </>
+            )}
           </div>
         </div>
 

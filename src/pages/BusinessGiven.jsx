@@ -110,7 +110,7 @@ const BusinessGiven = () => {
     // Find the business data for the selected ID
     const businessToEdit = businessData.find((business) => business.id === id);
     // Navigate to add-business with state containing the business data
-    navigate("/add-business", { state: { businessToEdit } });
+    navigate(`/add-business/${id}`, { state: { businessToEdit } });
   };
 
   const handleDelete = (id) => {
@@ -264,21 +264,6 @@ const BusinessGiven = () => {
                         <span className="text-sm font-semibold text-gray-300 group-hover:text-amber-500 transition-colors">
                           {header}
                         </span>
-                        {header !== "Actions" && (
-                          <svg
-                            className="w-4 h-4 text-gray-500 group-hover:text-amber-500 transition-colors"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="2"
-                              d="M7 16V4m0 0L3 8m4-4l4 4m-4 4v8m0 0l4-4m-4 4l-4-4"
-                            />
-                          </svg>
-                        )}
                       </div>
                     </th>
                   ))}

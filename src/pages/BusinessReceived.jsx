@@ -60,7 +60,7 @@ const BusinessReceived = () => {
 
   const handleEdit = (id) => {
     const businessToEdit = businessData.find((business) => business.id === id);
-    navigate("/add-res-business", { state: { businessToEdit } });
+    navigate(`/add-res-business/${id}`, { state: { businessToEdit } });
   };
 
   const handleDelete = (id) => {
@@ -185,21 +185,6 @@ const BusinessReceived = () => {
                         <span className="text-sm font-semibold text-gray-300 group-hover:text-amber-500 transition-colors">
                           {header}
                         </span>
-                        {header !== "Actions" && (
-                          <svg
-                            className="w-4 h-4 text-gray-500 group-hover:text-amber-500 transition-colors"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="2"
-                              d="M7 16V4m0 0L3 8m4-4l4 4m-4 4v8m0 0l4-4m-4 4l-4-4"
-                            />
-                          </svg>
-                        )}
                       </div>
                     </th>
                   ))}

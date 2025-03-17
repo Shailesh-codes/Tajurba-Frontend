@@ -4,8 +4,14 @@ import {
   Users,
   Handshake,
   UserPlus,
-  
+  BookOpen,
+  GraduationCap,
+  Calendar,
   Briefcase,
+  UserCheck,
+  Trophy,
+  Target,
+  Star,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -100,7 +106,7 @@ const StatisticCard = ({ icon: Icon, title, value, trend, period }) => {
   );
 };
 
-const ActivityCard = ({ iconSrc, title, value, trend }) => {
+const ActivityCard = ({ icon, title, value, trend }) => {
   return (
     <div className="group relative overflow-hidden p-6 rounded-2xl bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-500 hover:shadow-lg hover:shadow-[#D4B86A]/20">
       <div className="absolute inset-0 bg-gradient-to-r from-[#D4B86A]/10 via-transparent to-[#D4B86A]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl" />
@@ -108,7 +114,7 @@ const ActivityCard = ({ iconSrc, title, value, trend }) => {
       <div className="relative z-10">
         <div className="flex items-center gap-4 mb-4">
           <div className="p-3.5 rounded-xl bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] shadow-lg group-hover:shadow-[#D4B86A]/40 transition-all duration-500">
-            <img src={iconSrc} alt={title} className="w-6 h-6 brightness-0" />
+            {icon}
           </div>
           <h3 className="text-[#D4B86A] font-medium">{title}</h3>
         </div>
@@ -234,28 +240,28 @@ const MemberDashboard = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               <StatCard
-                icon={Handshake}
+                icon={() => <Handshake className="w-6 h-6 text-white" />}
                 title="Referrals Exchanged"
                 value="124"
                 trend="12"
                 period="last 15 days"
               />
               <StatCard
-                icon={Briefcase}
+                icon={() => <Briefcase className="w-6 h-6 text-white" />}
                 title="Total Business Revenue"
                 value="₹2.4 CR"
                 trend="8"
                 period="last 15 days"
               />
               <StatCard
-                icon={Users}
+                icon={() => <Users className="w-6 h-6 text-white" />}
                 title="Total BDMs"
                 value="45"
                 trend="5"
                 period="last 15 days"
               />
               <StatCard
-                icon={UserPlus}
+                icon={() => <UserPlus className="w-6 h-6 text-white" />}
                 title="Total Guests"
                 value="89"
                 trend="15"
@@ -277,25 +283,25 @@ const MemberDashboard = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               <ActivityCard
-                iconSrc={meetingIcon}
+                icon={<Users className="w-6 h-6" />}
                 title="Meetings"
                 value="48"
                 trend="6"
               />
               <ActivityCard
-                iconSrc={mdpIcon}
+                icon={<BookOpen className="w-6 h-6" />}
                 title="MDP"
                 value="12"
                 trend="3"
               />
               <ActivityCard
-                iconSrc={training}
+                icon={<GraduationCap className="w-6 h-6" />}
                 title="Socials & Training"
                 value="24"
                 trend="4"
               />
               <ActivityCard
-                iconSrc={eventIcon}
+                icon={<Calendar className="w-6 h-6" />}
                 title="Events"
                 value="15"
                 trend="2"
