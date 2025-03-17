@@ -97,7 +97,7 @@ const ChaptersList = () => {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div className="flex gap-3">
-          <div className="p-3 bg-gradient-to-r from-gray-800 to-gray-900 rounded-xl">
+          <div className="p-3 bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] rounded-xl">
             <img src={chaptersIcon} alt="Chapters" className="w-6 h-6" />
           </div>
           <div className="flex flex-col">
@@ -107,7 +107,7 @@ const ChaptersList = () => {
         </div>
         <button
           onClick={() => navigate(-1)}
-          className="group flex items-center gap-2.5 px-5 py-2.5 bg-gray-800 text-gray-300 hover:text-green-500 rounded-xl transition-all duration-300 border border-gray-700"
+          className="group flex items-center gap-2.5 px-5 py-2.5 bg-gray-800 text-gray-300 hover:text-amber-500 rounded-xl transition-all duration-300 border border-gray-700"
         >
           <svg
             width="18"
@@ -140,7 +140,7 @@ const ChaptersList = () => {
                 placeholder="Search by chapter name..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full p-3 pl-11 bg-gray-700 rounded-xl border border-gray-600 focus:border-green-500 focus:ring-0 text-white placeholder-gray-400"
+                className="w-full p-3 pl-11 bg-gray-700 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-0 text-white placeholder-gray-400"
               />
               <svg
                 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
@@ -161,7 +161,7 @@ const ChaptersList = () => {
           <div className="order-1 sm:order-2 sm:ml-auto">
             <button
               onClick={() => setShowAddModal(true)}
-              className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-green-600 to-green-900 hover:from-green-700 hover:to-green-950 text-white/90 hover:text-white rounded-xl flex items-center justify-center gap-2 h-[48px] transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-green-900/30 hover:-translate-y-0.5"
+              className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-amber-600 to-amber-900 hover:from-amber-700 hover:to-amber-950 text-white/90 hover:text-white rounded-xl flex items-center justify-center gap-2 h-[48px] transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-amber-900/30 hover:-translate-y-0.5"
             >
               <svg
                 className="w-5 h-5"
@@ -251,7 +251,7 @@ const ChaptersList = () => {
                             });
                             setShowEditModal(true);
                           }}
-                          className="group flex items-center justify-center w-8 h-8 bg-gradient-to-r from-green-600 to-green-900 hover:from-green-700 hover:to-green-950 text-white/90 hover:text-white rounded-xl transition-all duration-300 shadow hover:shadow-lg hover:shadow-green-900/30 hover:-translate-y-0.5"
+                          className="group flex items-center justify-center w-8 h-8 bg-gradient-to-r from-amber-600 to-amber-900 hover:from-amber-700 hover:to-amber-950 text-white/90 hover:text-white rounded-xl transition-all duration-300 shadow hover:shadow-lg hover:shadow-amber-900/30 hover:-translate-y-0.5"
                         >
                           <svg
                             className="w-4 h-4"
@@ -303,7 +303,7 @@ const ChaptersList = () => {
                   value={newChapterName}
                   onChange={(e) => setNewChapterName(e.target.value)}
                   required
-                  className="w-full p-3 bg-gray-700/50 rounded-xl border border-gray-600 focus:border-green-500 focus:ring-0 text-white placeholder-gray-400"
+                  className="w-full p-3 bg-gray-700/50 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-0 text-white placeholder-gray-400"
                   placeholder="Enter chapter name"
                 />
               </div>
@@ -317,7 +317,7 @@ const ChaptersList = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-green-600 to-green-900 hover:from-green-700 hover:to-green-950 text-white font-semibold shadow-lg hover:shadow-xl hover:shadow-green-900/30 hover:-translate-y-0.5 transition-all duration-300"
+                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 to-amber-900 hover:from-amber-700 hover:to-amber-950 text-white font-semibold shadow-lg hover:shadow-xl hover:shadow-amber-900/30 hover:-translate-y-0.5 transition-all duration-300"
                 >
                   Add Chapter
                 </button>
@@ -353,7 +353,7 @@ const ChaptersList = () => {
                   value={editChapter.name}
                   onChange={(e) => setEditChapter({ ...editChapter, name: e.target.value })}
                   required
-                  className="w-full p-3 bg-gray-700/50 rounded-xl border border-gray-600 focus:border-green-500 focus:ring-0 text-white placeholder-gray-400"
+                  className="w-full p-3 bg-gray-700/50 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-0 text-white placeholder-gray-400"
                   placeholder="Enter chapter name"
                 />
               </div>
@@ -367,7 +367,7 @@ const ChaptersList = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-green-600 to-green-900 hover:from-green-700 hover:to-green-950 text-white font-semibold shadow-lg hover:shadow-xl hover:shadow-green-900/30 hover:-translate-y-0.5 transition-all duration-300"
+                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 to-amber-900 hover:from-amber-700 hover:to-amber-950 text-white font-semibold shadow-lg hover:shadow-xl hover:shadow-amber-900/30 hover:-translate-y-0.5 transition-all duration-300"
                 >
                   Update Chapter
                 </button>

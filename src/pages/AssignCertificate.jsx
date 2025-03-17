@@ -81,7 +81,7 @@ const AssignCertificate = () => {
           title: "text-white",
           htmlContainer: "text-gray-300",
           confirmButton:
-            "bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg px-6 py-2",
+            "bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-lg px-6 py-2",
         },
       });
       return;
@@ -139,7 +139,7 @@ const AssignCertificate = () => {
           title: "text-white",
           htmlContainer: "text-gray-300",
           confirmButton:
-            "bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg px-6 py-2",
+            "bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-lg px-6 py-2",
         },
       });
     }
@@ -153,7 +153,7 @@ const AssignCertificate = () => {
     <div className="mt-32 p-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div className="flex gap-3">
-          <div className="p-3 bg-gradient-to-r from-gray-800 to-gray-900 rounded-xl">
+          <div className="p-3 bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] rounded-xl">
             <img
               src={certi}
               alt="member"
@@ -173,7 +173,7 @@ const AssignCertificate = () => {
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate(-1)}
-            className="group flex items-center gap-2.5 px-5 py-2.5 bg-gray-800 text-gray-300 hover:text-green-500 rounded-xl transition-all duration-300 border border-gray-700"
+            className="group flex items-center gap-2.5 px-5 py-2.5 bg-gray-800 text-gray-300 hover:text-amber-500 rounded-xl transition-all duration-300 border border-gray-700"
           >
             <svg
               width="18"
@@ -196,7 +196,7 @@ const AssignCertificate = () => {
 
           <button
             onClick={() => navigate("/certificate-list")}
-            className="inline-flex items-center px-4 py-2 rounded-xl bg-gradient-to-r from-green-600 to-green-900 hover:from-green-700 hover:to-green-950 text-white font-semibold shadow-lg hover:shadow-xl hover:shadow-green-900/30 hover:-translate-y-0.5 transition-all duration-300"
+            className="inline-flex items-center px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white font-semibold shadow-lg hover:shadow-xl hover:shadow-amber-900/30 hover:-translate-y-0.5 transition-all duration-300"
           >
             Certificates List
           </button>
@@ -215,7 +215,7 @@ const AssignCertificate = () => {
                 required
                 value={selectedChapter}
                 onChange={(e) => setSelectedChapter(e.target.value)}
-                className="w-full p-3 bg-gray-700 rounded-xl border border-gray-600 focus:border-green-500 focus:ring-0 text-white"
+                className="w-full p-3 bg-gray-700 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-0 text-white"
               >
                 <option value="">Select Chapter</option>
                 {chapters.map((chapter) => (
@@ -237,7 +237,7 @@ const AssignCertificate = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, certificate_type: e.target.value })
                 }
-                className="w-full p-3 bg-gray-700 rounded-xl border border-gray-600 focus:border-green-500 focus:ring-0 text-white"
+                className="w-full p-3 bg-gray-700 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-0 text-white"
               >
                 <option value="">Select Certificate Type</option>
                 <option value="highest_business">Highest Business Given</option>
@@ -263,7 +263,7 @@ const AssignCertificate = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, issue_date: e.target.value })
                   }
-                  className="w-full p-3 bg-gray-700 rounded-xl border border-gray-600 focus:border-green-500 focus:ring-0 text-white [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full"
+                  className="w-full p-3 bg-gray-700 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-0 text-white [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full"
                 />
                 <img
                   src={calendarIcon}
@@ -281,7 +281,7 @@ const AssignCertificate = () => {
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full p-3 bg-gray-700 rounded-xl border border-gray-600 focus:border-green-500 focus:ring-0 text-white"
+                className="w-full p-3 bg-gray-700 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-0 text-white"
                 placeholder="Search members..."
               />
             </div>
@@ -304,7 +304,7 @@ const AssignCertificate = () => {
                           member.full_name
                         )
                       }
-                      className="form-checkbox h-5 w-5 text-green-500 rounded border-gray-600 bg-gray-700 focus:ring-0 focus:ring-offset-0"
+                      className="form-checkbox h-5 w-5 text-amber-500 rounded border-gray-600 bg-gray-700 focus:ring-0 focus:ring-offset-0"
                     />
                     <span className="text-white font-medium">
                       {member.full_name}
@@ -332,7 +332,7 @@ const AssignCertificate = () => {
             </button>
             <button
               type="submit"
-              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-green-600 to-green-900 hover:from-green-700 hover:to-green-950 text-white font-semibold shadow-lg hover:shadow-xl hover:shadow-green-900/30 hover:-translate-y-0.5 transition-all duration-300"
+              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white font-semibold shadow-lg hover:shadow-xl hover:shadow-amber-900/30 hover:-translate-y-0.5 transition-all duration-300"
             >
               Assign Certificate
             </button>

@@ -4,14 +4,6 @@ import { IoSettingsOutline, IoCalendarOutline } from "react-icons/io5";
 import { FiLogOut } from "react-icons/fi";
 import { AiOutlineSecurityScan } from "react-icons/ai";
 import Logo from "../assets/images/Tajurba-Logo-Golden.png";
-import business from "../assets/sidebar-icon/business.svg";
-import certificate from "../assets/images/icons/certificate.svg";
-import members from "../assets/images/icons/members.svg";
-import monthly_reward from "../assets/images/icons/mem-award.svg";
-import ref_given from "../assets/images/icons/ref-given.svg";
-import request_received from "../assets/images/icons/request.svg";
-import dashboard from "../assets/images/icons/dashboard.svg";
-import visitors_invited from "../assets/images/icons/visitors_invited.svg";
 import DashboardIcon from "../assets/SVGComponents/DashboardIcon";
 import AddMemberIcon from "../assets/SVGComponents/AddMemberIcon";
 import AssignCertificateIcon from "../assets/SVGComponents/AssignCertificateIcon";
@@ -23,14 +15,22 @@ import MeetingsIcon from "../assets/SVGComponents/EventIcon";
 import UserListIcon from "../assets/SVGComponents/UserListIcon";
 import VisitorIcon from "../assets/SVGComponents/VisitorIcon";
 import MonthlyRewardIcon from "../assets/SVGComponents/MonthlyRewardIcon";
+import MemberDashboardIcon from "../assets/SVGComponents/MemberDashboardIcon";
+import BDMIcon from "../assets/SVGComponents/BDMIcon";
+import BusinessGivenIcon from "../assets/SVGComponents/BusinessGivenIcon";
+import BusinessReceivedIcon from "../assets/SVGComponents/BusinessReceivedIcon";
+import MemberCertificateIcon from "../assets/SVGComponents/MemberCertificateIcon";
+import ReferralIcon from "../assets/SVGComponents/ReferralIcon";
+import RequestReceivedIcon from "../assets/SVGComponents/RequestResIcon";
+import VisitorsInvitedIcon from "../assets/SVGComponents/VisitorsInvitedIcon";
 
 const SideBar = ({ isOpen, setIsOpen }) => {
   const navLinkClass = ({ isActive }) =>
-    `flex items-center gap-4 px-4 py-3 rounded-lg transition-all duration-200
+    `flex items-center gap-4 px-6 py-4 rounded-lg transition-all duration-200
      ${
        isActive
-         ? "bg-[#f69100]/10 text-[#f69100] font-medium border-l-4 border-[#f69100]"
-         : "text-gray-400 hover:bg-[#1E293B]/50 hover:text-white border-l-4 border-transparent"
+         ? "bg-gradient-to-r from-[#cdb065]/20 to-[#cdb065]/5 text-[#cdb065] font-semibold border-l-4 border-[#cdb065]"
+         : "text-gray-300 hover:bg-[#1E293B]/70 hover:text-[#cdb065] border-l-4 border-transparent"
      }`;
 
   return (
@@ -38,140 +38,140 @@ const SideBar = ({ isOpen, setIsOpen }) => {
       {/* Backdrop */}
       <div
         onClick={() => setIsOpen(false)}
-        className={`fixed inset-0 bg-black/50 backdrop-blur-sm lg:hidden z-40
+        className={`fixed inset-0 bg-black/60 backdrop-blur-sm lg:hidden z-40
           transition-opacity duration-200
           ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}
       />
 
       {/* Sidebar */}
       <aside
-        className={`fixed lg:sticky top-0 left-0 h-screen w-72 bg-[#0F172A] z-50
-        transition-transform duration-300 ease-in-out shadow-xl flex flex-col
+        className={`fixed lg:sticky top-0 left-0 h-screen w-80 bg-gradient-to-b from-[#0c1424] to-[#0F172A] z-50
+        transition-transform duration-300 ease-in-out shadow-2xl flex flex-col
         ${isOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}
       >
-        {/* Fixed Logo Section */}
-        <div className="h-26 flex items-center justify-center px-6 py-6 border-b border-gray-700/50">
-          <img src={Logo} alt="Tajurba" className="h-16" />
+        {/* Logo Section */}
+        <div className="h-28 flex items-center justify-center px-6 py-8 border-b border-gray-700/30 bg-[#0c1424]/50">
+          <img src={Logo} alt="Tajurba" className="h-20" />
         </div>
 
         {/* Scrollable Navigation Section */}
         <div className="flex-1 overflow-y-auto scrollbar-hide">
-          <nav className="px-3 py-6 space-y-1.5">
+          <nav className="px-4 py-6 space-y-2">
             {/* Main Menu Items */}
-            <span className="text-white/80 text-xs font-semibold uppercase tracking-wider px-3 mb-4 block">
+            <span className="text-[#cdb065] text-sm font-bold uppercase tracking-wider px-4 mb-4 block">
               Main Menu
-              <hr className="border-gray-700/50 mt-2" />
+              <hr className="border-gray-700/30 mt-3" />
             </span>
             <NavLink to="/" className={navLinkClass}>
               <DashboardIcon color="currentColor" />
-              <span className="text-sm">Dashboard</span>
+              <span className="text-sm font-semibold">Dashboard</span>
             </NavLink>
 
             <NavLink to="/add-member" className={navLinkClass}>
               <AddMemberIcon color="currentColor" />
-              <span className="text-sm">Add Member</span>
+              <span className="text-sm font-semibold">Add Member</span>
             </NavLink>
 
             <NavLink to="/assign-certificates" className={navLinkClass}>
               <AssignCertificateIcon color="currentColor" />
-              <span className="text-sm">Assign Certificates</span>
+              <span className="text-sm font-semibold">Assign Certificates</span>
             </NavLink>
 
             <NavLink to="/broadcast" className={navLinkClass}>
               <BroadcastIcon color="currentColor" />
-              <span className="text-sm">Broadcast</span>
+              <span className="text-sm font-semibold">Broadcast</span>
             </NavLink>
 
             <NavLink to="/chapters-list" className={navLinkClass}>
               <ChapterListIcon color="currentColor" />
-              <span className="text-sm">Chapters List</span>
+              <span className="text-sm font-semibold">Chapters List</span>
             </NavLink>
 
             <NavLink to="/creative-list" className={navLinkClass}>
               <SliderIcon color="currentColor" />
-              <span className="text-sm">Creative Sliders List</span>
+              <span className="text-sm font-semibold">Creative Sliders List</span>
             </NavLink>
 
             <NavLink to="/mark-attendance" className={navLinkClass}>
               <MarkAttandance color="currentColor" />
-              <span className="text-sm">Mark Attendance & Venue Fees</span>
+              <span className="text-sm font-semibold">Mark Attendance & Venue Fees</span>
             </NavLink>
 
             <NavLink to="/member-list" className={navLinkClass}>
               <UserListIcon color="currentColor" />
-              <span className="text-sm">Member List</span>
+              <span className="text-sm font-semibold">Member List</span>
             </NavLink>
 
             <NavLink to="/meetings" className={navLinkClass}>
               <MeetingsIcon color="currentColor" />
-              <span className="text-sm">
+              <span className="text-sm font-semibold">
                 Meetings / MDP / Socials & Training List
               </span>
             </NavLink>
 
             <NavLink to="/visitor-list" className={navLinkClass}>
               <VisitorIcon color="currentColor" />
-              <span className="text-sm">Visitor List</span>
+              <span className="text-sm font-semibold">Visitor List</span>
             </NavLink>
             <NavLink to="/monthly-reward" className={navLinkClass}>
               <MonthlyRewardIcon color="currentColor" />
-              <span className="text-sm">Monthly Reward</span>
+              <span className="text-sm font-semibold">Monthly Reward</span>
             </NavLink>
 
             {/* Members routes */}
             <NavLink to="/member-dashboard" className={navLinkClass}>
-              <img src={dashboard} alt="" />
-              <span className="text-sm">Member Dashboard</span>
+              <MemberDashboardIcon color="currentColor" />
+              <span className="text-sm font-semibold">Member Dashboard</span>
             </NavLink>
 
             <NavLink to="/bdm" className={navLinkClass}>
-              <img src={business} alt="" />
-              <span className="text-sm">BDM's Done</span>
+              <BDMIcon color="currentColor" />
+              <span className="text-sm font-semibold">BDM's Done</span>
             </NavLink>
             <NavLink to="/business-given" className={navLinkClass}>
-              <img src={business} alt="" />
-              <span className="text-sm">Business Given</span>
+              <BusinessGivenIcon color="currentColor" />
+              <span className="text-sm font-semibold">Business Given</span>
             </NavLink>
             <NavLink to="/business-received" className={navLinkClass}>
-              <img src={business} alt="" />
-              <span className="text-sm">Business Received</span>
+              <BusinessReceivedIcon color="currentColor" />
+              <span className="text-sm font-semibold">Business Received</span>
             </NavLink>
             <NavLink to="/member-certificate" className={navLinkClass}>
-              <img src={certificate} alt="" />
-              <span className="text-sm">Member Certificate</span>
+              <MemberCertificateIcon color="currentColor" />
+              <span className="text-sm font-semibold">Member Certificate</span>
             </NavLink>
             <NavLink to="/chapter-members" className={navLinkClass}>
-              <img src={members} alt="" />
-              <span className="text-sm">Chapter Members</span>
+              <VisitorIcon color="currentColor" />
+              <span className="text-sm font-semibold">Chapter Members</span>
             </NavLink>
             <NavLink to="/meetings-mdp-socials" className={navLinkClass}>
-              <img src={members} alt="" />
-              <span className="text-sm">
+              <MeetingsIcon color="currentColor" />
+              <span className="text-sm font-semibold">
                 Meetings / MDP / Socials & Training Attendance & Venue Fees
               </span>
             </NavLink>
             <NavLink to="/member-monthly-reward" className={navLinkClass}>
-              <img src={monthly_reward} alt="" />
-              <span className="text-sm">Member Monthly Reward</span>
+              <MonthlyRewardIcon color="currentColor" />
+              <span className="text-sm font-semibold">Member Monthly Reward</span>
             </NavLink>
             <NavLink to="/ref-given" className={navLinkClass}>
-              <img src={ref_given} alt="" />
-              <span className="text-sm">Referral Given</span>
+              <ReferralIcon color="currentColor" />
+              <span className="text-sm font-semibold">Referral Given</span>
             </NavLink>
             <NavLink to="/request-received" className={navLinkClass}>
-              <img src={request_received} alt="" />
-              <span className="text-sm">Request Received</span>
+              <RequestReceivedIcon color="currentColor" />
+              <span className="text-sm font-semibold">Request Received</span>
             </NavLink>
             <NavLink to="/visitors-invited" className={navLinkClass}>
-              <img src={visitors_invited} alt="" />
-              <span className="text-sm">Visitors Invited</span>
+              <VisitorsInvitedIcon color="currentColor" />
+              <span className="text-sm font-semibold">Visitors Invited</span>
             </NavLink>
 
             {/* Others Section */}
-            <div className="mt-8">
-              <span className="text-white/80 text-xs font-semibold uppercase tracking-wider px-3 mb-4 block">
+            <div className="mt-10">
+              <span className="text-[#cdb065] text-sm font-bold uppercase tracking-wider px-4 mb-4 block">
                 Others
-                <hr className="border-gray-700/50 mt-2" />
+                <hr className="border-gray-700/30 mt-3" />
               </span>
 
               <NavLink to="/calendar" className={navLinkClass}>
@@ -191,14 +191,15 @@ const SideBar = ({ isOpen, setIsOpen }) => {
             </div>
 
             {/* Footer Section */}
-            <div className="pt-6 mt-6 space-y-1 border-t border-gray-700/50">
+            <div className="pt-6 mt-8 space-y-1 border-t border-gray-700/30">
               <button
-                className="w-full flex items-center gap-4 px-4 py-3 rounded-lg 
-                text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-200
-                font-medium border-l-4 border-transparent hover:border-red-400"
+                className="w-full flex items-center gap-4 px-6 py-4 rounded-lg 
+                text-red-400 hover:bg-gradient-to-r hover:from-red-500/20 hover:to-red-500/5 
+                hover:text-red-300 transition-all duration-200
+                font-semibold border-l-4 border-transparent hover:border-red-400"
               >
                 <FiLogOut className="text-xl" />
-                <span className="text-sm">Logout</span>
+                <span className="text-base">Logout</span>
               </button>
             </div>
           </nav>

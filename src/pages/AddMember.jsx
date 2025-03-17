@@ -23,7 +23,7 @@ const AddMember = () => {
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div className="flex items-center gap-4">
-          <div className="p-3 bg-gradient-to-r from-gray-800 to-gray-900 rounded-xl">
+          <div className="p-3 bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] rounded-xl border border-amber-500/20 shadow-lg">
             <img
               src={member}
               alt="member"
@@ -37,7 +37,7 @@ const AddMember = () => {
         </div>
         <button
           onClick={() => window.history.back()}
-          className="group flex items-center gap-2.5 px-5 py-2.5 bg-gray-800 text-gray-300 hover:text-green-500 rounded-xl transition-all duration-300 border border-gray-700"
+          className="group flex items-center gap-2.5 px-5 py-2.5 bg-gray-800 text-gray-300 hover:text-amber-500 rounded-xl transition-all duration-300 border border-gray-700"
         >
           <svg
             width="18"
@@ -76,7 +76,7 @@ const AddMember = () => {
                 id="name"
                 required
                 placeholder="Enter member name"
-                className="w-full p-3 bg-gray-700 rounded-xl border border-gray-600 focus:border-green-500 focus:ring-0 text-white placeholder-gray-400"
+                className="w-full p-3 bg-gray-700 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-0 text-white placeholder-gray-400"
                 value={formData.name}
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
@@ -99,7 +99,7 @@ const AddMember = () => {
                 pattern="[0-9]{10}"
                 maxLength="10"
                 placeholder="Enter 10-digit mobile number"
-                className="w-full p-3 bg-gray-700 rounded-xl border border-gray-600 focus:border-green-500 focus:ring-0 text-white placeholder-gray-400"
+                className="w-full p-3 bg-gray-700 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-0 text-white placeholder-gray-400"
                 value={formData.mobile}
                 onChange={(e) =>
                   setFormData({ ...formData, mobile: e.target.value })
@@ -119,7 +119,7 @@ const AddMember = () => {
                 type="email"
                 id="email"
                 placeholder="Enter email address"
-                className="w-full p-3 bg-gray-700 rounded-xl border border-gray-600 focus:border-green-500 focus:ring-0 text-white placeholder-gray-400"
+                className="w-full p-3 bg-gray-700 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-0 text-white placeholder-gray-400"
                 value={formData.email}
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
@@ -138,7 +138,7 @@ const AddMember = () => {
               <select
                 id="chapter"
                 required
-                className="w-full p-3 bg-gray-700 rounded-xl border border-gray-600 focus:border-green-500 focus:ring-0 text-white"
+                className="w-full p-3 bg-gray-700 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-0 text-white"
                 value={formData.chapter}
                 onChange={(e) =>
                   setFormData({ ...formData, chapter: e.target.value })
@@ -162,7 +162,7 @@ const AddMember = () => {
                 id="company"
                 required
                 placeholder="Enter company name"
-                className="w-full p-3 bg-gray-700 rounded-xl border border-gray-600 focus:border-green-500 focus:ring-0 text-white placeholder-gray-400"
+                className="w-full p-3 bg-gray-700 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-0 text-white placeholder-gray-400"
                 value={formData.company}
                 onChange={(e) =>
                   setFormData({ ...formData, company: e.target.value })
@@ -184,7 +184,7 @@ const AddMember = () => {
                 id="business_category"
                 required
                 placeholder="Enter business category"
-                className="w-full p-3 bg-gray-700 rounded-xl border border-gray-600 focus:border-green-500 focus:ring-0 text-white placeholder-gray-400"
+                className="w-full p-3 bg-gray-700 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-0 text-white placeholder-gray-400"
                 value={formData.business_category}
                 onChange={(e) =>
                   setFormData({
@@ -208,7 +208,7 @@ const AddMember = () => {
                   type="date"
                   id="date"
                   required
-                  className="w-full p-3 bg-gray-700 rounded-xl border border-gray-600 focus:border-green-500 focus:ring-0 text-white [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full"
+                  className="w-full p-3 bg-gray-700 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-0 text-white [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full"
                   value={formData.date}
                   onChange={(e) =>
                     setFormData({ ...formData, date: e.target.value })
@@ -244,7 +244,7 @@ const AddMember = () => {
             </button>
             <button
               type="submit"
-              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-green-600 to-green-900 hover:from-green-700 hover:to-green-950 text-white font-semibold shadow-lg hover:shadow-xl hover:shadow-green-900/30 hover:-translate-y-0.5 transition-all duration-300"
+              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-700 hover:from-amber-600 hover:to-amber-800a hover:to-amber-950 text-white font-semibold shadow-lg hover:shadow-xl hover:shadow-amber-900/30 hover:-translate-y-0.5 transition-all duration-300"
             >
               Add Member
             </button>

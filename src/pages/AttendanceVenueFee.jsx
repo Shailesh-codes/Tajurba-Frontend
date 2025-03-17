@@ -284,7 +284,7 @@ const AttendanceVenueFee = () => {
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div className="flex items-center gap-4">
-          <div className="p-3 bg-gradient-to-r from-gray-800 to-gray-900 rounded-xl">
+          <div className="p-3 bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] rounded-xl">
             <img src={attendanceIcon} alt="attendance" className="w-6 h-6" />
           </div>
           <div>
@@ -298,7 +298,7 @@ const AttendanceVenueFee = () => {
         </div>
         <button
           onClick={() => navigate("/mark-attendance")}
-          className="group flex items-center gap-2.5 px-5 py-2.5 bg-gray-800 text-gray-300 hover:text-green-500 rounded-xl transition-all duration-300 border border-gray-700"
+          className="group flex items-center gap-2.5 px-5 py-2.5 bg-gray-800 text-gray-300 hover:text-amber-500 rounded-xl transition-all duration-300 border border-gray-700"
         >
           <svg
             width="18"
@@ -375,7 +375,7 @@ const AttendanceVenueFee = () => {
                   {stats.attendance.marked}
                 </h3>
               </div>
-              <div className="p-3 bg-green-500/10 rounded-xl">
+              <div className="p-3 bg-amber-500/10 rounded-xl">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                   <path
                     d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z"
@@ -388,8 +388,8 @@ const AttendanceVenueFee = () => {
               </div>
             </div>
             <div className="flex items-center gap-3 mt-3">
-              <div className="px-2.5 py-1 bg-green-500/10 rounded-lg">
-                <span className="text-sm text-green-500">
+              <div className="px-2.5 py-1 bg-amber-500/10 rounded-lg">
+                <span className="text-sm text-amber-500">
                   {stats.attendance.present} Present
                 </span>
               </div>
@@ -428,8 +428,8 @@ const AttendanceVenueFee = () => {
               </div>
             </div>
             <div className="flex items-center gap-3 mt-3">
-              <div className="px-2.5 py-1 bg-green-500/10 rounded-lg">
-                <span className="text-sm text-green-500">
+              <div className="px-2.5 py-1 bg-amber-500/10 rounded-lg">
+                <span className="text-sm text-amber-500">
                   {stats.venue_fee.paid_count} Paid
                 </span>
               </div>
@@ -451,7 +451,7 @@ const AttendanceVenueFee = () => {
             placeholder="Search members..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full md:w-72 bg-gray-700 text-white p-3 rounded-xl border border-gray-600 focus:border-green-500 focus:ring-0"
+            className="w-full md:w-72 bg-gray-700 text-white p-3 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-0"
           />
         </div>
 
@@ -496,7 +496,7 @@ const AttendanceVenueFee = () => {
                         <div className="flex flex-col gap-1">
                           <span className={`px-2 py-1 text-xs font-medium ${
                             parseInt(member.is_active) === 1
-                              ? "bg-green-500/20 text-green-500"
+                              ? "bg-amber-500/20 text-amber-500"
                               : "bg-red-500/20 text-red-500"
                           } rounded-full`}>
                             {parseInt(member.is_active) === 1 ? "Active" : "Inactive"}
@@ -563,7 +563,7 @@ const AttendanceVenueFee = () => {
                             value={member.late_minutes || "less_than_10"}
                             onChange={(e) => handleLateMinutesChange(member.id, e.target.value)}
                             disabled={member.status !== "late"}
-                            className="bg-gray-700 text-white p-2 rounded-lg border border-gray-600 focus:border-green-500 focus:ring-0"
+                            className="bg-gray-700 text-white p-2 rounded-lg border border-gray-600 focus:border-amber-500 focus:ring-0"
                           >
                             <option value="less_than_10">Less than 10</option>
                             <option value="more_than_10">More than 10</option>
@@ -622,7 +622,7 @@ const AttendanceVenueFee = () => {
       <div className="sticky bottom-0 bg-gray-900 p-4 mt-4">
         <button
           onClick={saveData}
-          className="ml-auto flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-green-900 hover:from-green-700 hover:to-green-950 text-white rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-green-900/30 hover:-translate-y-0.5"
+          className="ml-auto flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-600 to-amber-900 hover:from-amber-700 hover:to-amber-950 text-white rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-amber-900/30 hover:-translate-y-0.5"
         >
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
             <path

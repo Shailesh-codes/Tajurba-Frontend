@@ -121,7 +121,7 @@ const EditScheduleMeeting = () => {
   if (loading) {
     return (
       <div className="mt-32 p-6 flex justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-500"></div>
       </div>
     );
   }
@@ -135,7 +135,7 @@ const EditScheduleMeeting = () => {
         className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8"
       >
         <div className="flex items-center gap-4">
-          <div className="p-3 bg-gradient-to-r from-gray-800 to-gray-900 rounded-xl">
+          <div className="p-3 bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] rounded-xl">
             <img src={eventIcon} alt="Events" className="w-6 h-6" />
           </div>
           <div>
@@ -147,7 +147,7 @@ const EditScheduleMeeting = () => {
         </div>
         <button
           onClick={() => navigate(-1)}
-          className="group flex items-center gap-2.5 px-5 py-2.5 bg-gray-800 text-gray-300 hover:text-green-500 rounded-xl transition-all duration-300 border border-gray-700"
+          className="group flex items-center gap-2.5 px-5 py-2.5 bg-gray-800 text-gray-300 hover:text-amber-500 rounded-xl transition-all duration-300 border border-gray-700"
         >
           <svg
             className="w-5 h-5 transition-transform duration-300 group-hover:-translate-x-1"
@@ -198,7 +198,7 @@ const EditScheduleMeeting = () => {
                       value={formData.title}
                       onChange={handleInputChange}
                       required
-                      className="w-full bg-gray-700 text-white p-3 rounded-xl border border-gray-600 focus:border-green-500 focus:ring-0"
+                      className="w-full bg-gray-700 text-white p-3 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-0"
                       placeholder="Enter title"
                     />
                   </div>
@@ -214,7 +214,7 @@ const EditScheduleMeeting = () => {
                       value={formData.venue}
                       onChange={handleInputChange}
                       required
-                      className="w-full bg-gray-700 text-white p-3 rounded-xl border border-gray-600 focus:border-green-500 focus:ring-0"
+                      className="w-full bg-gray-700 text-white p-3 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-0"
                       placeholder="Enter venue"
                     />
                   </div>
@@ -230,7 +230,7 @@ const EditScheduleMeeting = () => {
                       value={formData.date}
                       onChange={handleInputChange}
                       required
-                      className="w-full bg-gray-700 text-white p-3 rounded-xl border border-gray-600 focus:border-green-500 focus:ring-0 [color-scheme:dark]"
+                      className="w-full bg-gray-700 text-white p-3 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-0 [color-scheme:dark]"
                     />
                   </div>
 
@@ -245,7 +245,7 @@ const EditScheduleMeeting = () => {
                       value={formData.time}
                       onChange={handleInputChange}
                       required
-                      className="w-full bg-gray-700 text-white p-3 rounded-xl border border-gray-600 focus:border-green-500 focus:ring-0 [color-scheme:dark]"
+                      className="w-full bg-gray-700 text-white p-3 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-0 [color-scheme:dark]"
                     />
                   </div>
                 </div>
@@ -258,7 +258,7 @@ const EditScheduleMeeting = () => {
                     value={formData.description}
                     onChange={handleInputChange}
                     rows="4"
-                    className="w-full bg-gray-700 text-white p-3 rounded-xl border border-gray-600 focus:border-green-500 focus:ring-0 resize-none"
+                    className="w-full bg-gray-700 text-white p-3 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-0 resize-none"
                     placeholder="Enter description"
                   />
                 </div>
@@ -290,7 +290,7 @@ const EditScheduleMeeting = () => {
                       type="checkbox"
                       checked={formData.chapters.includes(chapter.id)}
                       onChange={() => handleChapterToggle(chapter.id)}
-                      className="form-checkbox bg-gray-600 border-gray-500 rounded text-green-500 focus:ring-0 focus:ring-offset-0"
+                      className="form-checkbox bg-gray-600 border-gray-500 rounded text-amber-500 focus:ring-0 focus:ring-offset-0"
                     />
                     <span className="text-gray-300">{chapter.name}</span>
                   </label>
@@ -333,7 +333,7 @@ const EditScheduleMeeting = () => {
                     required
                     min="0"
                     step="0.01"
-                    className="w-full bg-gray-700 text-white p-3 rounded-xl border border-gray-600 focus:border-green-500 focus:ring-0"
+                    className="w-full bg-gray-700 text-white p-3 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-0"
                     placeholder="Enter fee amount"
                   />
                   <img
@@ -356,7 +356,7 @@ const EditScheduleMeeting = () => {
                       value="default"
                       checked={formData.payment_method === "default"}
                       onChange={handleInputChange}
-                      className="text-green-500 bg-gray-700 border-gray-600 focus:ring-green-500 focus:ring-offset-gray-800"
+                      className="text-amber-500 bg-gray-700 border-gray-600 focus:ring-amber-500 focus:ring-offset-gray-800"
                     />
                     <span className="text-gray-300">Default Payment</span>
                   </label>
@@ -367,7 +367,7 @@ const EditScheduleMeeting = () => {
                       value="custom"
                       checked={formData.payment_method === "custom"}
                       onChange={handleInputChange}
-                      className="text-green-500 bg-gray-700 border-gray-600 focus:ring-green-500 focus:ring-offset-gray-800"
+                      className="text-amber-500 bg-gray-700 border-gray-600 focus:ring-amber-500 focus:ring-offset-gray-800"
                     />
                     <span className="text-gray-300">Custom Payment</span>
                   </label>
@@ -384,7 +384,7 @@ const EditScheduleMeeting = () => {
                       name="upi_id"
                       value={formData.upi_id}
                       onChange={handleInputChange}
-                      className="w-full bg-gray-700 text-white p-3 rounded-xl border border-gray-600 focus:border-green-500 focus:ring-0"
+                      className="w-full bg-gray-700 text-white p-3 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-0"
                       placeholder="Enter UPI ID"
                     />
                   </div>
@@ -459,7 +459,7 @@ const EditScheduleMeeting = () => {
           </button>
           <button
             type="submit"
-            className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-green-600 to-green-900 hover:from-green-700 hover:to-green-950 text-white font-semibold shadow-lg hover:shadow-xl hover:shadow-green-900/30 hover:-translate-y-0.5 transition-all duration-300"
+            className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 to-amber-900 hover:from-amber-700 hover:to-amber-950 text-white font-semibold shadow-lg hover:shadow-xl hover:shadow-amber-900/30 hover:-translate-y-0.5 transition-all duration-300"
           >
             Update Schedule
           </button>

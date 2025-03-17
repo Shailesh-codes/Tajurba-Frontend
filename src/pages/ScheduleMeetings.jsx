@@ -67,21 +67,22 @@ const ScheduleMeetings = () => {
   // Filter schedules based on search term and type
   useEffect(() => {
     let filtered = [...dummySchedules];
-    
+
     // Filter by search term
     if (searchTerm) {
-      filtered = filtered.filter(schedule => 
-        schedule.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        schedule.venue.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        schedule.chapters.toLowerCase().includes(searchTerm.toLowerCase())
+      filtered = filtered.filter(
+        (schedule) =>
+          schedule.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          schedule.venue.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          schedule.chapters.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-    
+
     // Filter by type
     if (selectedType) {
-      filtered = filtered.filter(schedule => schedule.type === selectedType);
+      filtered = filtered.filter((schedule) => schedule.type === selectedType);
     }
-    
+
     setFilteredSchedules(filtered);
   }, [searchTerm, selectedType]);
 
@@ -90,7 +91,7 @@ const ScheduleMeetings = () => {
       case "meeting":
         return "blue";
       case "event":
-        return "green";
+        return "amber";
       case "mdp":
         return "purple";
       case "socialTraining":
@@ -199,7 +200,7 @@ const ScheduleMeetings = () => {
         className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8"
       >
         <div className="flex items-center gap-4">
-          <div className="p-3 bg-gradient-to-r from-gray-800 to-gray-900 rounded-xl">
+          <div className="p-3 bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] rounded-xl">
             <img src={eventIcon} alt="Events" className="w-6 h-6" />
           </div>
           <div>
@@ -213,7 +214,7 @@ const ScheduleMeetings = () => {
         </div>
         <button
           onClick={() => navigate("/add-schedule")}
-          className="group flex items-center gap-2.5 px-5 py-2.5 bg-gradient-to-r from-green-600 to-green-900 hover:from-green-700 hover:to-green-950 text-white/90 hover:text-white rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-green-900/30 hover:-translate-y-0.5"
+          className="group flex items-center gap-2.5 px-5 py-2.5 bg-gradient-to-r from-amber-600 to-amber-900 hover:from-amber-700 hover:to-amber-950 text-white/90 hover:text-white rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-amber-900/30 hover:-translate-y-0.5"
         >
           <img
             src={addIcon}
@@ -242,7 +243,7 @@ const ScheduleMeetings = () => {
                 placeholder="Search schedules..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-gray-900/50 text-gray-300 pl-12 pr-4 py-3 rounded-xl border border-gray-700 focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-all duration-300"
+                className="w-full bg-gray-900/50 text-gray-300 pl-12 pr-4 py-3 rounded-xl border border-gray-700 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all duration-300"
               />
               <svg
                 className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500"
@@ -262,7 +263,7 @@ const ScheduleMeetings = () => {
               <select
                 value={selectedType}
                 onChange={(e) => setSelectedType(e.target.value)}
-                className="bg-gray-900/50 text-gray-300 px-4 py-2.5 rounded-xl border border-gray-700 focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-all duration-300"
+                className="bg-gray-900/50 text-gray-300 px-4 py-2.5 rounded-xl border border-gray-700 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all duration-300"
               >
                 <option value="">All Types</option>
                 <option value="meeting">Meeting</option>
@@ -277,8 +278,18 @@ const ScheduleMeetings = () => {
                 }}
                 className="flex items-center gap-2 bg-gray-900/50 text-gray-300 px-4 py-2.5 rounded-xl border border-gray-700 hover:bg-gray-700 transition-all duration-300"
               >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
                 </svg>
                 Reset
               </button>
@@ -292,57 +303,141 @@ const ScheduleMeetings = () => {
               <tr className="bg-gray-900/50">
                 <th className="py-5 px-6 text-left">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-gray-300">Type</span>
-                    <svg className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                    <span className="text-sm font-semibold text-gray-300">
+                      Type
+                    </span>
+                    <svg
+                      className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-300"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+                      />
                     </svg>
                   </div>
                 </th>
                 <th className="py-5 px-6 text-left">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-gray-300">Title</span>
-                    <svg className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                    <span className="text-sm font-semibold text-gray-300">
+                      Title
+                    </span>
+                    <svg
+                      className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-300"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+                      />
                     </svg>
                   </div>
                 </th>
                 <th className="py-5 px-6 text-left">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-gray-300">Venue</span>
-                    <svg className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                    <span className="text-sm font-semibold text-gray-300">
+                      Venue
+                    </span>
+                    <svg
+                      className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-300"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+                      />
                     </svg>
                   </div>
                 </th>
                 <th className="py-5 px-6 text-left">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-gray-300">Date & Time</span>
-                    <svg className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                    <span className="text-sm font-semibold text-gray-300">
+                      Date & Time
+                    </span>
+                    <svg
+                      className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-300"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+                      />
                     </svg>
                   </div>
                 </th>
                 <th className="py-5 px-6 text-left">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-gray-300">Chapters</span>
-                    <svg className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                    <span className="text-sm font-semibold text-gray-300">
+                      Chapters
+                    </span>
+                    <svg
+                      className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-300"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+                      />
                     </svg>
                   </div>
                 </th>
                 <th className="py-5 px-6 text-left">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-gray-300">Fee</span>
-                    <svg className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                    <span className="text-sm font-semibold text-gray-300">
+                      Fee
+                    </span>
+                    <svg
+                      className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-300"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+                      />
                     </svg>
                   </div>
                 </th>
                 <th className="py-5 px-6 text-left">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-gray-300">Actions</span>
-                    <svg className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                    <span className="text-sm font-semibold text-gray-300">
+                      Actions
+                    </span>
+                    <svg
+                      className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-300"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+                      />
                     </svg>
                   </div>
                 </th>
@@ -350,37 +445,45 @@ const ScheduleMeetings = () => {
             </thead>
             <tbody className="divide-y divide-gray-700/50">
               {filteredSchedules.map((schedule, index) => (
-                <tr 
+                <tr
                   key={schedule.id}
                   className={`group hover:bg-gray-800/50 transition-all duration-300 ${
-                    index % 2 === 0 ? 'bg-gray-800/20' : 'bg-gray-800/10'
+                    index % 2 === 0 ? "bg-gray-800/20" : "bg-gray-800/10"
                   }`}
                 >
                   <td className="py-4 px-6">
                     <span
                       className={`inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-full border ${
-                        schedule.type === 'meeting' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
-                        schedule.type === 'event' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
-                        schedule.type === 'mdp' ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' :
-                        'bg-orange-500/10 text-orange-400 border-orange-500/20'
+                        schedule.type === "meeting"
+                          ? "bg-blue-500/10 text-blue-400 border-blue-500/20"
+                          : schedule.type === "event"
+                          ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                          : schedule.type === "mdp"
+                          ? "bg-purple-500/10 text-purple-400 border-purple-500/20"
+                          : "bg-orange-500/10 text-orange-400 border-orange-500/20"
                       }`}
                     >
-                      <span className={`w-1.5 h-1.5 rounded-full mr-2 ${
-                        schedule.type === 'meeting' ? 'bg-blue-400' :
-                        schedule.type === 'event' ? 'bg-green-400' :
-                        schedule.type === 'mdp' ? 'bg-purple-400' :
-                        'bg-orange-400'
-                      }`}></span>
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full mr-2 ${
+                          schedule.type === "meeting"
+                            ? "bg-blue-400"
+                            : schedule.type === "event"
+                            ? "bg-amber-400"
+                            : schedule.type === "mdp"
+                            ? "bg-purple-400"
+                            : "bg-orange-400"
+                        }`}
+                      ></span>
                       {getTypeName(schedule.type)}
                     </span>
                   </td>
                   <td className="py-4 px-6">
                     <div className="flex flex-col">
-                      <span className="text-white font-medium group-hover:text-green-400 transition-colors">
+                      <span className="text-white font-medium group-hover:text-amber-400 transition-colors">
                         {schedule.title}
                       </span>
                       <span className="text-xs text-gray-500">
-                        ID: #{schedule.id.toString().padStart(4, '0')}
+                        ID: #{schedule.id.toString().padStart(4, "0")}
                       </span>
                     </div>
                   </td>
@@ -469,16 +572,28 @@ const ScheduleMeetings = () => {
                   <td className="py-4 px-6">
                     <div className="flex items-center justify-end gap-2">
                       <button
-                        onClick={() => navigate(`/view-schedule/${schedule.id}`)}
+                        onClick={() =>
+                          navigate(`/view-schedule/${schedule.id}`)
+                        }
                         className="flex items-center justify-center w-9 h-9 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl transition-all duration-300 shadow-lg hover:shadow-blue-500/25"
                       >
-                        <img src={viewIcon} alt="View" className="w-4 h-4 transition-transform hover:scale-110" />
+                        <img
+                          src={viewIcon}
+                          alt="View"
+                          className="w-4 h-4 transition-transform hover:scale-110"
+                        />
                       </button>
                       <button
-                        onClick={() => navigate(`/edit-schedule/${schedule.id}`)}
-                        className="flex items-center justify-center w-9 h-9 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-xl transition-all duration-300 shadow-lg hover:shadow-green-500/25"
+                        onClick={() =>
+                          navigate(`/edit-schedule/${schedule.id}`)
+                        }
+                        className="flex items-center justify-center w-9 h-9 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white rounded-xl transition-all duration-300 shadow-lg hover:shadow-amber-500/25"
                       >
-                        <img src={editIcon} alt="Edit" className="w-4 h-4 transition-transform hover:scale-110" />
+                        <img
+                          src={editIcon}
+                          alt="Edit"
+                          className="w-4 h-4 transition-transform hover:scale-110"
+                        />
                       </button>
                       {schedule.has_attendance === "1" ? (
                         <button
@@ -491,15 +606,26 @@ const ScheduleMeetings = () => {
                             stroke="currentColor"
                             viewBox="0 0 24 24"
                           >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
                           </svg>
                         </button>
                       ) : (
                         <button
-                          onClick={() => handleDelete(schedule.type, schedule.id)}
+                          onClick={() =>
+                            handleDelete(schedule.type, schedule.id)
+                          }
                           className="flex items-center justify-center w-9 h-9 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white rounded-xl transition-all duration-300 shadow-lg hover:shadow-red-500/25"
                         >
-                          <img src={deleteIcon} alt="Delete" className="w-4 h-4 transition-transform hover:scale-110" />
+                          <img
+                            src={deleteIcon}
+                            alt="Delete"
+                            className="w-4 h-4 transition-transform hover:scale-110"
+                          />
                         </button>
                       )}
                     </div>
@@ -514,13 +640,17 @@ const ScheduleMeetings = () => {
         <div className="p-6 border-t border-gray-700 bg-gray-800/50">
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-400">
-              Showing <span className="font-medium text-white">{filteredSchedules.length}</span> results
+              Showing{" "}
+              <span className="font-medium text-white">
+                {filteredSchedules.length}
+              </span>{" "}
+              results
             </div>
             <div className="flex items-center gap-2">
               <button className="px-4 py-2 text-sm text-gray-400 bg-gray-900/50 rounded-lg border border-gray-700 hover:bg-gray-700 transition-all duration-300">
                 Previous
               </button>
-              <button className="px-4 py-2 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all duration-300">
+              <button className="px-4 py-2 text-sm text-white bg-amber-600 rounded-lg hover:bg-amber-700 transition-all duration-300">
                 Next
               </button>
             </div>

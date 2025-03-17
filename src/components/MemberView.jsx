@@ -70,20 +70,20 @@ const MemberView = () => {
       html: `
         <div class="text-left space-y-6">
           <div class="flex items-center gap-4 p-6 ${
-            isActive ? "bg-red-500/10" : "bg-green-500/10"
-          } rounded-2xl border border-${isActive ? "red" : "green"}-500/20">
+            isActive ? "bg-red-500/10" : "bg-amber-500/10"
+          } rounded-2xl border border-${isActive ? "red" : "amber"}-500/20">
             <div class="p-3 bg-gradient-to-br ${
               isActive
                 ? "from-red-500/20 to-red-600/20"
-                : "from-green-500/20 to-green-600/20"
-            } rounded-xl border border-${isActive ? "red" : "green"}-500/30">
+                : "from-amber-500/20 to-amber-600/20"
+            } rounded-xl border border-${isActive ? "red" : "amber"}-500/30">
               <i class="fas ${isActive ? "fa-user-slash" : "fa-user-check"} ${
-        isActive ? "text-red-400" : "text-green-400"
+        isActive ? "text-red-400" : "text-amber-400"
       } text-xl"></i>
             </div>
             <div>
               <h3 class="font-semibold text-lg ${
-                isActive ? "text-red-400" : "text-green-400"
+                isActive ? "text-red-400" : "text-amber-400"
               }">${member.full_name}</h3>
               <p class="text-sm text-gray-400">
                 ${
@@ -129,9 +129,9 @@ const MemberView = () => {
           ${
             isActive
               ? "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700"
-              : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+              : "bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700"
           } text-white font-semibold rounded-xl px-6 py-3 transition-all duration-300 hover:shadow-lg hover:shadow-${
-          isActive ? "red" : "green"
+          isActive ? "red" : "amber"
         }-500/20 hover:-translate-y-0.5
         `,
         cancelButton:
@@ -163,10 +163,10 @@ const MemberView = () => {
           html: `
             <div class="flex items-center gap-3 mt-2">
               <div class="p-2 ${
-                isActive ? "bg-red-500/20" : "bg-green-500/20"
+                isActive ? "bg-red-500/20" : "bg-amber-500/20"
               } rounded-lg">
                 <i class="fas ${isActive ? "fa-user-slash" : "fa-user-check"} ${
-            isActive ? "text-red-400" : "text-green-400"
+            isActive ? "text-red-400" : "text-amber-400"
           }"></i>
               </div>
               <p class="text-sm text-gray-300">
@@ -295,8 +295,8 @@ const MemberView = () => {
         title: '<span class="text-lg font-semibold text-white">Profile Updated</span>',
         html: `
           <div class="flex items-center gap-3 mt-2">
-            <div class="p-2 bg-green-500/20 rounded-lg">
-              <i class="fas fa-check text-green-400"></i>
+            <div class="p-2 bg-amber-500/20 rounded-lg">
+              <i class="fas fa-check text-amber-400"></i>
             </div>
             <p class="text-sm text-gray-300">
               Member profile has been successfully updated
@@ -351,7 +351,7 @@ const MemberView = () => {
   if (loading) {
     return (
       <div className="mt-32 p-6 flex justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-500"></div>
       </div>
     );
   }
@@ -365,7 +365,7 @@ const MemberView = () => {
         className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8"
       >
         <div className="flex items-center gap-4">
-          <div className="p-3 bg-gradient-to-r from-gray-800 to-gray-900 rounded-xl">
+          <div className="p-3 bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] rounded-xl">
             <img src={memberListIcon} alt="Members" className="w-6 h-6" />
           </div>
           <div>
@@ -378,7 +378,7 @@ const MemberView = () => {
         <div className="flex flex-wrap items-center gap-4">
           <button
             onClick={handleEditClick}
-            className="group flex items-center gap-2.5 px-5 py-2.5 bg-gradient-to-r from-green-600 to-green-900 hover:from-green-700 hover:to-green-950 text-white/90 hover:text-white rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-green-900/30 hover:-translate-y-0.5"
+            className="group flex items-center gap-2.5 px-5 py-2.5 bg-gradient-to-r from-amber-600 to-amber-900 hover:from-amber-700 hover:to-amber-950 text-white/90 hover:text-white rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-amber-900/30 hover:-translate-y-0.5"
           >
             <img
               src={editIcon}
@@ -394,7 +394,7 @@ const MemberView = () => {
             className={`group flex items-center gap-2.5 px-5 py-2.5 bg-gradient-to-r ${
               member?.is_active === "1"
                 ? "from-yellow-600 to-yellow-900 hover:from-yellow-700 hover:to-yellow-950"
-                : "from-green-600 to-green-900 hover:from-green-700 hover:to-green-950"
+                : "from-amber-600 to-amber-900 hover:from-amber-700 hover:to-amber-950"
             } text-white/90 hover:text-white rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-yellow-900/30 hover:-translate-y-0.5`}
           >
             <img
@@ -410,7 +410,7 @@ const MemberView = () => {
           </button>
           <button
             onClick={() => navigate(-1)}
-            className="group flex items-center gap-2.5 px-5 py-2.5 bg-gray-800 text-gray-300 hover:text-green-500 rounded-xl transition-all duration-300 border border-gray-700"
+            className="group flex items-center gap-2.5 px-5 py-2.5 bg-gray-800 text-gray-300 hover:text-amber-500 rounded-xl transition-all duration-300 border border-gray-700"
           >
             <svg
               width="18"
@@ -443,12 +443,12 @@ const MemberView = () => {
         >
           <div className="p-8 rounded-2xl bg-gradient-to-br from-gray-800 via-gray-800 to-gray-900 shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-700/50 relative overflow-hidden">
             {/* Background decoration */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-green-500/10 to-transparent rounded-full blur-2xl"></div>
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-amber-500/10 to-transparent rounded-full blur-2xl"></div>
             <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-blue-500/10 to-transparent rounded-full blur-2xl"></div>
 
             <div className="flex flex-col items-center relative">
               <div className="relative mb-8 group">
-                <div className="w-36 h-36 rounded-full overflow-hidden ring-4 ring-green-500/20 p-1 bg-gradient-to-br from-gray-700 to-gray-800">
+                <div className="w-36 h-36 rounded-full overflow-hidden ring-4 ring-amber-500/20 p-1 bg-gradient-to-br from-gray-700 to-gray-800">
                   <img
                     src={
                       member?.profile_image ||
@@ -467,7 +467,7 @@ const MemberView = () => {
                 <div
                   className={`absolute bottom-2 right-2 p-2.5 rounded-full border-4 border-gray-800 ${
                     member?.is_active === "1"
-                      ? "bg-gradient-to-r from-green-400 to-green-500"
+                      ? "bg-gradient-to-r from-amber-400 to-amber-500"
                       : "bg-gradient-to-r from-red-400 to-red-500"
                   }`}
                 >

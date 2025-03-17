@@ -196,7 +196,7 @@ const MarkvenueFee = () => {
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div className="flex items-center gap-4">
-          <div className="p-3 bg-gradient-to-r from-gray-800 to-gray-900 rounded-xl">
+          <div className="p-3 bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] rounded-xl">
             <img src={attendanceIcon} alt="attendance" className="w-6 h-6" />
           </div>
           <div>
@@ -206,7 +206,7 @@ const MarkvenueFee = () => {
         </div>
         <button
           onClick={() => navigate("/mark-attendance")}
-          className="group flex items-center gap-2.5 px-5 py-2.5 bg-gray-800 text-gray-300 hover:text-green-500 rounded-xl transition-all duration-300 border border-gray-700"
+          className="group flex items-center gap-2.5 px-5 py-2.5 bg-gray-800 text-gray-300 hover:text-amber-500 rounded-xl transition-all duration-300 border border-gray-700"
         >
           <svg
             width="18"
@@ -290,8 +290,8 @@ const MarkvenueFee = () => {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="px-3 py-1.5 bg-green-500/20 rounded-lg">
-              <span className="text-sm text-green-400">{stats.venue_fee.paid_count} Paid</span>
+            <div className="px-3 py-1.5 bg-amber-500/20 rounded-lg">
+              <span className="text-sm text-amber-400">{stats.venue_fee.paid_count} Paid</span>
             </div>
             <div className="px-3 py-1.5 bg-red-500/20 rounded-lg">
               <span className="text-sm text-red-400">{stats.venue_fee.unpaid_count} Unpaid</span>
@@ -308,7 +308,7 @@ const MarkvenueFee = () => {
             placeholder="Search members..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full md:w-72 bg-gray-700 text-white p-3 rounded-xl border border-gray-600 focus:border-green-500 focus:ring-0"
+            className="w-full md:w-72 bg-gray-700 text-white p-3 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-0"
           />
         </div>
 
@@ -333,7 +333,7 @@ const MarkvenueFee = () => {
                     <td className="p-4 text-gray-300">{index + 1}</td>
                     <td className="p-4">
                       <div className="flex items-center gap-3">
-                        <div className={`w-2 h-2 rounded-full ${member.is_active ? 'bg-green-500' : 'bg-red-500'}`} />
+                        <div className={`w-2 h-2 rounded-full ${member.is_active ? 'bg-amber-500' : 'bg-red-500'}`} />
                         <div>
                           <p className="font-medium text-white">{member.full_name}</p>
                           <p className="text-sm text-gray-400">{member.chapter_name}</p>
@@ -351,7 +351,7 @@ const MarkvenueFee = () => {
                             onChange={() => handleVenueFeeChange(member.id, 'paid')}
                             className="venue-fee-radio-paid"
                           />
-                          <span className="text-green-400">Paid</span>
+                          <span className="text-amber-400">Paid</span>
                         </label>
                         <label className="flex items-center gap-2 cursor-pointer">
                           <input
@@ -394,7 +394,7 @@ const MarkvenueFee = () => {
       <div className="sticky bottom-0 bg-gray-900 p-4 mt-4">
         <button
           onClick={saveData}
-          className="ml-auto flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-green-900 hover:from-green-700 hover:to-green-950 text-white rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-green-900/30 hover:-translate-y-0.5"
+          className="ml-auto flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-600 to-amber-900 hover:from-amber-700 hover:to-amber-950 text-white rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-amber-900/30 hover:-translate-y-0.5"
         >
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
             <path

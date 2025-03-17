@@ -125,7 +125,7 @@ const MonthlyReward = () => {
           <div className="flex items-center gap-4">
             <motion.div
               whileHover={{ scale: 1.05, rotate: 5 }}
-              className="p-3  bg-gradient-to-r from-amber-500 to-amber-800 rounded-xl shadow-lg"
+              className="p-3 bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] rounded-xl shadow-lg"
             >
               <img
                 src={reward}
@@ -148,9 +148,9 @@ const MonthlyReward = () => {
             whileTap={{ scale: 0.98 }}
             onClick={() => navigate("/assign-certificates")}
             className="w-full lg:w-auto group flex items-center justify-center gap-2.5 px-5 py-2.5 
-                    bg-gradient-to-r from-green-600 to-green-800 hover:from-green-700 hover:to-green-900 
+                    bg-gradient-to-r from-amber-600 to-amber-800 hover:from-amber-700 hover:to-amber-900 
                     text-white/90 hover:text-white rounded-xl transition-all duration-300 
-                    shadow-lg hover:shadow-xl hover:shadow-green-900/30"
+                    shadow-lg hover:shadow-xl hover:shadow-amber-900/30"
           >
             <svg
               className="w-5 h-5 group-hover:rotate-12 transition-transform"
@@ -261,7 +261,7 @@ const MonthlyReward = () => {
                                     rounded-xl shadow-lg relative"
                         >
                           <span className="text-xl">{category.emoji}</span>
-                          <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full animate-ping" />
+                          <div className="absolute -top-1 -right-1 w-2 h-2 bg-amber-500 rounded-full animate-ping" />
                         </motion.div>
                         <div>
                           <span className="text-base text-gray-100 font-semibold group-hover:text-amber-400 transition-colors">

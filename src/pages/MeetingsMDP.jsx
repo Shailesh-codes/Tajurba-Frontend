@@ -58,7 +58,7 @@ const MeetingsMDP = () => {
       {/* Header Section with Back Button */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
         <div className="flex items-center gap-4">
-          <div className="p-3 bg-gradient-to-r from-amber-500 to-amber-800 rounded-xl">
+          <div className="p-3 bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] rounded-xl">
             <img src={meetings} alt="meetings" className="w-6 h-6" />
           </div>
           <div>

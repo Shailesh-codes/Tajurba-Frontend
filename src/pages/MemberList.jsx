@@ -115,7 +115,7 @@ const MemberList = () => {
         className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8"
       >
         <div className="flex items-center gap-4">
-          <div className="p-3 bg-gradient-to-r from-gray-800 to-gray-900 rounded-xl">
+          <div className="p-3 bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] rounded-xl">
             <img src={memberListIcon} alt="Members" className="w-6 h-6" />
           </div>
           <div>
@@ -125,7 +125,7 @@ const MemberList = () => {
         </div>
         <button
           onClick={() => navigate(-1)}
-          className="group flex items-center gap-2.5 px-5 py-2.5 bg-gray-800 text-gray-300 hover:text-green-500 rounded-xl transition-all duration-300 border border-gray-700"
+          className="group flex items-center gap-2.5 px-5 py-2.5 bg-gray-800 text-gray-300 hover:text-amber-500 rounded-xl transition-all duration-300 border border-gray-700"
         >
           <svg
             width="18"
@@ -160,7 +160,7 @@ const MemberList = () => {
               placeholder="Search by member name, mobile or chapter..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full sm:w-[400px] lg:w-[500px] bg-gray-700 text-white pl-11 pr-4 py-3 rounded-xl border border-gray-600 focus:border-green-500 focus:ring-0"
+              className="w-full sm:w-[400px] lg:w-[500px] bg-gray-700 text-white pl-11 pr-4 py-3 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-0"
             />
             <svg
               className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
@@ -181,7 +181,7 @@ const MemberList = () => {
         <div className="order-1 sm:order-2 sm:ml-auto">
           <button
             onClick={() => navigate("/add-member")}
-            className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-green-600 to-green-900 hover:from-green-700 hover:to-green-950 text-white/90 hover:text-white rounded-xl flex items-center justify-center gap-2 h-[56px] transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-green-900/30 hover:-translate-y-0.5"
+            className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-amber-600 to-amber-900 hover:from-amber-700 hover:to-amber-950 text-white/90 hover:text-white rounded-xl flex items-center justify-center gap-2 h-[56px] transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-amber-900/30 hover:-translate-y-0.5"
           >
             <img src={addIcon} alt="Add" className="w-5 h-5" />
             Add New Member
@@ -232,7 +232,7 @@ const MemberList = () => {
                       <div className="flex items-center gap-2">
                         <span className={`px-2 py-1 text-xs font-medium rounded-full ${
                           member.is_active === "1"
-                            ? "bg-green-500/20 text-green-500"
+                            ? "bg-amber-500/20 text-amber-500"
                             : "bg-red-500/20 text-red-500"
                         }`}>
                           {member.is_active === "1" ? "Active" : "Inactive"}
@@ -265,7 +265,7 @@ const MemberList = () => {
                         {member.is_active === "1" && (
                           <button
                             onClick={() => handleEditClick(member)}
-                            className="group flex items-center justify-center w-8 h-8 bg-gradient-to-r from-green-600 to-green-900 hover:from-green-700 hover:to-green-950 text-white/90 hover:text-white rounded-xl transition-all duration-300 shadow hover:shadow-lg hover:shadow-green-900/30 hover:-translate-y-0.5"
+                            className="group flex items-center justify-center w-8 h-8 bg-gradient-to-r from-amber-600 to-amber-900 hover:from-amber-700 hover:to-amber-950 text-white/90 hover:text-white rounded-xl transition-all duration-300 shadow hover:shadow-lg hover:shadow-amber-900/30 hover:-translate-y-0.5"
                           >
                             <img src={editIcon} alt="Edit" className="w-5 h-5 opacity-70 group-hover:opacity-100" />
                           </button>

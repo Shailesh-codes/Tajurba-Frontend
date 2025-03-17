@@ -4,6 +4,7 @@ import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import VisitorIcon from "../assets/images/icons/users.svg";
 
 const VisitorList = () => {
   const navigate = useNavigate();
@@ -29,7 +30,7 @@ const VisitorList = () => {
       sr_no: 1,
       invited_by_name: "John Doe",
       chapter_name: "Chapter One",
-      visitor_name: "Alice Smith", 
+      visitor_name: "Alice Smith",
       company_name: "Tech Corp",
       company_category: "IT",
       mobile: "1234567890",
@@ -40,7 +41,7 @@ const VisitorList = () => {
     {
       sr_no: 2,
       invited_by_name: "Jane Smith",
-      chapter_name: "Chapter Two", 
+      chapter_name: "Chapter Two",
       visitor_name: "Bob Johnson",
       company_name: "Digital Solutions",
       company_category: "Software",
@@ -58,7 +59,7 @@ const VisitorList = () => {
     "Chapter",
     "Visitor Name",
     "Company",
-    "Category", 
+    "Category",
     "Mobile",
     "Email",
     "Invite Date",
@@ -68,8 +69,8 @@ const VisitorList = () => {
   useEffect(() => {
     const filterVisitors = () => {
       return dummyVisitors.filter((visitor) => {
-        const matchesSearch = 
-          searchTerm === "" 
+        const matchesSearch =
+          searchTerm === ""
             ? true
             : Object.values(visitor)
                 .join(" ")
@@ -78,7 +79,7 @@ const VisitorList = () => {
 
         const matchesChapter =
           selectedChapter === "all"
-            ? true 
+            ? true
             : visitor.chapter_name === selectedChapter;
 
         return matchesSearch && matchesChapter;
@@ -195,23 +196,11 @@ const VisitorList = () => {
           <div className="relative bg-gray-800/40 backdrop-blur-xl rounded-2xl border border-gray-700 p-6 shadow-xl">
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-gradient-to-br from-amber-500/20 to-amber-600/20 rounded-xl border border-amber-500/20 shadow-lg">
-                  <svg
-                    className="w-6 h-6 text-amber-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                    />
-                  </svg>
+                <div className="p-3 bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] rounded-xl border border-amber-500/20 shadow-lg">
+                  <img src={VisitorIcon} alt="visitor" className="w-6 h-6" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-amber-600">
+                  <h1 className="text-2xl font-bold bg-clip-text bg-gradient-to-r text-white">
                     Visitor List
                   </h1>
                   <p className="text-gray-400 mt-1">

@@ -158,7 +158,7 @@ const BDM = () => {
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
         <div className="flex items-center gap-4">
-          <div className="p-3  bg-gradient-to-r from-amber-500 to-amber-800 rounded-xl">
+          <div className="p-3 bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] rounded-xl">
             <BsClipboardData className="w-6 h-6 text-white" />
           </div>
           <div>
@@ -168,7 +168,7 @@ const BDM = () => {
         </div>
         <button
           onClick={() => history.back()}
-          className="w-full sm:w-auto group flex items-center justify-center sm:justify-start gap-2.5 px-5 py-2.5 bg-gray-800 text-gray-300 hover:text-green-500 rounded-xl transition-all duration-300 border border-gray-700"
+          className="w-full sm:w-auto group flex items-center justify-center sm:justify-start gap-2.5 px-5 py-2.5 bg-gray-800 text-gray-300 hover:text-amber-500 rounded-xl transition-all duration-300 border border-gray-700"
         >
           <svg
             width="18"
@@ -428,7 +428,7 @@ const BDM = () => {
                         <span
                           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                             bdm.status === "verified"
-                              ? "bg-green-500/10 text-green-500"
+                              ? "bg-amber-500/10 text-amber-500"
                               : bdm.status === "rejected"
                               ? "bg-red-500/10 text-red-500"
                               : "bg-yellow-500/10 text-yellow-500"
@@ -461,9 +461,9 @@ const BDM = () => {
                             <>
                               <button
                                 onClick={() => navigate("/add-bdm")}
-                                className="relative group/btn flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-r from-green-600/90 to-green-800/90 hover:from-green-600 hover:to-green-800 transition-all duration-300 shadow-lg hover:shadow-green-900/30"
+                                className="relative group/btn flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-r from-amber-600/90 to-amber-800/90 hover:from-amber-600 hover:to-amber-800 transition-all duration-300 shadow-lg hover:shadow-amber-900/30"
                               >
-                                <div className="absolute inset-0 rounded-xl bg-green-600 opacity-0 group-hover/btn:opacity-20 blur-lg transition-opacity" />
+                                <div className="absolute inset-0 rounded-xl bg-amber-600 opacity-0 group-hover/btn:opacity-20 blur-lg transition-opacity" />
                                 <FiEdit className="w-5 h-5 text-white/90 group-hover/btn:text-white transition-colors relative" />
                               </button>
                               <button

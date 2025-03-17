@@ -55,7 +55,7 @@ const EditMemberModal = ({ member, chapters, onClose, onSubmit }) => {
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               required
-              className="w-full bg-gray-700 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full bg-gray-700 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
             />
           </div>
 
@@ -69,7 +69,7 @@ const EditMemberModal = ({ member, chapters, onClose, onSubmit }) => {
               value={formData.mobile}
               onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
               required
-              className="w-full bg-gray-700 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full bg-gray-700 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
             />
           </div>
 
@@ -81,7 +81,7 @@ const EditMemberModal = ({ member, chapters, onClose, onSubmit }) => {
               type="email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full bg-gray-700 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full bg-gray-700 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
             />
           </div>
 
@@ -93,7 +93,7 @@ const EditMemberModal = ({ member, chapters, onClose, onSubmit }) => {
               value={formData.chapter}
               onChange={(e) => setFormData({ ...formData, chapter: e.target.value })}
               required
-              className="w-full bg-gray-700 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full bg-gray-700 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
             >
               <option value="">Select Chapter</option>
               {chapters.map(chapter => (
@@ -114,7 +114,7 @@ const EditMemberModal = ({ member, chapters, onClose, onSubmit }) => {
                 value={formData.date}
                 onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                 required
-                className="w-full bg-gray-700 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 [color-scheme:dark]"
+                className="w-full bg-gray-700 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 [color-scheme:dark]"
               />
               <img
                 src={calendarIcon}
@@ -133,7 +133,7 @@ const EditMemberModal = ({ member, chapters, onClose, onSubmit }) => {
               value={formData.company}
               onChange={(e) => setFormData({ ...formData, company: e.target.value })}
               required
-              className="w-full bg-gray-700 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full bg-gray-700 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
             />
           </div>
 
@@ -146,7 +146,7 @@ const EditMemberModal = ({ member, chapters, onClose, onSubmit }) => {
               value={formData.business_category}
               onChange={(e) => setFormData({ ...formData, business_category: e.target.value })}
               required
-              className="w-full bg-gray-700 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full bg-gray-700 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
             />
           </div>
 
@@ -160,7 +160,7 @@ const EditMemberModal = ({ member, chapters, onClose, onSubmit }) => {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+              className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600"
             >
               Update Member
             </button>

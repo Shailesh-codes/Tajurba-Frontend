@@ -209,7 +209,7 @@ const CertificatesList = () => {
   const getCertificateTypeStyle = (type) => {
     const styles = {
       highest_business: "from-blue-600 to-blue-900",
-      highest_visitor: "from-green-600 to-green-900",
+      highest_visitor: "from-amber-600 to-amber-900",
       best_elevator_pitch: "from-purple-600 to-purple-900",
       maximum_referrals: "from-yellow-600 to-yellow-900",
       mdp_attended: "from-red-600 to-red-900",
@@ -222,7 +222,7 @@ const CertificatesList = () => {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div className="flex gap-3">
-          <div className="p-3 bg-gradient-to-r from-gray-800 to-gray-900 rounded-xl">
+          <div className="p-3 bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] rounded-xl">
             <img
               src={certificatesIcon}
               alt="Certificates"
@@ -240,7 +240,7 @@ const CertificatesList = () => {
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate(-1)}
-            className="group flex items-center gap-2.5 px-5 py-2.5 bg-gray-800 text-gray-300 hover:text-green-500 rounded-xl transition-all duration-300 border border-gray-700"
+            className="group flex items-center gap-2.5 px-5 py-2.5 bg-gray-800 text-gray-300 hover:text-amber-500 rounded-xl transition-all duration-300 border border-gray-700"
           >
             <svg
               width="18"
@@ -263,7 +263,7 @@ const CertificatesList = () => {
 
           <button
             onClick={() => navigate("/assign-certificates")}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-green-600 to-green-900 hover:from-green-700 hover:to-green-950 text-white font-semibold shadow-lg hover:shadow-xl hover:shadow-green-900/30 hover:-translate-y-0.5 transition-all duration-300"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-amber-900 hover:from-amber-700 hover:to-amber-950 text-white font-semibold shadow-lg hover:shadow-xl hover:shadow-amber-900/30 hover:-translate-y-0.5 transition-all duration-300"
           >
             <svg
               className="w-5 h-5"
@@ -295,7 +295,7 @@ const CertificatesList = () => {
               onChange={(e) =>
                 setFilters({ ...filters, search: e.target.value })
               }
-              className="w-full p-3 bg-gray-700 rounded-xl border border-gray-600 focus:border-green-500 focus:ring-0 text-white"
+              className="w-full p-3 bg-gray-700 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-0 text-white"
             />
           </div>
 
@@ -305,7 +305,7 @@ const CertificatesList = () => {
               onChange={(e) =>
                 setFilters({ ...filters, chapter: e.target.value })
               }
-              className="w-full p-3 bg-gray-700 rounded-xl border border-gray-600 focus:border-green-500 focus:ring-0 text-white"
+              className="w-full p-3 bg-gray-700 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-0 text-white"
             >
               <option value="">All Chapters</option>
               {chapters.map((chapter) => (
@@ -322,7 +322,7 @@ const CertificatesList = () => {
               onChange={(e) =>
                 setFilters({ ...filters, certificateType: e.target.value })
               }
-              className="w-full p-3 bg-gray-700 rounded-xl border border-gray-600 focus:border-green-500 focus:ring-0 text-white"
+              className="w-full p-3 bg-gray-700 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-0 text-white"
             >
               <option value="">All Types</option>
               <option value="highest_business">Highest Business Given</option>
@@ -406,7 +406,7 @@ const CertificatesList = () => {
                           type="date"
                           value={cert.issued_date}
                           readOnly
-                          className="w-full p-3 bg-gray-700 rounded-xl border border-gray-600 focus:border-green-500 focus:ring-0 text-white [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full"
+                          className="w-full p-3 bg-gray-700 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-0 text-white [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full"
                         />
                         <img
                           src={calendarIcon}

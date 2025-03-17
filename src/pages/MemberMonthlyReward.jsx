@@ -174,11 +174,11 @@ const MemberMonthlyReward = () => {
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-4">
         <div className="flex items-center gap-5">
-          <div className="p-4 bg-gradient-to-br from-amber-500/10 to-amber-600/10 rounded-2xl border border-amber-500/20">
-            <Award className="w-8 h-8 text-amber-500" />
+          <div className="p-4 bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] rounded-2xl">
+            <Award className="w-8 h-8 text-white" />
           </div>
           <div>
-            <h2 className="text-3xl font-bold text-white bg-gradient-to-r from-amber-200 to-amber-500 bg-clip-text text-transparent">
+            <h2 className="text-3xl font-bold text-white">
               Monthly Reward & Recognition
             </h2>
             <p className="text-sm text-gray-400 mt-1">
