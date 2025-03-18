@@ -105,10 +105,10 @@ const MarkAttendance = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div className="flex gap-3">
           <div className="p-3 bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] rounded-xl">
-            <img src={attendanceIcon} alt="Attendance" className="w-6 h-6" />
+            <img src={attendanceIcon} alt="Attendance" className="w-8 h-6" />
           </div>
           <div className="flex flex-col">
-            <h1 className="text-2xl font-bold text-white">
+            <h1 className="text-xl font-bold text-white">
               Mark Meeting Attendance
             </h1>
             <h2 className="text-sm text-gray-400">

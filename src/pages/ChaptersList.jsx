@@ -94,7 +94,7 @@ const ChaptersList = () => {
   );
 
   return (
-    <div className="mt-32 p-6">
+    <div className="mt-32 p-1 lg:p-6">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div className="flex gap-3">

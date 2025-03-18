@@ -131,7 +131,7 @@ const MemberList = () => {
   };
 
   return (
-    <div className="mt-32 p-6">
+    <div className="mt-32 p-1 lg:p-6">
       {/* Header Section */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }}

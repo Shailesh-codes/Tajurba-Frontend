@@ -50,18 +50,20 @@ const Dashboard = () => {
   });
 
   return (
-    <div className="mt-32 p-6 space-y-8 min-h-screen bg-gradient-to-b from-gray-900 via-gray-900/95 to-gray-950">
+    <div className="mt-32 lg:p-4 sm:p-6 space-y-6 sm:space-y-8 min-h-screen bg-gradient-to-b from-gray-900 via-gray-900/95 to-gray-950">
       {/* Header Section */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="flex items-center gap-4">
-          <div className="p-4 bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] rounded-2xl shadow-lg shadow-[#D4B86A]/20">
-            <Users className="w-7 h-7 text-gray-900" />
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="p-3 sm:p-4 bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] rounded-xl sm:rounded-2xl shadow-lg shadow-[#D4B86A]/20">
+            <Users className="w-6 h-6 sm:w-7 sm:h-7 text-gray-900" />
           </div>
           <div>
-            <h2 className="text-4xl font-bold text-white bg-clip-text">
+            <h2 className="text-2xl sm:text-4xl font-bold text-white bg-clip-text">
               Dashboard Overview
             </h2>
-            <p className="text-gray-400 mt-1">Monitor your performance</p>
+            <p className="text-sm sm:text-base text-gray-400 mt-0.5 sm:mt-1">
+              Monitor your performance
+            </p>
           </div>
         </div>
       </div>
@@ -71,35 +73,35 @@ const Dashboard = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="relative overflow-hidden bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 backdrop-blur-xl rounded-2xl border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-300 shadow-xl"
+        className="relative overflow-hidden bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 backdrop-blur-xl rounded-xl sm:rounded-2xl border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-300 shadow-xl"
       >
         <div className="absolute inset-0 bg-gradient-to-r from-[#D4B86A]/10 via-transparent to-[#D4B86A]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl" />
-        <div className="relative p-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="relative p-4 sm:p-8">
+          <div className="grid grid-cols-1 gap-4 sm:gap-8">
             {/* Date Range */}
-            <div className="relative group space-y-3">
-              <label className="text-sm font-semibold text-[#D4B86A] mb-2 block">
+            <div className="relative group space-y-2 sm:space-y-3">
+              <label className="text-sm font-semibold text-[#D4B86A] mb-1 sm:mb-2 block">
                 Date Range
               </label>
-              <div className="flex flex-col lg:flex-row gap-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 <input
                   type="date"
-                  className="flex-1 p-4 bg-gray-800/50 rounded-xl border border-[#D4B86A]/30 focus:border-[#D4B86A] focus:ring-2 focus:ring-[#D4B86A]/20 text-white transition-all duration-300 [color-scheme:dark] text-sm"
+                  className="flex-1 p-3 sm:p-4 bg-gray-800/50 rounded-lg sm:rounded-xl border border-[#D4B86A]/30 focus:border-[#D4B86A] focus:ring-2 focus:ring-[#D4B86A]/20 text-white transition-all duration-300 [color-scheme:dark] text-sm"
                 />
                 <input
                   type="date"
-                  className="flex-1 p-4 bg-gray-800/50 rounded-xl border border-[#D4B86A]/30 focus:border-[#D4B86A] focus:ring-2 focus:ring-[#D4B86A]/20 text-white transition-all duration-300 [color-scheme:dark] text-sm"
+                  className="flex-1 p-3 sm:p-4 bg-gray-800/50 rounded-lg sm:rounded-xl border border-[#D4B86A]/30 focus:border-[#D4B86A] focus:ring-2 focus:ring-[#D4B86A]/20 text-white transition-all duration-300 [color-scheme:dark] text-sm"
                 />
               </div>
             </div>
 
             {/* Status Selector */}
-            <div className="relative group space-y-3">
-              <label className="text-sm font-semibold text-[#D4B86A] mb-2 block">
+            <div className="relative group space-y-2 sm:space-y-3">
+              <label className="text-sm font-semibold text-[#D4B86A] mb-1 sm:mb-2 block">
                 Status
               </label>
               <select
-                className="w-full p-4 bg-gray-800/50 rounded-xl border border-[#D4B86A]/30 focus:border-[#D4B86A] focus:ring-2 focus:ring-[#D4B86A]/20 text-white transition-all duration-300 text-sm appearance-none"
+                className="w-full p-3 sm:p-4 bg-gray-800/50 rounded-lg sm:rounded-xl border border-[#D4B86A]/30 focus:border-[#D4B86A] focus:ring-2 focus:ring-[#D4B86A]/20 text-white transition-all duration-300 text-sm appearance-none"
                 style={{
                   backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23D4B86A'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
                   backgroundRepeat: "no-repeat",
@@ -121,9 +123,9 @@ const Dashboard = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8"
       >
-        <div className="group relative overflow-hidden p-6 rounded-2xl bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-500">
+        <div className="group relative overflow-hidden p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-500">
           <div className="absolute inset-0">
             <div className="absolute inset-0 bg-gradient-to-r from-[#D4B86A]/10 via-purple-500/5 to-[#D4B86A]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl" />
           </div>
@@ -153,7 +155,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="group relative overflow-hidden p-6 rounded-2xl bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-500">
+        <div className="group relative overflow-hidden p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-500">
           <div className="absolute inset-0">
             <div className="absolute inset-0 bg-gradient-to-r from-[#D4B86A]/10 via-purple-500/5 to-[#D4B86A]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl" />
           </div>
@@ -183,7 +185,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="group relative overflow-hidden p-6 rounded-2xl bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-500">
+        <div className="group relative overflow-hidden p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-500">
           <div className="absolute inset-0">
             <div className="absolute inset-0 bg-gradient-to-r from-[#D4B86A]/10 via-purple-500/5 to-[#D4B86A]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl" />
           </div>
@@ -213,7 +215,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="group relative overflow-hidden p-6 rounded-2xl bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-500">
+        <div className="group relative overflow-hidden p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-500">
           <div className="absolute inset-0">
             <div className="absolute inset-0 bg-gradient-to-r from-[#D4B86A]/10 via-purple-500/5 to-[#D4B86A]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl" />
           </div>
@@ -249,10 +251,10 @@ const Dashboard = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"
       >
         {/* Card 1 - Meetings & Attendance */}
-        <div className="group relative overflow-hidden p-6 rounded-xl bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-500 hover:transform hover:scale-[1.02]">
+        <div className="group relative overflow-hidden p-4 sm:p-6 rounded-lg sm:rounded-xl bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-500 hover:transform hover:scale-[1.02]">
           <div className="absolute inset-0">
             <div className="absolute inset-0 bg-gradient-to-r from-[#D4B86A]/10 via-purple-500/5 to-[#D4B86A]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl" />
           </div>
@@ -297,7 +299,7 @@ const Dashboard = () => {
         </div>
 
         {/* Card 2 - MDP & Attendance */}
-        <div className="group relative overflow-hidden p-6 rounded-xl bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-500 hover:transform hover:scale-[1.02]">
+        <div className="group relative overflow-hidden p-4 sm:p-6 rounded-lg sm:rounded-xl bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-500 hover:transform hover:scale-[1.02]">
           <div className="absolute inset-0">
             <div className="absolute inset-0 bg-gradient-to-r from-[#D4B86A]/10 via-purple-500/5 to-[#D4B86A]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl" />
           </div>
@@ -342,7 +344,7 @@ const Dashboard = () => {
         </div>
 
         {/* Card 3 - Socials & Training */}
-        <div className="group relative overflow-hidden p-6 rounded-xl bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-500 hover:transform hover:scale-[1.02]">
+        <div className="group relative overflow-hidden p-4 sm:p-6 rounded-lg sm:rounded-xl bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-500 hover:transform hover:scale-[1.02]">
           <div className="absolute inset-0">
             <div className="absolute inset-0 bg-gradient-to-r from-[#D4B86A]/10 via-purple-500/5 to-[#D4B86A]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl" />
           </div>
@@ -387,7 +389,7 @@ const Dashboard = () => {
         </div>
 
         {/* Card 4 - Total Members */}
-        <div className="group relative overflow-hidden p-6 rounded-xl bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-500 hover:transform hover:scale-[1.02]">
+        <div className="group relative overflow-hidden p-4 sm:p-6 rounded-lg sm:rounded-xl bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-500 hover:transform hover:scale-[1.02]">
           <div className="absolute inset-0">
             <div className="absolute inset-0 bg-gradient-to-r from-[#D4B86A]/10 via-purple-500/5 to-[#D4B86A]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl" />
           </div>
@@ -425,7 +427,7 @@ const Dashboard = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-[#0A0F1C] to-[#1A1F2C] p-8 mt-8 border border-[#D4B86A]/20 hover:border-[#D4B86A]/40 transition-all duration-500"
+        className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-b from-[#0A0F1C] to-[#1A1F2C] p-4 sm:p-8 mt-6 sm:mt-8 border border-[#D4B86A]/20 hover:border-[#D4B86A]/40 transition-all duration-500"
       >
         {/* Glowing background effects */}
         <div className="absolute top-0 left-1/4 w-1/2 h-1/2 bg-[#D4B86A]/10 blur-[120px] rounded-full" />
@@ -433,7 +435,7 @@ const Dashboard = () => {
 
         <div className="relative">
           {/* Header */}
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 sm:mb-8 gap-4">
             <div className="flex items-center gap-3">
               <div className="p-2.5 rounded-xl bg-gradient-to-r from-[#D4B86A] to-[#B88746] shadow-lg shadow-[#D4B86A]/20">
                 <TrendingUp className="w-5 h-5 text-gray-900" />
@@ -451,8 +453,8 @@ const Dashboard = () => {
           </div>
 
           {/* Chart */}
-          <div className="bg-white/[0.02] rounded-xl p-6 border border-white/10 backdrop-blur-sm hover:border-[#D4B86A]/30 transition-all duration-500">
-            <div className="h-[400px] w-full">
+          <div className="bg-white/[0.02] rounded-lg sm:rounded-xl p-3 sm:p-6 border border-white/10 backdrop-blur-sm hover:border-[#D4B86A]/30 transition-all duration-500">
+            <div className="h-[300px] sm:h-[400px] w-full">
               <Line
                 data={{
                   labels: generateLabels(),

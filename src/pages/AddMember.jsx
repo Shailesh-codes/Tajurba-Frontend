@@ -19,7 +19,7 @@ const AddMember = () => {
   };
 
   return (
-    <div className="mt-32 p-6">
+    <div className="mt-32 p-1 lg:p-6">
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div className="flex items-center gap-4">
