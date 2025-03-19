@@ -170,7 +170,7 @@ const MemberMonthlyReward = () => {
   };
 
   return (
-    <div className="mt-32 flex flex-col space-y-8">
+    <div className="mt-36 p-1 lg:p-6 flex flex-col space-y-8">
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-4">
         <div className="flex items-center gap-5">
@@ -196,19 +196,19 @@ const MemberMonthlyReward = () => {
       </div>
 
       {/* Filters Section */}
-      <div className="flex flex-col sm:flex-row justify-end gap-4">
+      <div className="flex flex-row gap-2 sm:flex-row justify-items-start lg:justify-end lg:gap-4">
         <div className="relative flex items-center">
           <input
             type="month"
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
-            className="w-48 pl-6 py-2.5 bg-gray-800/50 text-white rounded-xl border border-gray-700 focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20 [color-scheme:dark]"
+            className="lg:w-48 pl-6 py-2.5 bg-gray-800/50 text-white rounded-xl border border-gray-700 focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20 [color-scheme:dark]"
           />
         </div>
         <select
           value={selectedChapter}
           onChange={(e) => setSelectedChapter(e.target.value)}
-          className="w-48 px-4 py-2.5 bg-gray-800/50 text-white rounded-xl border border-gray-700 focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20"
+          className="lg:w-48 px-4 py-2.5 bg-gray-800/50 text-white rounded-xl border border-gray-700 focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20"
         >
           <option value="">All Chapters</option>
           <option value="chapter-a">Chapter A</option>
@@ -217,13 +217,13 @@ const MemberMonthlyReward = () => {
       </div>
 
       {/* Monthly Achievement Section */}
-      <div className="mt-8">
+      <div className="mt-4 lg:mt-8">
         <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
           <GraduationCap className="w-6 h-6 text-amber-500" />
           Your Monthly Achievement
         </h3>
         <div className="p-8 rounded-2xl bg-gradient-to-br from-gray-900/90 to-gray-800/90 border border-gray-800">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 items-center gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 items-center gap-6">
             {/* Profile QR Section */}
             <div className="flex flex-col items-center justify-center gap-6 w-full">
               {/* QR Code Container */}

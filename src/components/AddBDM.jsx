@@ -2,11 +2,12 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { BsClipboardData } from "react-icons/bs";
 import { FiCalendar, FiUsers, FiHome } from "react-icons/fi";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import calendarIcon from "../assets/images/icons/calender-icon.svg";
 
 const AddBDM = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
   const [formData, setFormData] = useState({
     chapter: "",
     member: "",
@@ -19,7 +20,7 @@ const AddBDM = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="mt-32 p-6"
+      className="mt-32 p-1 lg:p-6"
     >
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
@@ -28,8 +29,21 @@ const AddBDM = () => {
             <BsClipboardData className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-white">Add BDM</h2>
-            <p className="text-sm text-gray-400">Fill in the details below</p>
+            {id ? (
+              <>
+                <h2 className="text-2xl font-bold text-white">Edit BDM</h2>
+                <p className="text-sm text-gray-400">
+                  Fill in the details below
+                </p>
+              </>
+            ) : (
+              <>
+                <h2 className="text-2xl font-bold text-white">Add BDM</h2>
+                <p className="text-sm text-gray-400">
+                  Fill in the details below
+                </p>
+              </>
+            )}
           </div>
         </div>
 
@@ -154,7 +168,14 @@ const AddBDM = () => {
           <div className="flex justify-end gap-4">
             <button
               type="button"
-              onClick={() => setFormData({ chapter: "", member: "", bdmDate: "", description: "" })}
+              onClick={() =>
+                setFormData({
+                  chapter: "",
+                  member: "",
+                  bdmDate: "",
+                  description: "",
+                })
+              }
               className="px-6 py-2.5 rounded-xl border border-gray-700 text-gray-300 hover:bg-gray-700/50 transition-all duration-300"
             >
               Reset

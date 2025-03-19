@@ -1,11 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import {
-  FiCalendar,
-  FiMapPin,
-  FiClock,
-  FiInfo,
-} from "react-icons/fi";
+import { FiCalendar, FiMapPin, FiClock, FiInfo } from "react-icons/fi";
 import {
   BsQrCodeScan,
   BsGraphUp,
@@ -74,7 +69,7 @@ const EventDetails = () => {
   };
 
   return (
-    <div className="mt-32 flex flex-col space-y-8 relative">
+    <div className="mt-32 p-2 lg:p-6 flex flex-col space-y-8 relative">
       {/* Decorative background elements */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute top-20 left-10 w-72 h-72 bg-amber-500/10 rounded-full blur-3xl"></div>
@@ -134,7 +129,9 @@ const EventDetails = () => {
               <div className="p-3 bg-gradient-to-br from-amber-500 to-purple-600 rounded-xl transform -rotate-6 hover:rotate-0 transition-all duration-300">
                 <BsGraphUp className="w-7 h-7 text-white" />
               </div>
-              <h3 className="text-2xl font-bold text-white">Business Growth Workshop</h3>
+              <h3 className="text-2xl font-bold text-white">
+                Business Growth Workshop
+              </h3>
             </div>
             <div className="space-y-8">
               <div className="flex items-start gap-5 group hover:bg-gray-800/30 p-4 rounded-xl transition-all duration-300">
@@ -142,7 +139,9 @@ const EventDetails = () => {
                   <FiCalendar className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-400 mb-1">Date & Time</p>
+                  <p className="text-sm font-medium text-gray-400 mb-1">
+                    Date & Time
+                  </p>
                   <p className="text-base text-white group-hover:text-amber-500 transition-colors duration-300">
                     March 15, 2024 10:00 AM
                   </p>
@@ -154,8 +153,12 @@ const EventDetails = () => {
                   <FiMapPin className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-400 mb-1">Venue</p>
-                  <p className="text-base text-white group-hover:text-amber-500 transition-colors duration-300">Hotel Grand Plaza</p>
+                  <p className="text-sm font-medium text-gray-400 mb-1">
+                    Venue
+                  </p>
+                  <p className="text-base text-white group-hover:text-amber-500 transition-colors duration-300">
+                    Hotel Grand Plaza
+                  </p>
                 </div>
               </div>
 
@@ -164,7 +167,9 @@ const EventDetails = () => {
                   <FiInfo className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-400 mb-1">Description</p>
+                  <p className="text-sm font-medium text-gray-400 mb-1">
+                    Description
+                  </p>
                   <p className="text-base text-white group-hover:text-amber-500 transition-colors duration-300">
                     Meetings are an essential part of effective team
                     collaboration – but we've all been in meetings that were a
@@ -194,7 +199,9 @@ const EventDetails = () => {
               <div className="p-3 bg-gradient-to-br from-purple-500 to-amber-500 rounded-xl transform rotate-6 hover:rotate-0 transition-all duration-300">
                 <BsPersonCheck className="w-7 h-7 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-white">Attendance Status</h3>
+              <h3 className="text-xl font-bold text-white">
+                Attendance Status
+              </h3>
             </div>
             <div className="space-y-6">
               <div className="flex items-center justify-between p-4 bg-gray-800/30 rounded-xl hover:bg-gray-800/50 transition-all duration-300">
@@ -225,14 +232,22 @@ const EventDetails = () => {
               <div className="p-2.5 bg-amber-500/10 rounded-xl">
                 <BsQrCodeScan className="w-6 h-6 text-amber-500" />
               </div>
-              <h3 className="text-xl font-semibold text-white">Payment Methods</h3>
+              <h3 className="text-xl font-semibold text-white">
+                Payment Methods
+              </h3>
             </div>
             <div className="grid sm:grid-cols-2 gap-8">
               <div className="flex flex-col items-center p-8 bg-gradient-to-br from-amber-500/5 to-purple-500/5 rounded-2xl border border-gray-700/50 hover:border-amber-500/50 transition-all duration-300">
                 <div className="p-3 bg-white rounded-xl mb-4 shadow-lg transform hover:scale-105 transition-transform duration-300">
-                  <img src="https://dummyimage.com/128x128/000/fff&text=QR+Code" alt="QR Code" className="w-32 h-32" />
+                  <img
+                    src="https://dummyimage.com/128x128/000/fff&text=QR+Code"
+                    alt="QR Code"
+                    className="w-32 h-32"
+                  />
                 </div>
-                <p className="text-sm text-gray-400 mt-2">Scan QR code to pay</p>
+                <p className="text-sm text-gray-400 mt-2">
+                  Scan QR code to pay
+                </p>
               </div>
 
               <div className="space-y-4">
@@ -260,7 +275,9 @@ const EventDetails = () => {
               <div className="p-2.5 bg-amber-500/10 rounded-xl">
                 <BsBuilding className="w-6 h-6 text-amber-500" />
               </div>
-              <h3 className="text-xl font-semibold text-white">Venue Fee Details</h3>
+              <h3 className="text-xl font-semibold text-white">
+                Venue Fee Details
+              </h3>
             </div>
             <div className="space-y-4">
               <div className="flex items-center justify-between">

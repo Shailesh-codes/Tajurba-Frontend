@@ -76,7 +76,7 @@ const VisitorInviteAddEdit = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="mt-32 p-6"
+      className="mt-32 p-1 lg:p-6"
     >
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
@@ -85,10 +85,10 @@ const VisitorInviteAddEdit = () => {
             <img src={visitorIcon} alt="visitorIcon" className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-white">
+            <h2 className="text-xl lg:text-2xl font-bold text-white">
               {id ? "Edit Visitor Invite" : "Add Visitor Invite"}
             </h2>
-            <p className="text-sm text-gray-400">
+            <p className="text-sm lg:text-base text-gray-400">
               {id
                 ? "Update existing visitor invite"
                 : "Create new visitor invite"}

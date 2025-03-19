@@ -49,6 +49,7 @@ import MemberDashboard from "./pages/MemberDashboard";
 import Setting from "./pages/Settings";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Calendar from "./pages/Calendar";
+import LogoutModal from "./authentications/LogoutModal";
 
 function App() {
   return (
@@ -78,6 +79,7 @@ function App() {
         <Route path="/member-dashboard" element={<MemberDashboard />} />
         <Route path="/bdm" element={<BDM />} />
         <Route path="/add-bdm" element={<AddBDM />} />
+        <Route path="/edit-bdm/:id" element={<AddBDM />} />
         <Route path="/view-bdm/:id" element={<ViewBDM />} />
         <Route path="/business-given" element={<BusinessGiven />} />
         <Route path="/add-business" element={<AddBusiness />} />

@@ -55,7 +55,7 @@ const AddMeetings = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-900 pt-32 pb-16 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-900 pt-32 pb-16 lg:px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header Section with Enhanced Design */}
         <motion.div
@@ -344,7 +344,9 @@ const AddMeetings = () => {
                         type="checkbox"
                         className="peer h-5 w-5 appearance-none rounded-md border-2 border-gray-500 bg-gray-700/50 checked:border-blue-500 checked:bg-blue-500/20 hover:border-blue-400 transition-all duration-300"
                         onChange={(e) => {
-                          const newChapters = e.target.checked ? chapters.map(c => c.id) : [];
+                          const newChapters = e.target.checked
+                            ? chapters.map((c) => c.id)
+                            : [];
                           setFormData({ ...formData, chapters: newChapters });
                         }}
                         checked={formData.chapters.length === chapters.length}
@@ -389,8 +391,13 @@ const AddMeetings = () => {
                             onChange={(e) => {
                               const newChapters = e.target.checked
                                 ? [...formData.chapters, chapter.id]
-                                : formData.chapters.filter((id) => id !== chapter.id);
-                              setFormData({ ...formData, chapters: newChapters });
+                                : formData.chapters.filter(
+                                    (id) => id !== chapter.id
+                                  );
+                              setFormData({
+                                ...formData,
+                                chapters: newChapters,
+                              });
                             }}
                             className="peer h-5 w-5 appearance-none rounded-md border-2 border-gray-500 bg-gray-700/50 checked:border-blue-500 checked:bg-blue-500/20 hover:border-blue-400 transition-all duration-300"
                           />
@@ -417,11 +424,13 @@ const AddMeetings = () => {
                           </span>
                         </div>
                         <div className="ml-auto">
-                          <div className={`h-2 w-2 rounded-full ${
-                            formData.chapters.includes(chapter.id)
-                              ? 'bg-blue-500 animate-pulse'
-                              : 'bg-gray-600'
-                          } transition-colors duration-300`} />
+                          <div
+                            className={`h-2 w-2 rounded-full ${
+                              formData.chapters.includes(chapter.id)
+                                ? "bg-blue-500 animate-pulse"
+                                : "bg-gray-600"
+                            } transition-colors duration-300`}
+                          />
                         </div>
                       </label>
                     ))}

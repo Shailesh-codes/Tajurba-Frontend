@@ -179,7 +179,7 @@ const MemberDashboard = () => {
               <label className="text-sm font-semibold text-[#D4B86A] mb-2 block">
                 Date Range
               </label>
-              <div className="flex gap-4">
+              <div className="flex flex-col lg:flex-row gap-4">
                 <input
                   type="date"
                   className="flex-1 p-4 bg-gray-800/50 rounded-xl border border-[#D4B86A]/30 focus:border-[#D4B86A] focus:ring-2 focus:ring-[#D4B86A]/20 text-white transition-all duration-300 [color-scheme:dark] text-sm"

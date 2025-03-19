@@ -21,14 +21,14 @@ const EditScheduleMeeting = () => {
     payment_method: "default",
     upi_id: "",
     qr_code: "",
-    chapters: []
+    chapters: [],
   });
 
   // Dummy chapters data (replace with API call)
   const chapters = [
     { id: 1, name: "Chapter One" },
     { id: 2, name: "Chapter Two" },
-    { id: 3, name: "Chapter Three" }
+    { id: 3, name: "Chapter Three" },
   ];
 
   useEffect(() => {
@@ -52,18 +52,18 @@ const EditScheduleMeeting = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleChapterToggle = (chapterId) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       chapters: prev.chapters.includes(chapterId)
-        ? prev.chapters.filter(id => id !== chapterId)
-        : [...prev.chapters, chapterId]
+        ? prev.chapters.filter((id) => id !== chapterId)
+        : [...prev.chapters, chapterId],
     }));
   };
 
@@ -72,11 +72,11 @@ const EditScheduleMeeting = () => {
     try {
       // Replace with your actual API call
       const response = await fetch(`/api/schedule/${id}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(formData),
       });
 
       if (response.ok) {
@@ -92,29 +92,29 @@ const EditScheduleMeeting = () => {
 
   const showSuccess = (message) => {
     Swal.fire({
-      icon: 'success',
-      title: 'Success!',
+      icon: "success",
+      title: "Success!",
       text: message,
       background: "#1F2937",
       customClass: {
         popup: "bg-gray-800 rounded-xl border border-gray-700",
         title: "text-white",
-        htmlContainer: "text-gray-300"
-      }
+        htmlContainer: "text-gray-300",
+      },
     });
   };
 
   const showError = (message) => {
     Swal.fire({
-      icon: 'error',
-      title: 'Error!',
+      icon: "error",
+      title: "Error!",
       text: message,
       background: "#1F2937",
       customClass: {
         popup: "bg-gray-800 rounded-xl border border-gray-700",
         title: "text-white",
-        htmlContainer: "text-gray-300"
-      }
+        htmlContainer: "text-gray-300",
+      },
     });
   };
 
@@ -127,7 +127,7 @@ const EditScheduleMeeting = () => {
   }
 
   return (
-    <div className="mt-32 p-6">
+    <div className="mt-32 p-1lg:p-6">
       {/* Header Section */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -178,11 +178,23 @@ const EditScheduleMeeting = () => {
             <div className="p-6 rounded-2xl bg-gray-800 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-700">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-2 bg-blue-500/20 rounded-lg">
-                  <svg className="w-5 h-5 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                  <svg
+                    className="w-5 h-5 text-blue-300"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
                   </svg>
                 </div>
-                <h3 className="text-lg font-semibold text-white">Basic Information</h3>
+                <h3 className="text-lg font-semibold text-white">
+                  Basic Information
+                </h3>
               </div>
 
               <div className="space-y-6">
@@ -252,7 +264,9 @@ const EditScheduleMeeting = () => {
 
                 {/* Description Field */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-300">Description</label>
+                  <label className="text-sm font-medium text-gray-300">
+                    Description
+                  </label>
                   <textarea
                     name="description"
                     value={formData.description}
@@ -271,8 +285,18 @@ const EditScheduleMeeting = () => {
             <div className="p-6 rounded-2xl bg-gray-800 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-700">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-2 bg-purple-500/20 rounded-lg">
-                  <svg className="w-5 h-5 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                  <svg
+                    className="w-5 h-5 text-purple-300"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                    />
                   </svg>
                 </div>
                 <h3 className="text-lg font-semibold text-white">
@@ -281,7 +305,7 @@ const EditScheduleMeeting = () => {
               </div>
 
               <div className="space-y-4">
-                {chapters.map(chapter => (
+                {chapters.map((chapter) => (
                   <label
                     key={chapter.id}
                     className="flex items-center gap-3 p-3 rounded-xl bg-gray-700/50 border border-gray-600 cursor-pointer hover:bg-gray-700 transition-all duration-300"
@@ -311,11 +335,23 @@ const EditScheduleMeeting = () => {
           <div className="p-6 rounded-2xl bg-gray-800 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-700">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-2 bg-emerald-500/20 rounded-lg">
-                <svg className="w-5 h-5 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z"/>
+                <svg
+                  className="w-5 h-5 text-emerald-300"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z"
+                  />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-white">Payment Details</h3>
+              <h3 className="text-lg font-semibold text-white">
+                Payment Details
+              </h3>
             </div>
 
             <div className="space-y-6">
@@ -347,7 +383,9 @@ const EditScheduleMeeting = () => {
 
               {/* Payment Method */}
               <div className="space-y-3">
-                <label className="text-sm font-medium text-gray-300">Payment Method</label>
+                <label className="text-sm font-medium text-gray-300">
+                  Payment Method
+                </label>
                 <div className="grid grid-cols-2 gap-3">
                   <label className="flex items-center gap-2 p-3 bg-gray-700/50 rounded-xl border border-gray-600 cursor-pointer hover:bg-gray-700 transition-all duration-300">
                     <input
@@ -378,7 +416,9 @@ const EditScheduleMeeting = () => {
               {formData.payment_method === "custom" && (
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-300">UPI ID</label>
+                    <label className="text-sm font-medium text-gray-300">
+                      UPI ID
+                    </label>
                     <input
                       type="text"
                       name="upi_id"
@@ -389,7 +429,9 @@ const EditScheduleMeeting = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-300">QR Code</label>
+                    <label className="text-sm font-medium text-gray-300">
+                      QR Code
+                    </label>
                     <input
                       type="file"
                       accept="image/*"
@@ -415,11 +457,23 @@ const EditScheduleMeeting = () => {
           <div className="p-6 rounded-2xl bg-gray-800 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-700">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-2 bg-purple-500/20 rounded-lg">
-                <svg className="w-5 h-5 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
+                <svg
+                  className="w-5 h-5 text-purple-300"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
+                  />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-white">QR Code Preview</h3>
+              <h3 className="text-lg font-semibold text-white">
+                QR Code Preview
+              </h3>
             </div>
 
             <div className="p-4 bg-gray-700/50 rounded-xl border border-gray-600">
@@ -431,7 +485,9 @@ const EditScheduleMeeting = () => {
                     className="max-w-[200px] rounded-lg"
                   />
                 ) : (
-                  <div className="text-gray-400 text-sm">No QR code uploaded</div>
+                  <div className="text-gray-400 text-sm">
+                    No QR code uploaded
+                  </div>
                 )}
                 {formData.upi_id && (
                   <p className="mt-3 text-sm text-gray-400">

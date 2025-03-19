@@ -59,7 +59,7 @@ const MemberReferGiven = () => {
   });
 
   return (
-    <div className="mt-32 flex flex-col gap-1 space-y-5">
+    <div className="mt-32 p-1 lg:p-6 flex flex-col gap-1 space-y-5">
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
         <div className="flex items-center gap-4">
@@ -125,7 +125,7 @@ const MemberReferGiven = () => {
         <div className="order-1 sm:order-2 sm:ml-auto">
           <button
             onClick={() => navigate("/add-edit-ref-given")}
-            className="w-full sm:w-auto pl-6 pr-6 py-2 bg-gradient-to-r from-amber-500 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white text-lg font-normal rounded-2xl h-[56px] border border-gray-600/50 focus:outline-none transition-colors flex items-center gap-2"
+            className="flex justify-center w-full sm:w-auto px-10 py-2 bg-gradient-to-r from-amber-500 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white text-lg font-normal rounded-2xl h-[56px] border border-gray-600/50 focus:outline-none transition-colors flex items-center gap-2"
           >
             <svg
               className="w-5 h-5"

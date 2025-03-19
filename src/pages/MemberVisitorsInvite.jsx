@@ -101,17 +101,17 @@ const MemberVisitorsInvite = () => {
             <BsPersonPlus className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-white">
+            <h2 className="text-xl lg:text-2xl font-bold text-white">
               Visitor Invites List
             </h2>
-            <p className="text-sm text-gray-400">
+            <p className="text-sm lg:text-base text-gray-400">
               View and manage visitor invites
             </p>
           </div>
         </div>
         <button
           onClick={() => history.back()}
-          className="w-full sm:w-auto group flex items-center gap-2.5 px-5 py-2.5 bg-gray-800 text-gray-300 hover:text-amber-500 rounded-xl transition-all duration-300 border border-gray-700"
+          className="w-32 sm:w-auto group flex items-center gap-2.5 px-5 py-2.5 bg-gray-800 text-gray-300 hover:text-amber-500 rounded-xl transition-all duration-300 border border-gray-700"
         >
           <svg
             width="18"
@@ -129,7 +129,9 @@ const MemberVisitorsInvite = () => {
               strokeLinejoin="round"
             />
           </svg>
-          <span className="font-semibold tracking-wide text-sm">Back</span>
+          <span className="font-semibold tracking-wide text-sm lg:text-base">
+            Back
+          </span>
         </button>
       </div>
 
@@ -188,7 +190,7 @@ const MemberVisitorsInvite = () => {
                 strokeLinejoin="round"
               />
             </svg>
-            <span>Add Visitor Invite</span>
+            <span className="text-sm lg:text-base">Add Visitor Invite</span>
           </Link>
         </div>
       </div>

@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Users, Home, Calendar, Phone, ChevronLeft, ScrollText } from "lucide-react";
+import {
+  Users,
+  Home,
+  Calendar,
+  Phone,
+  ChevronLeft,
+  ScrollText,
+} from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import calendarIcon from "../assets/images/icons/calender-icon.svg";
 import referralIcon from "../assets/images/icons/ref-given.svg";
@@ -22,12 +29,12 @@ const MemberReferEditAdd = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="mt-32 p-6"
+      className="mt-32 p-1 lg:p-6"
     >
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div className="flex items-center gap-4">
-          <div className="p-3 bg-gradient-to-r from-amber-500 to-amber-800  rounded-xl shadow-lg">
+          <div className="p-3 bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746]  rounded-xl shadow-lg">
             <img src={referralIcon} alt="referralIcon" className="w-6 h-6" />
           </div>
           <div>
@@ -199,14 +206,16 @@ const MemberReferEditAdd = () => {
           <div className="flex justify-end gap-4">
             <button
               type="button"
-              onClick={() => setFormData({
-                chapter: "",
-                member: "",
-                referralFor: "",
-                mobile: "",
-                date: "",
-                description: "",
-              })}
+              onClick={() =>
+                setFormData({
+                  chapter: "",
+                  member: "",
+                  referralFor: "",
+                  mobile: "",
+                  date: "",
+                  description: "",
+                })
+              }
               className="px-6 py-2.5 rounded-xl border border-gray-700 text-gray-300 hover:bg-gray-700/50 hover:border-amber-500/30 transition-all duration-300 hover:-translate-y-0.5"
             >
               Reset
@@ -216,7 +225,9 @@ const MemberReferEditAdd = () => {
               className="relative group px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white font-semibold shadow-lg hover:shadow-xl hover:shadow-amber-900/30 hover:-translate-y-0.5 transition-all duration-300"
             >
               <div className="absolute inset-0 rounded-xl bg-white/20 opacity-0 group-hover:opacity-20 blur-xl transition-opacity" />
-              <span className="relative z-10">{id ? "Update Referral" : "Save Referral"}</span>
+              <span className="relative z-10">
+                {id ? "Update Referral" : "Save Referral"}
+              </span>
             </button>
           </div>
         </form>

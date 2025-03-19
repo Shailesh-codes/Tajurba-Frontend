@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from "react";
 import {
-  FiSearch,
-  FiChevronDown,
-  FiChevronLeft,
-  FiChevronRight,
-  FiEye,
-  FiEdit,
-  FiTrash2,
-} from "react-icons/fi";
+  Search,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  Edit,
+  Trash2,
+} from "lucide-react";
 import { HiOutlineUserGroup } from "react-icons/hi";
 import { BsClipboardData, BsPlus } from "react-icons/bs";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
+import DeleteModal from "../layout/DeleteModal";
 
 // Add this dummy data array
 const dummyBDMs = [
@@ -78,6 +79,8 @@ const BDM = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [resultsPerPage, setResultsPerPage] = useState(10);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedBdmId, setSelectedBDMId] = useState(null);
 
   // Options for results per page dropdown
   const resultsPerPageOptions = [10, 25, 50, 100];
@@ -150,11 +153,20 @@ const BDM = () => {
   };
 
   const handleDelete = (id) => {
-    console.log("Deleting BDM:", id);
+    setSelectedBDMId(id);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = () => {
+    if (selectedBdmId) {
+      console.log("Deleting BDM:", selectedBdmId);
+      setShowDeleteModal(false);
+      setSelectedBDMId(null);
+    }
   };
 
   return (
-    <div className="mt-32 flex flex-col space-y-5">
+    <div className="mt-32 p-1 flex flex-col space-y-5">
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
         <div className="flex items-center gap-4">
@@ -440,23 +452,23 @@ const BDM = () => {
                             className="relative group/btn flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-r from-amber-600/90 to-amber-800/90 hover:from-amber-600 hover:to-amber-800 transition-all duration-300 shadow-lg hover:shadow-amber-900/30"
                           >
                             <div className="absolute inset-0 rounded-xl bg-amber-600 opacity-0 group-hover/btn:opacity-20 blur-lg transition-opacity" />
-                            <FiEye className="w-5 h-5 text-white/90 group-hover/btn:text-white transition-colors relative" />
+                            <Eye className="w-5 h-5 text-white/90 group-hover/btn:text-white transition-colors relative" />
                           </button>
                           {bdm.status === "pending" && (
                             <>
                               <button
-                                onClick={() => navigate("/add-bdm")}
+                                onClick={() => navigate(`/edit-bdm/${bdm.id}`)}
                                 className="relative group/btn flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-r from-green-600/90 to-green-800/90 hover:from-green-600 hover:to-green-800 transition-all duration-300 shadow-lg hover:shadow-amber-900/30"
                               >
                                 <div className="absolute inset-0 rounded-xl bg-green-600 opacity-0 group-hover/btn:opacity-20 blur-lg transition-opacity" />
-                                <FiEdit className="w-5 h-5 text-white/90 group-hover/btn:text-white transition-colors relative" />
+                                <Edit className="w-5 h-5 text-white/90 group-hover/btn:text-white transition-colors relative" />
                               </button>
                               <button
                                 onClick={() => handleDelete(bdm.id)}
                                 className="relative group/btn flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-r from-red-600/90 to-red-800/90 hover:from-red-600 hover:to-red-800 transition-all duration-300 shadow-lg hover:shadow-red-900/30"
                               >
                                 <div className="absolute inset-0 rounded-xl bg-red-600 opacity-0 group-hover/btn:opacity-20 blur-lg transition-opacity" />
-                                <FiTrash2 className="w-5 h-5 text-white/90 group-hover/btn:text-white transition-colors relative" />
+                                <Trash2 className="w-5 h-5 text-white/90 group-hover/btn:text-white transition-colors relative" />
                               </button>
                             </>
                           )}
@@ -483,7 +495,7 @@ const BDM = () => {
                 : "bg-gray-700 text-white"
             }`}
           >
-            <FiChevronLeft className="w-5 h-5" />
+            <ChevronLeft className="w-5 h-5" />
           </button>
 
           <div className="flex items-center gap-2 px-4 py-2.5 bg-gray-700 rounded-xl shadow-lg">
@@ -517,10 +529,16 @@ const BDM = () => {
                 : "bg-gray-700 text-white"
             }`}
           >
-            <FiChevronRight className="w-5 h-5" />
+            <ChevronRight className="w-5 h-5" />
           </button>
         </div>
       )}
+      <DeleteModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onDelete={confirmDelete}
+        itemName="BDM"
+      />
     </div>
   );
 };

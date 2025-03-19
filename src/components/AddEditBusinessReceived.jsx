@@ -22,17 +22,13 @@ const AddEditBusinessReceived = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="mt-32 p-6"
+      className="mt-32 p-1 lg:p-6"
     >
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div className="flex items-center gap-4">
           <div className="p-3 bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] rounded-xl shadow-lg">
-            <img
-              src={buss}
-              alt="businessIcon"
-              className="w-6 h-6 text-white"
-            />
+            <img src={buss} alt="businessIcon" className="w-6 h-6 text-white" />
           </div>
           <div>
             <h2 className="text-2xl font-bold text-white">

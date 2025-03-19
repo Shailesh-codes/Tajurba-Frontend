@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { 
-  Eye, 
-  ChevronLeft, 
-  Briefcase, 
-  IndianRupee, 
+import {
+  Eye,
+  ChevronLeft,
+  Briefcase,
+  IndianRupee,
   FileText,
   Check,
-  X
+  X,
 } from "lucide-react";
 import requestIcon from "../assets/images/icons/request.svg";
 import { useNavigate } from "react-router-dom";
@@ -55,7 +55,7 @@ const MemberReqReceived = () => {
   };
 
   return (
-    <div className="mt-32 flex flex-col space-y-5">
+    <div className="mt-32 p-1 lg:p-6 flex flex-col space-y-5">
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
         <div className="flex items-center gap-4">
@@ -73,7 +73,7 @@ const MemberReqReceived = () => {
           onClick={() => navigate(-1)}
           className="w-full sm:w-auto group flex items-center justify-center sm:justify-start gap-2.5 px-5 py-2.5 bg-gray-800 text-gray-300 hover:text-amber-500 rounded-xl transition-all duration-300 border border-gray-700"
         >
-          <ChevronLeft 
+          <ChevronLeft
             size={18}
             className="transition-transform duration-300 group-hover:-translate-x-1"
           />
@@ -326,7 +326,9 @@ const MemberReqReceived = () => {
                             </button>
                           </>
                         ) : (
-                          <span className="text-sm text-gray-400">No actions needed</span>
+                          <span className="text-sm text-gray-400">
+                            No actions needed
+                          </span>
                         )}
                       </div>
                     </td>

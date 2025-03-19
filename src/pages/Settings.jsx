@@ -91,7 +91,7 @@ const Setting = () => {
       }
 
       // Check file type
-      if (!file.type.startsWith('image/')) {
+      if (!file.type.startsWith("image/")) {
         alert("Please upload an image file");
         return;
       }
@@ -100,7 +100,7 @@ const Setting = () => {
       // You can also show a preview
       const reader = new FileReader();
       reader.onloadend = () => {
-        document.querySelector('#profilePreview').src = reader.result;
+        document.querySelector("#profilePreview").src = reader.result;
       };
       reader.readAsDataURL(file);
     }
@@ -115,21 +115,21 @@ const Setting = () => {
 
     try {
       const formData = new FormData();
-      formData.append('profilePicture', profilePicture);
+      formData.append("profilePicture", profilePicture);
 
       // Replace with your API endpoint
-      const response = await fetch('/api/update-profile-picture', {
-        method: 'POST',
+      const response = await fetch("/api/update-profile-picture", {
+        method: "POST",
         body: formData,
       });
 
       if (response.ok) {
         alert("Profile picture updated successfully!");
       } else {
-        throw new Error('Failed to update profile picture');
+        throw new Error("Failed to update profile picture");
       }
     } catch (error) {
-      console.error('Error updating profile picture:', error);
+      console.error("Error updating profile picture:", error);
       alert("Failed to update profile picture");
     }
   };
@@ -139,7 +139,7 @@ const Setting = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="mt-32 p-6"
+      className="mt-32 p-1 lg:p-6"
     >
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
@@ -217,7 +217,7 @@ const Setting = () => {
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <div 
+                <div
                   className="absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center cursor-pointer"
                   onClick={() => fileInputRef.current?.click()}
                 >

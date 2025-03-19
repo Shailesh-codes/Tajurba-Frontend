@@ -70,28 +70,28 @@ const Calendar = () => {
           key={day} 
           onMouseEnter={() => setHoveredDate(day)}
           onMouseLeave={() => setHoveredDate(null)}
-          className={`h-32 p-3 rounded-xl transition-all duration-300 transform 
+          className={`h-24 sm:h-32 p-1 sm:p-3 rounded-xl transition-all duration-300 transform 
             ${isToday ? 'bg-gradient-to-br from-green-500 to-green-600 shadow-lg shadow-green-500/20' : 
               'bg-gradient-to-br from-gray-800 to-gray-900'}
             ${isHovered ? 'scale-105 shadow-xl' : 'hover:scale-102'}
             border border-gray-700/30 backdrop-blur-sm`}
         >
           <div className="flex justify-between items-start">
-            <span className={`font-medium ${isToday ? 'text-white' : 'text-gray-300'} text-lg`}>
+            <span className={`font-medium ${isToday ? 'text-white' : 'text-gray-300'} text-base sm:text-lg`}>
               {day}
             </span>
             {dayEvents.length > 0 && (
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-xs">
+              <span className="flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full bg-white/20 text-[10px] sm:text-xs">
                 {dayEvents.length}
               </span>
             )}
           </div>
           
-          <div className="mt-2 space-y-1 max-h-[80px] overflow-y-auto custom-scrollbar">
+          <div className="mt-1 sm:mt-2 space-y-1 max-h-[60px] sm:max-h-[80px] overflow-y-auto custom-scrollbar">
             {dayEvents.map((event, index) => (
               <div 
                 key={index}
-                className={`p-2 text-xs rounded-lg ${gradientClasses[event.type]} 
+                className={`p-1 sm:p-2 text-[10px] sm:text-xs rounded-lg ${gradientClasses[event.type]} 
                   shadow-sm backdrop-blur-sm transition-all duration-300
                   hover:shadow-md hover:scale-102 cursor-pointer`}
               >
@@ -107,22 +107,22 @@ const Calendar = () => {
   };
 
   return (
-    <div className="mt-32 max-w-7xl mx-auto p-6">
-      <div className="w-full py-6 px-8 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-800 shadow-2xl">
+    <div className="mt-8 sm:mt-16 md:mt-32 max-w-7xl mx-auto px-4 lg:px-6">
+      <div className="w-full py-4 sm:py-6 px-4 sm:px-8 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-800 shadow-2xl">
         {/* Calendar Header */}
-        <div className="flex flex-col md:flex-row justify-between items-center mb-8">
+        <div className="flex flex-col md:flex-row justify-between items-center mb-6 sm:mb-8">
           <h3 className="text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500 mb-4 md:mb-0">
             Calendar
           </h3>
-          <div className="flex space-x-4">
+          <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
             <button 
               onClick={handleToday}
-              className="w-fit bg-gradient-to-r from-green-500 to-green-600 text-white px-12 py-2.5 rounded-xl
+              className="w-full sm:w-fit bg-gradient-to-r from-green-500 to-green-600 text-white px-8 sm:px-12 py-2.5 rounded-xl
                 hover:shadow-lg hover:shadow-green-500/20 transition-all duration-300 font-medium"
             >
               Today
             </button>
-            <div className="flex items-center bg-gray-800/50 rounded-xl p-1 backdrop-blur-sm">
+            <div className="flex items-center justify-center bg-gray-800/50 rounded-xl p-1 backdrop-blur-sm">
               <button 
                 onClick={handlePrevMonth}
                 className="p-2.5 hover:bg-white/10 rounded-lg transition-colors"
@@ -144,21 +144,21 @@ const Calendar = () => {
         </div>
 
         {/* Month Display */}
-        <h3 className="text-3xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 mb-8 text-center">
+        <h3 className="text-2xl sm:text-3xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 mb-6 sm:mb-8 text-center">
           {formatDate(currentDate)}
         </h3>
 
         {/* Calendar Grid */}
-        <div className="bg-gray-800/50 rounded-2xl p-6 backdrop-blur-sm border border-gray-700/30">
-          <div className="grid grid-cols-7 gap-4 mb-4">
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-              <div key={day} className="text-center font-medium text-gray-400">
+        <div className="bg-gray-800/50 rounded-2xl p-3 sm:p-6 backdrop-blur-sm border border-gray-700/30">
+          <div className="grid grid-cols-7 gap-2 sm:gap-4 mb-2 sm:mb-4">
+            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(day => (
+              <div key={day} className="text-center font-medium text-gray-400 text-sm sm:text-base">
                 {day}
               </div>
             ))}
           </div>
           
-          <div className="grid grid-cols-7 gap-4">
+          <div className="grid grid-cols-7 gap-2 sm:gap-4">
             {renderCalendarDays()}
           </div>
         </div>

@@ -69,7 +69,8 @@ const ViewBusiness = () => {
           company: data.received_company,
           businessCategory: data.received_business,
           description: data.description,
-          profileImage: data.received_profile_image || businessData.profileImage,
+          profileImage:
+            data.received_profile_image || businessData.profileImage,
           socialMedia: {
             facebook: data.received_facebook,
             twitter: data.received_twitter,
@@ -96,7 +97,7 @@ const ViewBusiness = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="mt-32 p-6"
+      className="mt-32 p-1 lg:p-6"
     >
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
@@ -112,7 +113,7 @@ const ViewBusiness = () => {
 
         <div className="flex flex-wrap gap-3">
           <button
-            onClick={() => navigate(`/edit-business/${id}`)}
+            onClick={() => navigate(`/add-business/${id}`)}
             className="group flex items-center gap-2.5 px-5 py-2.5 bg-gradient-to-r from-amber-600 to-amber-800 hover:from-amber-700 hover:to-amber-900 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-amber-900/30 hover:-translate-y-0.5"
           >
             <svg
@@ -187,24 +188,26 @@ const ViewBusiness = () => {
             </span>
 
             <div className="flex gap-3 mb-6">
-              {Object.entries(businessData.socialMedia).map(([platform, url]) => {
-                if (!url) return null;
-                return (
-                  <a
-                    key={platform}
-                    href={url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2 bg-gray-700 rounded-lg hover:bg-amber-500/20 hover:text-amber-500 transition-all duration-300"
-                  >
-                    <img
-                      src={`/src/assets/socials-media-logos/${platform}.png`}
-                      alt={platform}
-                      className="w-5 h-5"
-                    />
-                  </a>
-                );
-              })}
+              {Object.entries(businessData.socialMedia).map(
+                ([platform, url]) => {
+                  if (!url) return null;
+                  return (
+                    <a
+                      key={platform}
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 bg-gray-700 rounded-lg hover:bg-amber-500/20 hover:text-amber-500 transition-all duration-300"
+                    >
+                      <img
+                        src={`/src/assets/socials-media-logos/${platform}.png`}
+                        alt={platform}
+                        className="w-5 h-5"
+                      />
+                    </a>
+                  );
+                }
+              )}
             </div>
 
             <div className="w-full border-t border-gray-700 pt-4">
@@ -250,15 +253,25 @@ const ViewBusiness = () => {
                 </label>
                 <div className="flex items-center gap-3 p-3 bg-gray-700/50 rounded-xl">
                   <FiUsers className="w-5 h-5 text-amber-500" />
-                  <p className="font-medium text-white">{businessData.memberName}</p>
+                  <p className="font-medium text-white">
+                    {businessData.memberName}
+                  </p>
                 </div>
               </div>
 
               {[
                 { icon: FiMail, label: "Email", value: businessData.email },
                 { icon: FiPhone, label: "Mobile", value: businessData.mobile },
-                { icon: FiGlobe, label: "Website", value: businessData.website },
-                { icon: FiBriefcase, label: "Company", value: businessData.company },
+                {
+                  icon: FiGlobe,
+                  label: "Website",
+                  value: businessData.website,
+                },
+                {
+                  icon: FiBriefcase,
+                  label: "Company",
+                  value: businessData.company,
+                },
                 {
                   icon: FiFolder,
                   label: "Business Category",
@@ -287,13 +300,15 @@ const ViewBusiness = () => {
           className="lg:col-span-3 bg-gradient-to-b from-gray-800/40 to-gray-900/40 backdrop-blur-xl rounded-xl border border-gray-700 shadow-xl p-6"
         >
           <div className="flex items-center gap-3 mb-6">
-            <div className={`p-2 rounded-lg ${
-              businessData.verifyStatus === "verified" 
-                ? "bg-green-500/20" 
-                : businessData.verifyStatus === "rejected"
-                ? "bg-red-500/20"
-                : "bg-amber-500/20"
-            }`}>
+            <div
+              className={`p-2 rounded-lg ${
+                businessData.verifyStatus === "verified"
+                  ? "bg-green-500/20"
+                  : businessData.verifyStatus === "rejected"
+                  ? "bg-red-500/20"
+                  : "bg-amber-500/20"
+              }`}
+            >
               <svg
                 className={`w-5 h-5 ${
                   businessData.verifyStatus === "verified"
@@ -326,7 +341,8 @@ const ViewBusiness = () => {
                   <p className="text-gray-300">
                     Verified on{" "}
                     <span className="text-green-400 font-medium">
-                      {new Date(businessData.verifiedDate).toLocaleDateString()} at{" "}
+                      {new Date(businessData.verifiedDate).toLocaleDateString()}{" "}
+                      at{" "}
                       {new Date(businessData.verifiedDate).toLocaleTimeString()}
                     </span>
                   </p>
@@ -355,7 +371,8 @@ const ViewBusiness = () => {
                   <p className="text-gray-300">
                     Rejected on{" "}
                     <span className="text-red-400 font-medium">
-                      {new Date(businessData.verifiedDate).toLocaleDateString()} at{" "}
+                      {new Date(businessData.verifiedDate).toLocaleDateString()}{" "}
+                      at{" "}
                       {new Date(businessData.verifiedDate).toLocaleTimeString()}
                     </span>
                   </p>
@@ -381,9 +398,7 @@ const ViewBusiness = () => {
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-amber-400"></div>
-                  <p className="text-gray-300">
-                    Awaiting verification
-                  </p>
+                  <p className="text-gray-300">Awaiting verification</p>
                 </div>
                 <div className="flex items-center gap-2 mt-2">
                   <div className="px-3 py-1.5 bg-amber-500/20 text-amber-400 rounded-lg text-sm font-medium">

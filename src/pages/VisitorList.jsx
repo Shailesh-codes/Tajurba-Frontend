@@ -184,7 +184,7 @@ const VisitorList = () => {
   };
 
   return (
-    <div className="mt-32 min-h-screen bg-gray-900 p-6">
+    <div className="mt-32 min-h-screen bg-gray-900 p-1 lg:p-6">
       <div className="max-w-[1800px] mx-auto space-y-6">
         {/* Header Section */}
         <motion.div

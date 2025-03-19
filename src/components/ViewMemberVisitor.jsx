@@ -55,7 +55,7 @@ const ViewMemberVisitor = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="mt-32 p-6 space-y-8"
+      className="mt-32 p-1 lg:p-6 space-y-8"
     >
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -64,10 +64,10 @@ const ViewMemberVisitor = () => {
             <Users className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-300">
+            <h2 className="text-xl lg:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-300">
               Visitor Invite Details
             </h2>
-            <p className="text-gray-400 mt-1">
+            <p className="text-sm lg:text-base text-gray-400 mt-1">
               View comprehensive visitor information
             </p>
           </div>
@@ -79,7 +79,7 @@ const ViewMemberVisitor = () => {
             className="group flex items-center gap-2.5 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-emerald-900/30 hover:-translate-y-0.5"
           >
             <Edit3 className="w-4 h-4" />
-            <span>Edit Invite</span>
+            <span className="text-sm lg:text-base">Edit Invite</span>
           </button>
 
           <button
@@ -87,7 +87,9 @@ const ViewMemberVisitor = () => {
             className="group flex items-center gap-2.5 px-5 py-2.5 bg-gray-800 text-gray-300 hover:text-amber-500 rounded-xl transition-all duration-300 border border-gray-700 hover:border-amber-500/30"
           >
             <ChevronLeft className="w-4 h-4 transition-transform duration-300 group-hover:-translate-x-1" />
-            <span className="font-semibold tracking-wide text-sm">Back</span>
+            <span className="font-semibold tracking-wide text-sm lg:text-base">
+              Back
+            </span>
           </button>
         </div>
       </div>

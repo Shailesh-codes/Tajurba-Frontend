@@ -24,7 +24,8 @@ const ViewReceivedBusiness = () => {
     givenByWebsite: "www.shailesh.com",
     givenByCompany: "Tech Solutions Ltd",
     givenByBusiness: "IT Services",
-    description: "Provided IT consulting services for web application development and cloud infrastructure setup. The project included full-stack development, database design, and deployment strategies.",
+    description:
+      "Provided IT consulting services for web application development and cloud infrastructure setup. The project included full-stack development, database design, and deployment strategies.",
     profileImage: "https://avatar.iran.liara.run/public",
     socialMedia: {
       facebook: "https://facebook.com/shailesh",
@@ -49,7 +50,6 @@ const ViewReceivedBusiness = () => {
     //     console.error("Error fetching business data:", err);
     //   }
     // };
-
     // if (id) {
     //   fetchBusinessData();
     // }
@@ -60,7 +60,7 @@ const ViewReceivedBusiness = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="mt-32 p-6"
+      className="mt-32 p-1 lg:p-6"
     >
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
@@ -69,7 +69,9 @@ const ViewReceivedBusiness = () => {
             <BsClipboardData className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-white">Business Received Details</h2>
+            <h2 className="text-2xl font-bold text-white">
+              Business Received Details
+            </h2>
             <p className="text-sm text-gray-400">View business information</p>
           </div>
         </div>
@@ -144,56 +146,58 @@ const ViewReceivedBusiness = () => {
             </div>
 
             <div className="flex gap-3 mb-4">
-              {Object.entries(businessData.socialMedia).map(([platform, url]) => {
-                if (!url) return null;
-                
-                // Platform-specific color configurations
-                const socialColors = {
-                  facebook: {
-                    bg: "bg-[#1877F2]/20",
-                    hover: "hover:bg-[#1877F2]/30",
-                    text: "hover:text-[#1877F2]"
-                  },
-                  twitter: {
-                    bg: "bg-[#1DA1F2]/20",
-                    hover: "hover:bg-[#1DA1F2]/30",
-                    text: "hover:text-[#1DA1F2]"
-                  },
-                  linkedin: {
-                    bg: "bg-[#0A66C2]/20",
-                    hover: "hover:bg-[#0A66C2]/30",
-                    text: "hover:text-[#0A66C2]"
-                  },
-                  instagram: {
-                    bg: "bg-[#E4405F]/20",
-                    hover: "hover:bg-[#E4405F]/30",
-                    text: "hover:text-[#E4405F]"
-                  },
-                  whatsapp: {
-                    bg: "bg-[#25D366]/20",
-                    hover: "hover:bg-[#25D366]/30",
-                    text: "hover:text-[#25D366]"
-                  }
-                };
+              {Object.entries(businessData.socialMedia).map(
+                ([platform, url]) => {
+                  if (!url) return null;
 
-                const colors = socialColors[platform];
+                  // Platform-specific color configurations
+                  const socialColors = {
+                    facebook: {
+                      bg: "bg-[#1877F2]/20",
+                      hover: "hover:bg-[#1877F2]/30",
+                      text: "hover:text-[#1877F2]",
+                    },
+                    twitter: {
+                      bg: "bg-[#1DA1F2]/20",
+                      hover: "hover:bg-[#1DA1F2]/30",
+                      text: "hover:text-[#1DA1F2]",
+                    },
+                    linkedin: {
+                      bg: "bg-[#0A66C2]/20",
+                      hover: "hover:bg-[#0A66C2]/30",
+                      text: "hover:text-[#0A66C2]",
+                    },
+                    instagram: {
+                      bg: "bg-[#E4405F]/20",
+                      hover: "hover:bg-[#E4405F]/30",
+                      text: "hover:text-[#E4405F]",
+                    },
+                    whatsapp: {
+                      bg: "bg-[#25D366]/20",
+                      hover: "hover:bg-[#25D366]/30",
+                      text: "hover:text-[#25D366]",
+                    },
+                  };
 
-                return (
-                  <a
-                    key={platform}
-                    href={url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`p-2 rounded-lg transition-all duration-300 ${colors.bg} ${colors.hover} ${colors.text}`}
-                  >
-                    <img
-                      src={`/src/assets/images/socials-media-logos/${platform}.svg`}
-                      alt={platform}
-                      className="w-5 h-5"
-                    />
-                  </a>
-                );
-              })}
+                  const colors = socialColors[platform];
+
+                  return (
+                    <a
+                      key={platform}
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`p-2 rounded-lg transition-all duration-300 ${colors.bg} ${colors.hover} ${colors.text}`}
+                    >
+                      <img
+                        src={`/src/assets/images/socials-media-logos/${platform}.svg`}
+                        alt={platform}
+                        className="w-5 h-5"
+                      />
+                    </a>
+                  );
+                }
+              )}
             </div>
 
             <h3 className="text-2xl font-bold text-white mb-2">
@@ -241,12 +245,36 @@ const ViewReceivedBusiness = () => {
 
             <div className="grid md:grid-cols-2 gap-6">
               {[
-                { icon: FiUsers, label: "Member Name", value: businessData.givenByName },
-                { icon: FiMail, label: "Email", value: businessData.givenByEmail },
-                { icon: FiPhone, label: "Mobile", value: businessData.givenByMobile },
-                { icon: FiGlobe, label: "Website", value: businessData.givenByWebsite },
-                { icon: FiBriefcase, label: "Company", value: businessData.givenByCompany },
-                { icon: FiFolder, label: "Business Category", value: businessData.givenByBusiness },
+                {
+                  icon: FiUsers,
+                  label: "Member Name",
+                  value: businessData.givenByName,
+                },
+                {
+                  icon: FiMail,
+                  label: "Email",
+                  value: businessData.givenByEmail,
+                },
+                {
+                  icon: FiPhone,
+                  label: "Mobile",
+                  value: businessData.givenByMobile,
+                },
+                {
+                  icon: FiGlobe,
+                  label: "Website",
+                  value: businessData.givenByWebsite,
+                },
+                {
+                  icon: FiBriefcase,
+                  label: "Company",
+                  value: businessData.givenByCompany,
+                },
+                {
+                  icon: FiFolder,
+                  label: "Business Category",
+                  value: businessData.givenByBusiness,
+                },
               ].map((item, index) => (
                 <div key={index} className="space-y-2">
                   <label className="text-sm font-medium text-gray-400">

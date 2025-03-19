@@ -54,7 +54,7 @@ const MeetingsMDP = () => {
   };
 
   return (
-    <div className="mt-32 flex flex-col space-y-5">
+    <div className="mt-32 p-1 lg:p-6 flex flex-col space-y-5">
       {/* Header Section with Back Button */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
         <div className="flex items-center gap-4">

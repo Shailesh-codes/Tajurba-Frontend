@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { IoSettingsOutline, IoCalendarOutline } from "react-icons/io5";
 import { FiLogOut } from "react-icons/fi";
@@ -24,7 +24,7 @@ import ReferralIcon from "../assets/SVGComponents/ReferralIcon";
 import RequestReceivedIcon from "../assets/SVGComponents/RequestResIcon";
 import VisitorsInvitedIcon from "../assets/SVGComponents/VisitorsInvitedIcon";
 
-const SideBar = ({ isOpen, setIsOpen }) => {
+const SideBar = ({ isOpen, setIsOpen, setIsLogoutModalOpen }) => {
   const navLinkClass = ({ isActive }) =>
     `flex items-center gap-4 px-6 py-4 rounded-lg transition-all duration-200
      ${
@@ -64,42 +64,58 @@ const SideBar = ({ isOpen, setIsOpen }) => {
             </span>
             <NavLink to="/" className={navLinkClass}>
               <DashboardIcon color="currentColor" />
-              <span className="text-sm font-semibold text-white">Dashboard</span>
+              <span className="text-sm font-semibold text-white">
+                Dashboard
+              </span>
             </NavLink>
 
             <NavLink to="/add-member" className={navLinkClass}>
               <AddMemberIcon color="currentColor" />
-              <span className="text-sm font-semibold text-white">Add Member</span>
+              <span className="text-sm font-semibold text-white">
+                Add Member
+              </span>
             </NavLink>
 
             <NavLink to="/assign-certificates" className={navLinkClass}>
               <AssignCertificateIcon color="currentColor" />
-              <span className="text-sm font-semibold text-white">Assign Certificates</span>
+              <span className="text-sm font-semibold text-white">
+                Assign Certificates
+              </span>
             </NavLink>
 
             <NavLink to="/broadcast" className={navLinkClass}>
               <BroadcastIcon color="currentColor" />
-              <span className="text-sm font-semibold text-white">Broadcast</span>
+              <span className="text-sm font-semibold text-white">
+                Broadcast
+              </span>
             </NavLink>
 
             <NavLink to="/chapters-list" className={navLinkClass}>
               <ChapterListIcon color="currentColor" />
-              <span className="text-sm font-semibold text-white">Chapters List</span>
+              <span className="text-sm font-semibold text-white">
+                Chapters List
+              </span>
             </NavLink>
 
             <NavLink to="/creative-list" className={navLinkClass}>
               <SliderIcon color="currentColor" />
-              <span className="text-sm font-semibold text-white">Creative Sliders List</span>
+              <span className="text-sm font-semibold text-white">
+                Creative Sliders List
+              </span>
             </NavLink>
 
             <NavLink to="/mark-attendance" className={navLinkClass}>
               <MarkAttandance color="currentColor" />
-              <span className="text-sm font-semibold text-white">Mark Attendance & Venue Fees</span>
+              <span className="text-sm font-semibold text-white">
+                Mark Attendance & Venue Fees
+              </span>
             </NavLink>
 
             <NavLink to="/member-list" className={navLinkClass}>
               <UserListIcon color="currentColor" />
-              <span className="text-sm font-semibold text-white">Member List</span>
+              <span className="text-sm font-semibold text-white">
+                Member List
+              </span>
             </NavLink>
 
             <NavLink to="/meetings" className={navLinkClass}>
@@ -111,38 +127,54 @@ const SideBar = ({ isOpen, setIsOpen }) => {
 
             <NavLink to="/visitor-list" className={navLinkClass}>
               <VisitorIcon color="currentColor" />
-              <span className="text-sm font-semibold text-white">Visitor List</span>
+              <span className="text-sm font-semibold text-white">
+                Visitor List
+              </span>
             </NavLink>
             <NavLink to="/monthly-reward" className={navLinkClass}>
               <MonthlyRewardIcon color="currentColor" />
-              <span className="text-sm font-semibold text-white">Monthly Reward</span>
+              <span className="text-sm font-semibold text-white">
+                Monthly Reward
+              </span>
             </NavLink>
 
             {/* Members routes */}
             <NavLink to="/member-dashboard" className={navLinkClass}>
               <MemberDashboardIcon color="currentColor" />
-              <span className="text-sm font-semibold text-white">Member Dashboard</span>
+              <span className="text-sm font-semibold text-white">
+                Member Dashboard
+              </span>
             </NavLink>
 
             <NavLink to="/bdm" className={navLinkClass}>
               <BDMIcon color="currentColor" />
-              <span className="text-sm font-semibold text-white">BDM's Done</span>
+              <span className="text-sm font-semibold text-white">
+                BDM's Done
+              </span>
             </NavLink>
             <NavLink to="/business-given" className={navLinkClass}>
               <BusinessGivenIcon color="currentColor" />
-              <span className="text-sm font-semibold text-white">Business Given</span>
+              <span className="text-sm font-semibold text-white">
+                Business Given
+              </span>
             </NavLink>
             <NavLink to="/business-received" className={navLinkClass}>
               <BusinessReceivedIcon color="currentColor" />
-              <span className="text-sm font-semibold text-white">Business Received</span>
+              <span className="text-sm font-semibold text-white">
+                Business Received
+              </span>
             </NavLink>
             <NavLink to="/member-certificate" className={navLinkClass}>
               <MemberCertificateIcon color="currentColor" />
-              <span className="text-sm font-semibold text-white">Member Certificate</span>
+              <span className="text-sm font-semibold text-white">
+                Member Certificate
+              </span>
             </NavLink>
             <NavLink to="/chapter-members" className={navLinkClass}>
               <VisitorIcon color="currentColor" />
-              <span className="text-sm font-semibold text-white">Chapter Members</span>
+              <span className="text-sm font-semibold text-white">
+                Chapter Members
+              </span>
             </NavLink>
             <NavLink to="/meetings-mdp-socials" className={navLinkClass}>
               <MeetingsIcon color="currentColor" />
@@ -152,19 +184,27 @@ const SideBar = ({ isOpen, setIsOpen }) => {
             </NavLink>
             <NavLink to="/member-monthly-reward" className={navLinkClass}>
               <MonthlyRewardIcon color="currentColor" />
-              <span className="text-sm font-semibold text-white">Member Monthly Reward</span>
+              <span className="text-sm font-semibold text-white">
+                Member Monthly Reward
+              </span>
             </NavLink>
             <NavLink to="/ref-given" className={navLinkClass}>
               <ReferralIcon color="currentColor" />
-              <span className="text-sm font-semibold text-white">Referral Given</span>
+              <span className="text-sm font-semibold text-white">
+                Referral Given
+              </span>
             </NavLink>
             <NavLink to="/request-received" className={navLinkClass}>
               <RequestReceivedIcon color="currentColor" />
-              <span className="text-sm font-semibold text-white">Request Received</span>
+              <span className="text-sm font-semibold text-white">
+                Request Received
+              </span>
             </NavLink>
             <NavLink to="/visitors-invited" className={navLinkClass}>
               <VisitorsInvitedIcon color="currentColor" />
-              <span className="text-sm font-semibold text-white">Visitors Invited</span>
+              <span className="text-sm font-semibold text-white">
+                Visitors Invited
+              </span>
             </NavLink>
 
             {/* Others Section */}
@@ -191,12 +231,13 @@ const SideBar = ({ isOpen, setIsOpen }) => {
             </div>
 
             {/* Footer Section */}
-            <div className="pt-6 mt-8 space-y-1 border-t border-gray-700/30">
+            <div className="pb-10 space-y-1 border-t border-gray-700/30">
               <button
                 className="w-full flex items-center gap-4 px-6 py-4 rounded-lg 
                 text-red-400 hover:bg-gradient-to-r hover:from-red-500/20 hover:to-red-500/5 
                 hover:text-red-300 transition-all duration-200
                 font-semibold border-l-4 border-transparent hover:border-red-400"
+                onClick={() => setIsLogoutModalOpen(true)}
               >
                 <FiLogOut className="text-xl" />
                 <span className="text-base font-semibold">Logout</span>
