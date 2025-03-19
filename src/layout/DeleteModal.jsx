@@ -7,20 +7,26 @@ const DeleteModal = ({ isOpen, onClose, onDelete, itemName }) => {
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 px-4">
-      {/* Enhanced animated backdrop with multiple layers */}
       <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-black/70 backdrop-blur-xl" />
-        <div className="absolute inset-0 bg-gradient-to-br from-rose-900/20 via-black/0 to-red-900/20" />
-        <div className="absolute inset-0" 
-             style={{ background: 'radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 0%, rgba(0,0,0,0.5) 100%)' }} />
+        <div className="absolute inset-0 bg-black/30 backdrop-blur-xl" />
+        <div className="absolute inset-0 bg-gradient-to-br from-rose-900/35 via-black/0 to-red-900/20" />
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 0%, rgba(0,0,0,0.5) 100%)",
+          }}
+        />
       </div>
 
       {/* Modal container */}
       <div className="relative w-full max-w-[360px] transform transition-all duration-700 scale-100">
         {/* Glass card with enhanced effects */}
-        <div className="bg-gradient-to-br from-gray-900/95 via-gray-900/90 to-gray-800/95 rounded-2xl 
+        <div
+          className="bg-gradient-to-br from-gray-900/95 via-gray-900/90 to-gray-800/95 rounded-2xl 
                     border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] backdrop-blur-2xl
-                    overflow-hidden">
+                    overflow-hidden"
+        >
           {/* Decorative light effects */}
           <div className="absolute -top-32 -left-32 w-64 h-64 bg-red-500 rounded-full blur-[100px] opacity-20 animate-pulse-slow" />
           <div className="absolute -top-32 -right-32 w-64 h-64 bg-rose-500 rounded-full blur-[100px] opacity-20 animate-pulse-slow" />
@@ -33,16 +39,22 @@ const DeleteModal = ({ isOpen, onClose, onDelete, itemName }) => {
               {/* Enhanced Delete Icon */}
               <div className="relative mb-6 group">
                 {/* Multiple animated rings */}
-                <div className="absolute -inset-1 bg-gradient-to-r from-red-600 via-rose-500 to-red-600 
-                            rounded-full blur-md opacity-70 group-hover:opacity-100 animate-spin-slow transition-all duration-500" />
-                <div className="absolute -inset-2 bg-gradient-to-r from-rose-600 via-red-500 to-rose-600 
-                            rounded-full blur-sm opacity-50 group-hover:opacity-75 animate-spin-reverse-slow transition-all duration-500" />
-                
+                <div
+                  className="absolute -inset-1 bg-gradient-to-r from-red-600 via-rose-500 to-red-600 
+                            rounded-full blur-md opacity-70 group-hover:opacity-100 animate-spin-slow transition-all duration-500"
+                />
+                <div
+                  className="absolute -inset-2 bg-gradient-to-r from-rose-600 via-red-500 to-rose-600 
+                            rounded-full blur-sm opacity-50 group-hover:opacity-75 animate-spin-reverse-slow transition-all duration-500"
+                />
+
                 {/* Main icon container */}
-                <div className="relative p-5 rounded-full bg-gradient-to-b from-gray-800 via-gray-900 to-black 
+                <div
+                  className="relative p-5 rounded-full bg-gradient-to-b from-gray-800 via-gray-900 to-black 
                             border-2 border-white/10 group-hover:border-red-500/50 transition-all duration-500
-                            shadow-lg shadow-red-500/20 group-hover:shadow-red-500/40">
-                  <Trash2 
+                            shadow-lg shadow-red-500/20 group-hover:shadow-red-500/40"
+                >
+                  <Trash2
                     className="w-8 h-8 stroke-red-400 stroke-2 group-hover:stroke-red-300 
                               transform group-hover:scale-110 group-hover:rotate-12 transition-all duration-500"
                   />
@@ -50,8 +62,10 @@ const DeleteModal = ({ isOpen, onClose, onDelete, itemName }) => {
               </div>
 
               {/* Enhanced content */}
-              <h2 className="text-2xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r 
-                          from-red-400 via-rose-300 to-red-400 text-center animate-gradient">
+              <h2
+                className="text-2xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r 
+                          from-red-400 via-rose-300 to-red-400 text-center animate-gradient"
+              >
                 Delete {itemName}
               </h2>
               <div className="mb-6 text-center">
@@ -59,9 +73,11 @@ const DeleteModal = ({ isOpen, onClose, onDelete, itemName }) => {
                   Are you sure you want to delete this {itemName.toLowerCase()}?
                 </p>
                 {/* Enhanced alert box */}
-                <div className="flex items-center justify-center gap-2 text-red-300/90 
+                <div
+                  className="flex items-center justify-center gap-2 text-red-300/90 
                             bg-gradient-to-r from-red-500/10 via-rose-500/10 to-red-500/10 
-                            py-2.5 px-4 rounded-xl border border-red-500/20">
+                            py-2.5 px-4 rounded-xl border border-red-500/20"
+                >
                   <FiAlertCircle className="w-4 h-4 animate-pulse" />
                   <span className="text-xs font-medium">
                     This action cannot be undone
@@ -102,21 +118,40 @@ const DeleteModal = ({ isOpen, onClose, onDelete, itemName }) => {
       {/* Animations */}
       <style jsx>{`
         @keyframes spin-slow {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
         }
         @keyframes spin-reverse-slow {
-          from { transform: rotate(360deg); }
-          to { transform: rotate(0deg); }
+          from {
+            transform: rotate(360deg);
+          }
+          to {
+            transform: rotate(0deg);
+          }
         }
         @keyframes pulse-slow {
-          0%, 100% { opacity: 0.3; }
-          50% { opacity: 0.6; }
+          0%,
+          100% {
+            opacity: 0.3;
+          }
+          50% {
+            opacity: 0.6;
+          }
         }
         @keyframes gradient {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
+          0% {
+            background-position: 0% 50%;
+          }
+          50% {
+            background-position: 100% 50%;
+          }
+          100% {
+            background-position: 0% 50%;
+          }
         }
         .animate-spin-slow {
           animation: spin-slow 15s linear infinite;
