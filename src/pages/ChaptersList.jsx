@@ -4,6 +4,8 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import chaptersIcon from "../assets/images/icons/list.svg";
 import { motion } from "framer-motion";
+import api from "../hooks/api";
+import { format } from "date-fns";
 
 const ChaptersList = () => {
   const navigate = useNavigate();
@@ -20,7 +22,7 @@ const ChaptersList = () => {
 
   const loadChapters = async () => {
     try {
-      const response = await axios.get("/api/chapters");
+      const response = await axios.get(`${api}/chapters`);
       if (response.data.status === "success") {
         const sortedChapters = response.data.data.sort((a, b) =>
           a.chapter_name.localeCompare(b.chapter_name)
@@ -36,7 +38,7 @@ const ChaptersList = () => {
   const handleAddChapter = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post("/api/chapters", {
+      const response = await axios.post(`${api}/chapters/add-update`, {
         action: "add",
         chapter_name: newChapterName,
       });
@@ -56,7 +58,7 @@ const ChaptersList = () => {
   const handleEditChapter = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post("/api/chapters", {
+      const response = await axios.post(`${api}/chapters/add-update`, {
         action: "update",
         chapter_id: editChapter.id,
         chapter_name: editChapter.name,
@@ -87,6 +89,15 @@ const ChaptersList = () => {
         popup: "bg-gray-900 border-gray-700 rounded-2xl border",
       },
     });
+  };
+
+  const formatDateTime = (dateString) => {
+    if (!dateString) return "--";
+    try {
+      return format(new Date(dateString), "MMM d, yyyy 'at' h:mm a");
+    } catch (error) {
+      return dateString;
+    }
   };
 
   const filteredChapters = chapters.filter((chapter) =>
@@ -255,12 +266,12 @@ const ChaptersList = () => {
                         </td>
                         <td className="px-6 py-4">
                           <span className="text-sm text-gray-300">
-                            {chapter.created_at}
+                            {formatDateTime(chapter.created_at)}
                           </span>
                         </td>
                         <td className="px-6 py-4">
                           <span className="text-sm text-gray-400">
-                            {chapter.updated_at || "--"}
+                            {formatDateTime(chapter.updated_at)}
                           </span>
                         </td>
                         <td className="px-6 py-4">

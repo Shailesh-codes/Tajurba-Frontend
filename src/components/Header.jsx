@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import reward from "../assets/sidebar-icon/reward.svg";
 import info from "../assets/sidebar-icon/info.svg";
 
-const Header = ({ setIsOpen, isOpen }) => {
+const Header = ({ setIsSidebarOpen, isSidebarOpen }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [lastScroll, setLastScroll] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
@@ -47,7 +47,7 @@ const Header = ({ setIsOpen, isOpen }) => {
       <div className="flex items-center justify-between px-4 h-full w-full">
         {/* Left side - Menu button for mobile */}
         <button
-          onClick={() => setIsOpen(!isOpen)}
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
           className="lg:hidden p-2 rounded-lg hover:bg-[#1E293B]"
         >
           <FiMenu className="w-6 h-6 text-gray-300" />

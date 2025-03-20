@@ -91,7 +91,7 @@ const SignIn = () => {
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <svg
-                  className="h-5 w-5 text-gray-400 group-focus-within:text-[#27DA68] transition-colors"
+                  className="h-5 w-5 text-gray-400 group-focus-within:text-amber-500 transition-colors"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -106,7 +106,7 @@ const SignIn = () => {
               </div>
               <input
                 type="tel"
-                className="w-full pl-10 pr-4 py-3.5 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder:text-gray-400 focus:border-[#27DA68] focus:ring-1 focus:ring-[#27DA68] transition-all duration-200"
+                className="w-full pl-10 pr-4 py-3.5 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder:text-gray-400 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all duration-200"
                 placeholder="Mobile Number"
                 value={formData.mobile}
                 onChange={(e) =>
@@ -119,7 +119,7 @@ const SignIn = () => {
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <svg
-                  className="h-5 w-5 text-gray-400 focus:text-[#27DA68] group-focus-within:text-[#27DA68] transition-colors"
+                  className="h-5 w-5 text-gray-400 group-focus-within:text-amber-500 transition-colors"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -134,7 +134,7 @@ const SignIn = () => {
               </div>
               <input
                 type={showPassword ? "text" : "password"}
-                className="w-full pl-10 pr-10 py-3.5 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder:text-gray-400 focus:border-[#27DA68] focus:ring-1 focus:ring-[#27DA68] transition-all duration-200"
+                className="w-full pl-10 pr-10 py-3.5 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder:text-gray-400 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all duration-200"
                 placeholder="Password"
                 value={formData.password}
                 onChange={(e) =>
@@ -144,7 +144,7 @@ const SignIn = () => {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-[#27DA68] transition-colors"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-amber-500 transition-colors"
               >
                 {showPassword ? (
                   <svg
@@ -193,7 +193,7 @@ const SignIn = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, rememberMe: e.target.checked })
                 }
-                className="w-4 h-4 rounded border-gray-600 text-[#27DA68] focus:ring-[#27DA68] transition-colors"
+                className="w-4 h-4 rounded border-gray-600 text-amber-500 focus:ring-amber-500 transition-colors"
               />
               <label htmlFor="remember" className="ml-2 text-sm text-gray-300">
                 Remember me
@@ -203,7 +203,7 @@ const SignIn = () => {
             {/* Sign In Button */}
             <button
               type="submit"
-              className="w-full py-3.5 px-4 bg-gradient-to-r from-[#27DA68] to-[#1a8f45] text-white font-medium rounded-lg hover:opacity-90 transition-all duration-200 transform hover:scale-[1.02] focus:ring-2 focus:ring-[#27DA68] focus:ring-offset-2 focus:ring-offset-gray-900"
+              className="w-full py-3.5 px-4 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-medium rounded-lg hover:opacity-90 transition-all duration-200 transform hover:scale-[1.02] focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-gray-900"
             >
               Sign In
             </button>

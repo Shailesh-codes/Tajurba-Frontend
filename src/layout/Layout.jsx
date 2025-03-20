@@ -32,7 +32,10 @@ const Layout = () => {
       />
       
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header onMenuClick={() => setIsSidebarOpen(true)} />
+        <Header 
+          setIsSidebarOpen={setIsSidebarOpen}
+          isSidebarOpen={isSidebarOpen}
+        />
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-[#0F172A] p-4">
           <Outlet />
         </main>
