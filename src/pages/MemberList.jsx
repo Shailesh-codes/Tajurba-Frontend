@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import memberListIcon from "../assets/images/icons/users.svg";
@@ -6,134 +6,275 @@ import addIcon from "../assets/images/icons/add.svg";
 import viewIcon from "../assets/images/icons/view.svg";
 import editIcon from "../assets/images/icons/edit.svg";
 import settingsIcon from "../assets/images/icons/setting.svg";
-import EditMemberModal from '../components/EditMemberModal';
+import EditMemberModal from "../components/EditMemberModal";
 import Swal from "sweetalert2";
+import api from "../hooks/api";
+import axios from "axios";
 
 const MemberList = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
-  const [loading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
-  const [chapters] = useState([
-    { chapter_id: 1, chapter_name: "Chapter One" },
-    { chapter_id: 2, chapter_name: "Chapter Two" },
-    // Add more chapters as needed
-  ]);
+  const [members, setMembers] = useState([]);
+  const [chapters, setChapters] = useState([]);
 
-  // Dummy data for testing UI
-  const dummyMembers = [
-    {
-      member_id: 1,
-      full_name: "John Doe",
-      mobile: "1234567890",
-      email: "john@example.com",
-      chapter_name: "Chapter One",
-      chapter_id: 1,
-      is_active: "1",
-      joining_date: "2024-01-01",
-      company_name: "ABC Corp",
-      business_category: "Technology"
-    },
-    {
-      member_id: 2,
-      full_name: "Jane Smith",
-      mobile: "9876543210",
-      email: "jane@example.com",
-      chapter_name: "Chapter Two",
-      chapter_id: 2,
-      is_active: "0",
-      joining_date: "2024-02-01",
-      company_name: "XYZ Ltd",
-      business_category: "Marketing"
-    },
-    {
-      member_id: 1,
-      full_name: "John Doe",
-      mobile: "1234567890",
-      email: "john@example.com",
-      chapter_name: "Chapter One",
-      chapter_id: 1,
-      is_active: "1",
-      joining_date: "2024-01-01",
-      company_name: "ABC Corp",
-      business_category: "Technology"
-    },
-    {
-      member_id: 1,
-      full_name: "John Doe",
-      mobile: "1234567890",
-      email: "john@example.com",
-      chapter_name: "Chapter One",
-      chapter_id: 1,
-      is_active: "1",
-      joining_date: "2024-01-01",
-      company_name: "ABC Corp",
-      business_category: "Technology"
-    },
-  ];
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const membersResponse = await axios.get(`${api}/members/members`);
+        if (membersResponse.data.success) {
+          setMembers(membersResponse.data.data);
+        }
 
-  const filteredMembers = dummyMembers.filter(member => 
-    member.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    member.mobile.includes(searchTerm) ||
-    member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    member.chapter_name.toLowerCase().includes(searchTerm.toLowerCase())
+        const chaptersResponse = await axios.get(`${api}/chapters`);
+        if (chaptersResponse.data.status === "success") {
+          setChapters(chaptersResponse.data.data);
+        }
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "Failed to load members data",
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 3000,
+          background: "#1F2937",
+          color: "#fff",
+        });
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const filteredMembers = members.filter(
+    (member) =>
+      member.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.mobile?.includes(searchTerm) ||
+      member.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.chapter_name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleEditSubmit = async (formData) => {
+    try {
+      const response = await axios.patch(
+        `${api}/members/members/${formData.id}`,
+        formData
+      );
+
+      if (response.data.success) {
+        const updatedMembersRes = await axios.get(`${api}/members/members`);
+        if (updatedMembersRes.data.success) {
+          setMembers(updatedMembersRes.data.data);
+        }
+
+        Swal.fire({
+          icon: "success",
+          title: "Success",
+          text: "Member updated successfully",
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 3000,
+          background: "#1F2937",
+          color: "#fff",
+        });
+
+        setEditModalOpen(false);
+      }
+    } catch (error) {
+      console.error("Error updating member:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: error.response?.data?.message || "Failed to update member",
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
+        background: "#1F2937",
+        color: "#fff",
+      });
+    }
+  };
 
   const handleEditClick = (member) => {
     setSelectedMember(member);
     setEditModalOpen(true);
   };
 
-  const handleEditSubmit = async (formData) => {
-    try {
-      // For now, just update the dummy data
-      const updatedMembers = dummyMembers.map(member => 
-        member.member_id === formData.member_id 
-          ? {
-              ...member,
-              full_name: formData.name,
-              mobile: formData.mobile,
-              email: formData.email,
-              chapter_name: chapters.find(c => c.chapter_id === parseInt(formData.chapter))?.chapter_name || member.chapter_name,
-              joining_date: formData.date
-            }
-          : member
-      );
-      
-      // Show success message
+  const toggleMemberStatus = async (member) => {
+    if (!member || !member.id) {
       Swal.fire({
-        icon: 'success',
-        title: 'Success',
-        text: 'Member updated successfully',
+        icon: "error",
+        title: '<span class="text-lg font-semibold text-white">Error</span>',
+        text: "Invalid member data",
         toast: true,
-        position: 'top-end',
+        position: "top-end",
         showConfirmButton: false,
         timer: 3000,
-        background: '#1F2937',
-        color: '#fff'
+        background: "#1F2937",
+        color: "#fff",
       });
+      return;
+    }
 
-      setEditModalOpen(false);
-    } catch (error) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'Failed to update member',
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 3000,
-        background: '#1F2937',
-        color: '#fff'
-      });
+    const isActive = member.status === "active";
+
+    const result = await Swal.fire({
+      title: isActive
+        ? '<span class="text-gray-300 text-2xl">Deactivate Member?</span>'
+        : '<span class="text-white text-2xl">Activate Member?</span>',
+      html: `
+        <div class="text-left space-y-6">
+          <div class="flex items-center gap-4 p-6 ${
+            isActive ? "bg-red-500/10" : "bg-green-500/10"
+          } rounded-2xl border border-${isActive ? "red" : "amber"}-500/20">
+            <div class="p-3 bg-gradient-to-br ${
+              isActive
+                ? "from-red-500/20 to-red-600/20"
+                : "from-green-500/20 to-green-600/20"
+            } rounded-xl border border-${isActive ? "red" : "green"}-500/30">
+              <i class="fas ${isActive ? "fa-user-slash" : "fa-user-check"} ${
+        isActive ? "text-red-400" : "text-green-400"
+      } text-xl"></i>
+            </div>
+            <div>
+              <h3 class="font-semibold text-lg ${
+                isActive ? "text-red-400" : "text-green-400"
+              }">${member.name}</h3>
+              <p class="text-sm text-gray-400">
+                ${
+                  isActive
+                    ? "Currently Active Member"
+                    : "Currently Inactive Member"
+                }
+              </p>
+            </div>
+          </div>
+          
+          <div class="p-4 bg-gray-700/30 rounded-xl border border-gray-600/30">
+            <p class="text-sm text-gray-300">
+              ${
+                isActive
+                  ? "This action will deactivate the member's account. They won't be able to access their account until reactivated."
+                  : "This action will reactivate the member's account. They will regain access to their account immediately."
+              }
+            </p>
+          </div>
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: `
+        <div class="flex items-center gap-2">
+          <i class="fas ${isActive ? "fa-user-slash" : "fa-user-check"}"></i>
+          <span>${isActive ? "Yes, Deactivate" : "Yes, Activate"}</span>
+        </div>
+      `,
+      cancelButtonText: `
+        <div class="flex items-center gap-2">
+          <i class="fas fa-times"></i>
+          <span>Cancel</span>
+        </div>
+      `,
+      background: "#1F2937",
+      customClass: {
+        popup: "bg-gray-800 rounded-2xl border border-gray-700 shadow-2xl",
+        title: "text-2xl font-bold text-white mb-4",
+        htmlContainer: "text-gray-300",
+        actions: "border-t border-gray-700 mt-6 py-4",
+        confirmButton: `
+          ${
+            isActive
+              ? "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700"
+              : "bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700"
+          } text-white font-semibold rounded-xl px-6 py-3 transition-all duration-300 hover:shadow-lg hover:shadow-${
+          isActive ? "red" : "amber"
+        }-500/20 hover:-translate-y-0.5
+        `,
+        cancelButton:
+          "bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white font-semibold rounded-xl px-6 py-3 transition-all duration-300 hover:shadow-lg hover:shadow-gray-500/20 hover:-translate-y-0.5",
+      },
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const requestUrl = `${api}/members/members/${member.id}/status`;
+        const requestData = {
+          status: isActive ? "inactive" : "active",
+        };
+
+        const response = await axios.patch(requestUrl, requestData);
+
+        if (response.data.success) {
+          const updatedMembers = members.map((m) =>
+            m.id === member.id
+              ? { ...m, status: isActive ? "inactive" : "active" }
+              : m
+          );
+          setMembers(updatedMembers);
+
+          Swal.fire({
+            icon: "success",
+            title: `<span class="text-lg font-semibold text-white">
+              ${isActive ? "Member Deactivated" : "Member Activated"}
+            </span>`,
+            html: `
+              <div class="flex items-center gap-3 mt-2">
+                <div class="p-2 ${
+                  isActive ? "bg-red-500/20" : "bg-green-500/20"
+                } rounded-lg">
+                  <i class="fas ${
+                    isActive ? "fa-user-slash" : "fa-user-check"
+                  } ${isActive ? "text-red-400" : "text-green-400"}"></i>
+                </div>
+                <p class="text-sm text-gray-300">
+                  ${
+                    isActive
+                      ? "The member has been successfully deactivated"
+                      : "The member has been successfully activated"
+                  }
+                </p>
+              </div>
+            `,
+            toast: true,
+            position: "top-end",
+            showConfirmButton: false,
+            timer: 3000,
+            background: "#1F2937",
+            customClass: {
+              popup: "bg-gray-800 rounded-xl border border-gray-700 shadow-lg",
+            },
+          });
+        }
+      } catch (error) {
+        Swal.fire({
+          icon: "error",
+          title: '<span class="text-lg font-semibold text-white">Error</span>',
+          text:
+            error.response?.data?.message || "Failed to update member status",
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 3000,
+          background: "#1F2937",
+          color: "#fff",
+        });
+      }
+    } else {
+      console.log("Status update cancelled by user");
     }
   };
 
   return (
     <div className="mt-32 p-1 lg:p-6">
       {/* Header Section */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8"
@@ -171,7 +312,7 @@ const MemberList = () => {
       </motion.div>
 
       {/* Search and Add Section */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
@@ -227,38 +368,58 @@ const MemberList = () => {
               <thead className="sticky top-0 z-10">
                 <tr className="bg-gradient-to-r from-gray-800/95 via-gray-800/98 to-gray-800/95 backdrop-blur-xl">
                   <th className="px-6 py-4 text-left border-b border-gray-700">
-                    <span className="text-sm font-semibold text-gray-300">SR No.</span>
+                    <span className="text-sm font-semibold text-gray-300">
+                      SR No.
+                    </span>
                   </th>
                   <th className="px-6 py-4 text-left border-b border-gray-700">
-                    <span className="text-sm font-semibold text-gray-300">Member Name</span>
+                    <span className="text-sm font-semibold text-gray-300">
+                      Member Name
+                    </span>
                   </th>
                   <th className="px-6 py-4 text-left border-b border-gray-700">
-                    <span className="text-sm font-semibold text-gray-300">Mobile Number</span>
+                    <span className="text-sm font-semibold text-gray-300">
+                      Mobile Number
+                    </span>
                   </th>
                   <th className="px-6 py-4 text-left border-b border-gray-700">
-                    <span className="text-sm font-semibold text-gray-300">Email</span>
+                    <span className="text-sm font-semibold text-gray-300">
+                      Email
+                    </span>
                   </th>
                   <th className="px-6 py-4 text-left border-b border-gray-700">
-                    <span className="text-sm font-semibold text-gray-300">Chapter</span>
+                    <span className="text-sm font-semibold text-gray-300">
+                      Chapter
+                    </span>
                   </th>
                   <th className="px-6 py-4 text-left border-b border-gray-700">
-                    <span className="text-sm font-semibold text-gray-300">Join Date</span>
+                    <span className="text-sm font-semibold text-gray-300">
+                      Join Date
+                    </span>
                   </th>
                   <th className="px-6 py-4 text-left border-b border-gray-700">
-                    <span className="text-sm font-semibold text-gray-300">Actions</span>
+                    <span className="text-sm font-semibold text-gray-300">
+                      Actions
+                    </span>
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-700/50">
                 {loading ? (
                   <tr>
-                    <td colSpan="7" className="px-6 py-8 text-center text-gray-400">
+                    <td
+                      colSpan="7"
+                      className="px-6 py-8 text-center text-gray-400"
+                    >
                       Loading members...
                     </td>
                   </tr>
                 ) : filteredMembers.length === 0 ? (
                   <tr>
-                    <td colSpan="7" className="px-6 py-8 text-center text-gray-400">
+                    <td
+                      colSpan="7"
+                      className="px-6 py-8 text-center text-gray-400"
+                    >
                       No members found
                     </td>
                   </tr>
@@ -268,7 +429,7 @@ const MemberList = () => {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      key={member.member_id}
+                      key={member.id}
                       className="group hover:bg-gradient-to-r hover:from-gray-700/30 hover:via-gray-700/40 hover:to-gray-700/30 transition-all duration-300"
                     >
                       <td className="py-5 px-6">
@@ -276,15 +437,17 @@ const MemberList = () => {
                       </td>
                       <td className="py-5 px-6">
                         <div className="flex items-center gap-2">
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            member.is_active === "1"
-                              ? "bg-amber-500/20 text-amber-500"
-                              : "bg-red-500/20 text-red-500"
-                          }`}>
-                            {member.is_active === "1" ? "Active" : "Inactive"}
+                          <span
+                            className={`px-2 py-1 text-xs font-medium rounded-full ${
+                              member.status === "active"
+                                ? "bg-green-500/20 text-green-500"
+                                : "bg-red-500/20 text-red-500"
+                            }`}
+                          >
+                            {member.status === "active" ? "Active" : "Inactive"}
                           </span>
-                          <span className="text-gray-400" title={member.full_name}>
-                            {member.full_name}
+                          <span className="text-gray-400" title={member.name}>
+                            {member.name}
                           </span>
                         </div>
                       </td>
@@ -295,32 +458,50 @@ const MemberList = () => {
                         <span className="text-gray-400">{member.email}</span>
                       </td>
                       <td className="py-5 px-6">
-                        <span className="text-gray-400">{member.chapter_name}</span>
+                        <span className="text-gray-400">
+                          {member.chapter_name || "No Chapter Assigned"}
+                        </span>
                       </td>
                       <td className="py-5 px-6">
-                        <span className="text-gray-400">{member.joining_date}</span>
+                        <span className="text-gray-400">
+                          {new Date(member.joiningDate).toLocaleDateString()}
+                        </span>
                       </td>
                       <td className="py-5 px-6">
                         <div className="flex items-center gap-2">
                           <button
-                            onClick={() => navigate(`/member-view/${member.member_id}`)}
+                            onClick={() =>
+                              navigate(`/member-view/${member.id}`)
+                            }
                             className="group flex items-center justify-center w-8 h-8 bg-gradient-to-r from-blue-600 to-blue-900 hover:from-blue-700 hover:to-blue-950 text-white/90 hover:text-white rounded-xl transition-all duration-300 shadow hover:shadow-lg hover:shadow-blue-900/30 hover:-translate-y-0.5"
                           >
-                            <img src={viewIcon} alt="View" className="w-5 h-5 opacity-70 group-hover:opacity-100" />
+                            <img
+                              src={viewIcon}
+                              alt="View"
+                              className="w-5 h-5 opacity-70 group-hover:opacity-100"
+                            />
                           </button>
-                          {member.is_active === "1" && (
+                          {member.status === "active" && (
                             <button
                               onClick={() => handleEditClick(member)}
                               className="group flex items-center justify-center w-8 h-8 bg-gradient-to-r from-amber-600 to-amber-900 hover:from-amber-700 hover:to-amber-950 text-white/90 hover:text-white rounded-xl transition-all duration-300 shadow hover:shadow-lg hover:shadow-amber-900/30 hover:-translate-y-0.5"
                             >
-                              <img src={editIcon} alt="Edit" className="w-5 h-5 opacity-70 group-hover:opacity-100" />
+                              <img
+                                src={editIcon}
+                                alt="Edit"
+                                className="w-5 h-5 opacity-70 group-hover:opacity-100"
+                              />
                             </button>
                           )}
                           <button
-                            onClick={() => {}}
+                            onClick={() => toggleMemberStatus(member)}
                             className="group flex items-center justify-center w-8 h-8 bg-gradient-to-r from-yellow-600 to-yellow-900 hover:from-yellow-700 hover:to-yellow-950 text-white/90 hover:text-white rounded-xl transition-all duration-300 shadow hover:shadow-lg hover:shadow-yellow-900/30 hover:-translate-y-0.5"
                           >
-                            <img src={settingsIcon} alt="Settings" className="w-5 h-5 opacity-70 group-hover:opacity-100" />
+                            <img
+                              src={settingsIcon}
+                              alt="Settings"
+                              className="w-5 h-5 opacity-70 group-hover:opacity-100"
+                            />
                           </button>
                         </div>
                       </td>

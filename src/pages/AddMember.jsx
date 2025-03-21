@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import member from "../assets/images/icons/member.svg";
 import calendarIcon from "../assets/images/icons/calender-icon.svg";
+import api from "../hooks/api";
+import axios from "axios";
+import Swal from "sweetalert2";
 
 const AddMember = () => {
   const [formData, setFormData] = useState({
@@ -13,9 +16,82 @@ const AddMember = () => {
     date: "",
   });
 
-  const handleSubmit = (e) => {
+  const [chapters, setChapters] = useState([]);
+
+  useEffect(() => {
+    const fetchChapters = async () => {
+      try {
+        const response = await axios.get(`${api}/chapters`);
+        if (response.data.status === "success") {
+          setChapters(response.data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching chapters:", error);
+      }
+    };
+    fetchChapters();
+  }, []);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Add your form submission logic here
+    try {
+      const memberData = {
+        name: formData.name,
+        mobile: formData.mobile,
+        email: formData.email,
+        chapter: formData.chapter,
+        company: formData.company,
+        business_category: formData.business_category,
+        joiningDate: formData.date,
+        status: "active"
+      };
+
+      const response = await axios.post(`${api}/members/add-member`, memberData);
+
+      if (response.data.success) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Success!',
+          text: 'Member added successfully',
+          background: "#111827",
+          color: "#fff",
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 3000,
+          customClass: {
+            popup: "bg-gray-900 border-gray-700 rounded-2xl border",
+          },
+        });
+
+        setFormData({
+          name: "",
+          mobile: "",
+          email: "",
+          chapter: "",
+          company: "",
+          business_category: "",
+          date: "",
+        });
+      }
+    } catch (error) {
+      console.error("Error adding member:", error);
+      
+      Swal.fire({
+        icon: 'error',
+        title: 'Error!',
+        text: error.response?.data?.message || 'Failed to add member',
+        background: "#111827",
+        color: "#fff",
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
+        customClass: {
+          popup: "bg-gray-900 border-gray-700 rounded-2xl border",
+        },
+      });
+    }
   };
 
   return (
@@ -145,7 +221,11 @@ const AddMember = () => {
                 }
               >
                 <option value="">Select Chapter</option>
-                {/* Add your chapter options here */}
+                {chapters.map((chapter) => (
+                  <option key={chapter.chapter_id} value={chapter.chapter_id}>
+                    {chapter.chapter_name}
+                  </option>
+                ))}
               </select>
             </div>
 

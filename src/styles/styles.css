@@ -108,3 +108,34 @@
   ring: 2px;
   ring-color: #22c55e;
 }
+
+.custom-animation-duration {
+  --animate-duration: 800ms;
+}
+
+.animate__custom {
+  --animate-duration: 1.2s !important;
+}
+
+.animate__animated.animate__fadeInRight,
+.animate__animated.animate__fadeOutRight {
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Add these new classes for smooth animations */
+.swal-smooth-enter {
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+.swal-smooth-enter-active {
+  opacity: 1;
+  transform: translateX(0);
+  transition: all 1500ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.swal-smooth-leave-active {
+  opacity: 0;
+  transform: translateX(100%);
+  transition: all 1500ms cubic-bezier(0.4, 0, 0.2, 1);
+}
