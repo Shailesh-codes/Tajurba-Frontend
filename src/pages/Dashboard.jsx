@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Medal,
   Users,
@@ -22,6 +22,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import axios from "axios";
 
 // Register ChartJS components
 ChartJS.register(
@@ -48,6 +49,8 @@ const Dashboard = () => {
       "0"
     )}`;
   });
+
+
 
   return (
     <div className="mt-32 lg:p-4 sm:p-6 space-y-6 sm:space-y-8 min-h-screen bg-gradient-to-b from-gray-900 via-gray-900/95 to-gray-950">

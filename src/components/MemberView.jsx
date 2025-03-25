@@ -185,57 +185,72 @@ const MemberView = () => {
             status: isActive ? "inactive" : "active",
           });
 
-        // Enhanced success alert
-        Swal.fire({
-          html: `
+          // Enhanced success alert
+          Swal.fire({
+            html: `
             <div class="flex items-start gap-3 p-1">
               <div class="flex-shrink-0">
-                <div class="p-2 ${isActive ? 'bg-red-500/15' : 'bg-green-500/15'} rounded-lg border ${
-                  isActive ? 'border-red-500/30' : 'border-green-500/30'
-                } shadow-lg">
-                  <i class="fas ${isActive ? 'fa-user-slash' : 'fa-user-check'} ${
-                    isActive ? 'text-red-400' : 'text-green-400'
-                  } text-sm"></i>
+                <div class="p-2 ${
+                  isActive ? "bg-red-500/15" : "bg-green-500/15"
+                } rounded-lg border ${
+              isActive ? "border-red-500/30" : "border-green-500/30"
+            } shadow-lg">
+                  <i class="fas ${
+                    isActive ? "fa-user-slash" : "fa-user-check"
+                  } ${
+              isActive ? "text-red-400" : "text-green-400"
+            } text-sm"></i>
                 </div>
               </div>
               <div class="flex flex-col min-w-[200px]">
                 <div class="flex items-center gap-2">
-                  <h3 class="text-sm font-semibold ${isActive ? 'text-red-400' : 'text-green-400'}">${member.name}</h3>
+                  <h3 class="text-sm font-semibold ${
+                    isActive ? "text-red-400" : "text-green-400"
+                  }">${member.name}</h3>
                   <span class="px-2 py-0.5 text-xs ${
-                    isActive ? 'bg-red-500/10 text-red-400 border-red-500/20' : 'bg-green-500/10 text-green-400 border-green-500/20'
+                    isActive
+                      ? "bg-red-500/10 text-red-400 border-red-500/20"
+                      : "bg-green-500/10 text-green-400 border-green-500/20"
                   } rounded-full border">
-                    ${isActive ? 'Deactivated' : 'Activated'}
+                    ${isActive ? "Deactivated" : "Activated"}
                   </span>
                 </div>
-                <div class="mt-1 p-2 ${isActive ? 'bg-red-500/10' : 'bg-green-500/10'} rounded-md border ${
-                  isActive ? 'border-red-500/20' : 'border-green-500/20'
-                }">
+                <div class="mt-1 p-2 ${
+                  isActive ? "bg-red-500/10" : "bg-green-500/10"
+                } rounded-md border ${
+              isActive ? "border-red-500/20" : "border-green-500/20"
+            }">
                   <p class="text-xs text-gray-300">
-                    ${isActive ? 'Member has been successfully deactivated' : 'Member has been successfully activated'}
+                    ${
+                      isActive
+                        ? "Member has been successfully deactivated"
+                        : "Member has been successfully activated"
+                    }
                   </p>
                 </div>
               </div>
             </div>
           `,
-          position: "top-right",
-          showConfirmButton: false,
-          timer: 5000,
-          timerProgressBar: true,
-          background: "linear-gradient(145deg, #1F2937, #111827)",
-          width: "auto",
-          padding: "1rem",
-          backdrop: false,
-          customClass: {
-            popup: 'swal-smooth-enter bg-gray-800 rounded-xl border border-gray-700 shadow-lg',
-            timerProgressBar: `${isActive ? 'bg-red-500' : 'bg-green-500'}`
-          },
-          showClass: {
-            popup: 'swal-smooth-enter-active'
-          },
-          hideClass: {
-            popup: 'swal-smooth-leave-active'
-          }
-        });
+            position: "top-right",
+            showConfirmButton: false,
+            timer: 5000,
+            timerProgressBar: true,
+            background: "linear-gradient(145deg, #1F2937, #111827)",
+            width: "auto",
+            padding: "1rem",
+            backdrop: false,
+            customClass: {
+              popup:
+                "swal-smooth-enter bg-gray-800 rounded-xl border border-gray-700 shadow-lg",
+              timerProgressBar: `${isActive ? "bg-red-500" : "bg-green-500"}`,
+            },
+            showClass: {
+              popup: "swal-smooth-enter-active",
+            },
+            hideClass: {
+              popup: "swal-smooth-leave-active",
+            },
+          });
         }
       } catch (error) {
         console.error("Error updating member status:", error);
@@ -275,15 +290,16 @@ const MemberView = () => {
           padding: "1rem",
           backdrop: false,
           customClass: {
-            popup: "animate__animated bg-gray-800 rounded-xl border border-gray-700 shadow-lg custom-animation-duration",
-            timerProgressBar: "bg-red-500"
+            popup:
+              "animate__animated bg-gray-800 rounded-xl border border-gray-700 shadow-lg custom-animation-duration",
+            timerProgressBar: "bg-red-500",
           },
           showClass: {
-            popup: 'animate__animated animate__fadeInRight animate__custom'
+            popup: "animate__animated animate__fadeInRight animate__custom",
           },
           hideClass: {
-            popup: 'animate__animated animate__fadeOutRight animate__custom'
-          }
+            popup: "animate__animated animate__fadeOutRight animate__custom",
+          },
         });
       }
     }
@@ -332,10 +348,6 @@ const MemberView = () => {
   // Add handleEditSubmit function
   const handleEditSubmit = async (formData) => {
     try {
-      // In production, this would be an API call
-      // await axios.put(`/api/members/${id}`, formData);
-      
-      // For now, update the local state with the new data
       setMember({
         ...member,
         full_name: formData.name,
@@ -351,7 +363,7 @@ const MemberView = () => {
       });
 
       setEditModalOpen(false);
-      
+
       // Show success message
       Swal.fire({
         icon: "success",
@@ -374,15 +386,16 @@ const MemberView = () => {
         timerProgressBar: true,
         background: "linear-gradient(145deg, #1F2937, #111827)",
         customClass: {
-          popup: "animate__animated bg-gray-800 rounded-xl border border-gray-700 shadow-lg custom-animation-duration",
+          popup:
+            "animate__animated bg-gray-800 rounded-xl border border-gray-700 shadow-lg custom-animation-duration",
           title: "text-white",
           htmlContainer: "text-gray-300",
         },
         showClass: {
-          popup: 'animate__animated animate__fadeInRight animate__custom'
+          popup: "animate__animated animate__fadeInRight animate__custom",
         },
         hideClass: {
-          popup: 'animate__animated animate__fadeOutRight animate__custom'
+          popup: "animate__animated animate__fadeOutRight animate__custom",
         },
       });
     } catch (error) {
@@ -407,7 +420,8 @@ const MemberView = () => {
         timer: 4000,
         background: "linear-gradient(145deg, #1F2937, #111827)",
         customClass: {
-          popup: "animate__animated bg-gray-800 rounded-xl border border-gray-700 shadow-lg custom-animation-duration",
+          popup:
+            "animate__animated bg-gray-800 rounded-xl border border-gray-700 shadow-lg custom-animation-duration",
         },
       });
     }
@@ -849,7 +863,7 @@ const ContactField = ({
   icon,
   gradient,
   borderColor,
-  iconColor, 
+  iconColor,
 }) => (
   <div className="space-y-2">
     <label className="text-sm font-medium text-gray-400">{label}</label>

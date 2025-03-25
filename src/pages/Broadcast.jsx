@@ -3,6 +3,7 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import broadcastIcon from "../assets/images/icons/broadcast-icon.svg";
 import { useNavigate } from "react-router-dom";
+import api from "../hooks/api";
 
 const Broadcast = () => {
   const [chapters, setChapters] = useState([]);
@@ -19,123 +20,83 @@ const Broadcast = () => {
   });
   const navigate = useNavigate();
 
-  // Load chapters and broadcasts on component mount
   useEffect(() => {
-    loadChapters();
-    loadBroadcasts();
+    const fetchChapters = async () => {
+      try {
+        const response = await axios.get(`${api}/chapters`);
+        if (response.data.status === "success") {
+          setChapters(response.data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching chapters:", error);
+      }
+    };
+    fetchChapters();
   }, []);
 
-  const loadChapters = async () => {
-    try {
-      const response = await axios.get("/api/broadcasts?action=chapters");
-      if (response.data.status === "success") {
-        setChapters(response.data.data);
-      }
-    } catch (error) {
-      console.error("Error loading chapters:", error);
-      showError("Failed to load chapters. Please refresh the page.");
-    }
-  };
-
-  const loadBroadcasts = async () => {
-    try {
-      const response = await axios.get("/api/broadcasts");
-      if (response.data.status === "success") {
-        setBroadcasts(response.data.data);
-      }
-    } catch (error) {
-      console.error("Error loading broadcasts:", error);
-      showError("Failed to load broadcasts");
-    }
-  };
-
-  const handleChapterSelection = (chapterId) => {
+  const handleChapterSelection = (chapterName) => {
     setSelectedChapters((prev) =>
-      prev.includes(chapterId)
-        ? prev.filter((id) => id !== chapterId)
-        : [...prev, chapterId]
+      prev.includes(chapterName)
+        ? prev.filter((name) => name !== chapterName)
+        : [...prev, chapterName]
     );
   };
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-
-    if (selectedChapters.length === 0) {
-      showError("Please select at least one chapter");
-      return;
-    }
-
-    if (
-      !formData.announcementSlot ||
-      !formData.announcementText ||
-      !formData.duration
-    ) {
-      showError("Please fill in all required fields");
-      return;
-    }
-
-    if (
-      formData.duration === "custom" &&
-      (!formData.startDate || !formData.endDate)
-    ) {
-      showError("Please select both start and end dates for custom duration");
-      return;
-    }
-
+    
     try {
-      const results = [];
-      const errors = [];
+      // For each selected chapter, create a broadcast
+      for (const chapterName of selectedChapters) {
+        const payload = {
+          chapterName,
+          announcementSlot: parseInt(formData.announcementSlot),
+          announcementText: formData.announcementText,
+          startDate: formData.startDate || new Date(),
+          duration: formData.duration,
+          endDate: formData.duration === 'custom' ? formData.endDate : null
+        };
 
-      for (const chapterId of selectedChapters) {
-        const response = await axios.post("/api/broadcasts", {
-          action: "add",
-          chapterId,
-          ...formData,
-        });
+        console.log('Sending payload:', payload);
 
-        if (response.data.status === "success") {
-          results.push(response.data);
-        } else {
-          errors.push(`Chapter ${chapterId}: ${response.data.message}`);
+        const response = await axios.post(`${api}/broadcasts`, payload);
+        
+        if (response.data.success) {
+          showSuccess("Broadcast created successfully");
+          setShowForm(false);
+          // Reset form data
+          setFormData({
+            announcementSlot: "",
+            announcementText: "",
+            duration: "",
+            startDate: "",
+            endDate: "",
+          });
+          setSelectedChapters([]);
+          // Refresh broadcasts list
+          fetchBroadcasts();
         }
       }
-
-      if (errors.length > 0) {
-        throw new Error(
-          `Failed to add some announcements:\n${errors.join("\n")}`
-        );
-      }
-
-      showSuccess(`Successfully added ${results.length} announcement(s)`);
-      setShowForm(false);
-      setFormData({
-        announcementSlot: "",
-        announcementText: "",
-        duration: "",
-        startDate: "",
-        endDate: "",
-      });
-      setSelectedChapters([]);
-      loadBroadcasts();
     } catch (error) {
-      console.error("Error adding announcements:", error);
-      showError(error.message);
+      console.error("Error creating broadcast:", error);
+      showError(error.response?.data?.message || "Error creating broadcast");
     }
   };
 
   const toggleBroadcast = async (id) => {
     try {
-      const response = await axios.post("/api/broadcasts", {
-        action: "toggle",
-        broadcast_id: id,
+      const response = await axios.patch(`${api}/broadcasts/toggle-status`, {
+        broadcast_id: id
       });
 
-      if (response.data.status === "success") {
-        loadBroadcasts();
+      if (response.data.success) {
+        showSuccess("Broadcast status updated successfully");
+        // Refresh broadcasts list
+        fetchBroadcasts();
       }
     } catch (error) {
       console.error("Error toggling broadcast:", error);
-      showError(error.message);
+      showError(error.response?.data?.message || "Error updating broadcast status");
     }
   };
 
@@ -162,21 +123,35 @@ const Broadcast = () => {
 
     if (result.isConfirmed) {
       try {
-        const response = await axios.post("/api/broadcasts", {
-          action: "delete",
-          broadcast_id: id,
-        });
+        const response = await axios.delete(`${api}/broadcasts/${id}`);
 
-        if (response.data.status === "success") {
-          loadBroadcasts();
+        if (response.data.success) {
           showSuccess("Broadcast deleted successfully");
+          // Refresh broadcasts list
+          fetchBroadcasts();
         }
       } catch (error) {
         console.error("Error deleting broadcast:", error);
-        showError(error.message);
+        showError(error.response?.data?.message || "Error deleting broadcast");
       }
     }
   };
+
+  const fetchBroadcasts = async () => {
+    try {
+      const response = await axios.get(`${api}/broadcasts`);
+      if (response.data.success) {
+        setBroadcasts(response.data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching broadcasts:", error);
+      showError("Error fetching broadcasts");
+    }
+  };
+
+  useEffect(() => {
+    fetchBroadcasts();
+  }, []);
 
   const showError = (message) => {
     Swal.fire({
@@ -224,7 +199,7 @@ const Broadcast = () => {
   };
 
   const filteredBroadcasts = filterChapter
-    ? broadcasts.filter((broadcast) => broadcast.chapter_id === filterChapter)
+    ? broadcasts.filter((broadcast) => broadcast.chapter_name === filterChapter)
     : broadcasts;
 
   // Add dummy broadcasts for demonstration
@@ -233,7 +208,8 @@ const Broadcast = () => {
       broadcast_id: 1,
       chapter_name: "Chapter Alpha",
       announcement_slot: 1,
-      announcement_text: "🎉 Join us for the Annual Leadership Summit 2024! Early bird registration now open with exclusive benefits for all members. Don't miss out on this transformative experience.",
+      announcement_text:
+        "🎉 Join us for the Annual Leadership Summit 2024! Early bird registration now open with exclusive benefits for all members. Don't miss out on this transformative experience.",
       status: "active",
       created_at: "2024-03-15T10:00:00",
       start_date: "2024-03-20T00:00:00",
@@ -243,7 +219,8 @@ const Broadcast = () => {
       broadcast_id: 2,
       chapter_name: "Chapter Beta",
       announcement_slot: 2,
-      announcement_text: "🏆 Congratulations to our chapter members for achieving the Excellence Award! Special recognition ceremony this Friday.",
+      announcement_text:
+        "🏆 Congratulations to our chapter members for achieving the Excellence Award! Special recognition ceremony this Friday.",
       status: "active",
       created_at: "2024-03-14T15:30:00",
       start_date: "2024-03-16T00:00:00",
@@ -306,7 +283,7 @@ const Broadcast = () => {
             >
               <option value="">All Chapters</option>
               {chapters.map((chapter) => (
-                <option key={chapter.chapter_id} value={chapter.chapter_id}>
+                <option key={chapter.chapter_name} value={chapter.chapter_name}>
                   {chapter.chapter_name}
                 </option>
               ))}
@@ -369,24 +346,29 @@ const Broadcast = () => {
                   {/* Chapter Selection */}
                   <div className="flex flex-col gap-3">
                     <label className="text-sm font-medium text-amber-400">
-                      Select Chapter(s) <span className="text-red-500 text-lg">*</span>
+                      Select Chapter(s){" "}
+                      <span className="text-red-500 text-lg">*</span>
                     </label>
                     <div className="max-h-48 overflow-y-auto bg-gray-900/50 backdrop-blur-sm rounded-xl border border-amber-500/20 p-4 scrollbar-thin scrollbar-thumb-amber-500/20 scrollbar-track-gray-800/50">
                       <div className="space-y-2">
                         {chapters.map((chapter) => (
                           <div
-                            key={chapter.chapter_id}
+                            key={chapter.chapter_name}
                             className="flex items-center py-2 px-3 rounded-lg hover:bg-amber-500/10 transition-colors duration-200"
                           >
                             <input
                               type="checkbox"
-                              id={`chapter_${chapter.chapter_id}`}
-                              checked={selectedChapters.includes(chapter.chapter_id)}
-                              onChange={() => handleChapterSelection(chapter.chapter_id)}
+                              id={`chapter_${chapter.chapter_name}`}
+                              checked={selectedChapters.includes(
+                                chapter.chapter_name
+                              )}
+                              onChange={() =>
+                                handleChapterSelection(chapter.chapter_name)
+                              }
                               className="w-4 h-4 rounded bg-gray-700 border-gray-600 text-amber-500 focus:ring-amber-500 focus:ring-offset-gray-800"
                             />
                             <label
-                              htmlFor={`chapter_${chapter.chapter_id}`}
+                              htmlFor={`chapter_${chapter.chapter_name}`}
                               className="ml-3 text-sm text-gray-300 cursor-pointer hover:text-amber-400 transition-colors duration-200"
                             >
                               {chapter.chapter_name}
@@ -400,7 +382,8 @@ const Broadcast = () => {
                   {/* Announcement Slot */}
                   <div className="flex flex-col gap-3">
                     <label className="text-sm font-medium text-amber-400">
-                      Select Announcement Slot <span className="text-red-500 text-lg">*</span>
+                      Select Announcement Slot{" "}
+                      <span className="text-red-500 text-lg">*</span>
                     </label>
                     <select
                       required
@@ -413,17 +396,26 @@ const Broadcast = () => {
                       }
                       className="w-full px-4 py-3 bg-gray-900/50 backdrop-blur-sm rounded-xl border border-amber-500/20 text-gray-200 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all duration-200"
                     >
-                      <option value="" className="bg-gray-900">Choose a slot...</option>
-                      <option value="1" className="bg-gray-900">Announcement #1</option>
-                      <option value="2" className="bg-gray-900">Announcement #2</option>
-                      <option value="3" className="bg-gray-900">Announcement #3</option>
+                      <option value="" className="bg-gray-900">
+                        Choose a slot...
+                      </option>
+                      <option value="1" className="bg-gray-900">
+                        Announcement #1
+                      </option>
+                      <option value="2" className="bg-gray-900">
+                        Announcement #2
+                      </option>
+                      <option value="3" className="bg-gray-900">
+                        Announcement #3
+                      </option>
                     </select>
                   </div>
 
                   {/* Announcement Text */}
                   <div className="flex flex-col gap-3 sm:col-span-2">
                     <label className="text-sm font-medium text-amber-400">
-                      Announcement Text <span className="text-red-500 text-lg">*</span>
+                      Announcement Text{" "}
+                      <span className="text-red-500 text-lg">*</span>
                     </label>
                     <textarea
                       required
@@ -453,12 +445,24 @@ const Broadcast = () => {
                       }
                       className="w-full px-4 py-3 bg-gray-900/50 backdrop-blur-sm rounded-xl border border-amber-500/20 text-gray-200 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all duration-200"
                     >
-                      <option value="" className="bg-gray-900">Choose duration...</option>
-                      <option value="7" className="bg-gray-900">7 Days</option>
-                      <option value="15" className="bg-gray-900">15 Days</option>
-                      <option value="30" className="bg-gray-900">30 Days</option>
-                      <option value="custom" className="bg-gray-900">Custom Range</option>
-                      <option value="always" className="bg-gray-900">Always</option>
+                      <option value="" className="bg-gray-900">
+                        Choose duration...
+                      </option>
+                      <option value="7" className="bg-gray-900">
+                        7 Days
+                      </option>
+                      <option value="15" className="bg-gray-900">
+                        15 Days
+                      </option>
+                      <option value="30" className="bg-gray-900">
+                        30 Days
+                      </option>
+                      <option value="custom" className="bg-gray-900">
+                        Custom Range
+                      </option>
+                      <option value="always" className="bg-gray-900">
+                        Always
+                      </option>
                     </select>
                   </div>
 
@@ -466,7 +470,8 @@ const Broadcast = () => {
                   {formData.duration === "custom" && (
                     <div className="flex flex-col gap-3">
                       <label className="text-sm font-medium text-amber-400">
-                        Custom Date Range <span className="text-red-500 text-lg">*</span>
+                        Custom Date Range{" "}
+                        <span className="text-red-500 text-lg">*</span>
                       </label>
                       <div className="grid grid-cols-2 gap-4">
                         <input
@@ -526,24 +531,28 @@ const Broadcast = () => {
 
         {/* Enhanced Announcement Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {(filteredBroadcasts.length === 0 ? dummyBroadcasts : filteredBroadcasts).map((broadcast) => {
+          {(filteredBroadcasts.length === 0
+            ? dummyBroadcasts
+            : filteredBroadcasts
+          ).map((broadcast) => {
             const isActive = broadcast.status === "active";
-            const isExpired = broadcast.end_date && new Date(broadcast.end_date) < new Date();
+            const isExpired =
+              broadcast.end_date && new Date(broadcast.end_date) < new Date();
 
             return (
               <div
                 key={broadcast.broadcast_id}
                 className={`relative overflow-hidden backdrop-blur-sm bg-gradient-to-br ${
-                  isActive 
-                    ? 'from-orange-950/30 to-gray-900/95'
-                    : 'from-gray-800/30 to-gray-900/95'
+                  isActive
+                    ? "from-orange-950/30 to-gray-900/95"
+                    : "from-gray-800/30 to-gray-900/95"
                 } rounded-2xl border ${
                   isActive ? "border-orange-500/30" : "border-gray-700/50"
                 } p-6 hover:shadow-lg transition-all duration-300 group`}
               >
                 {/* Decorative Elements */}
                 <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 rounded-full blur-3xl group-hover:bg-orange-500/20 transition-all duration-500"></div>
-                
+
                 {/* Enhanced Chapter and Slot Header */}
                 <div className="flex flex-col gap-3 mb-4 relative">
                   <div className="flex items-center justify-between">
@@ -556,37 +565,42 @@ const Broadcast = () => {
                   </div>
                   <p className="text-xs text-gray-400 flex items-center gap-2">
                     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
-                      <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
                     </svg>
                     {formatDate(broadcast.created_at)}
                   </p>
                 </div>
 
                 {/* Enhanced Announcement Content */}
-                <div className={`relative ${
-                  isActive
-                    ? 'bg-gradient-to-br from-orange-900/30 to-orange-900/10'
-                    : 'bg-gradient-to-br from-gray-800/30 to-gray-800/10'
+                <div
+                  className={`relative ${
+                    isActive
+                      ? "bg-gradient-to-br from-orange-900/30 to-orange-900/10"
+                      : "bg-gradient-to-br from-gray-800/30 to-gray-800/10"
                   } px-4 py-3 rounded-xl border ${
-                    isActive ? 'border-orange-500/30' : 'border-gray-600/30'
+                    isActive ? "border-orange-500/30" : "border-gray-600/30"
                   } mb-4 group-hover:scale-[1.02] transition-transform duration-300`}
                 >
-                  <div className={`flex items-start gap-3 ${
-                    isActive ? 'text-orange-200' : 'text-gray-300'
-                  }`}>
+                  <div
+                    className={`flex items-start gap-3 ${
+                      isActive ? "text-orange-200" : "text-gray-300"
+                    }`}
+                  >
                     <p className="text-sm leading-relaxed">
                       {broadcast.announcement_text}
                     </p>
                   </div>
-                  
+
                   {/* Enhanced Date Display */}
                   <div className="mt-3 space-y-1.5 border-t border-gray-700/50 pt-3">
                     <div className="text-xs text-gray-400 flex items-center gap-2">
-                      <svg
-                        className="w-4 h-4"
-                        viewBox="0 0 20 20"
-                        fill="none"
-                      >
+                      <svg className="w-4 h-4" viewBox="0 0 20 20" fill="none">
                         <path
                           d="M15.833 3.333H4.167C3.24 3.333 2.5 4.074 2.5 5v11.667c0 .926.741 1.666 1.667 1.666h11.666c.926 0 1.667-.74 1.667-1.666V5c0-.926-.74-1.667-1.667-1.667z"
                           stroke="currentColor"
@@ -647,8 +661,18 @@ const Broadcast = () => {
                     onClick={() => deleteBroadcast(broadcast.broadcast_id)}
                     className="px-4 py-1.5 rounded-lg bg-gradient-to-r from-gray-600 to-gray-800 hover:from-gray-700 hover:to-gray-900 text-sm text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2"
                   >
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    <svg
+                      className="w-4 h-4"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
                     </svg>
                     Delete
                   </button>
@@ -674,3 +698,4 @@ const Broadcast = () => {
 };
 
 export default Broadcast;
+

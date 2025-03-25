@@ -25,14 +25,14 @@ const Layout = () => {
 
   return (
     <div className="flex h-screen bg-[#0F172A]">
-      <SideBar 
-        isOpen={isSidebarOpen} 
+      <SideBar
+        isOpen={isSidebarOpen}
         setIsOpen={setIsSidebarOpen}
         setIsLogoutModalOpen={setIsLogoutModalOpen}
       />
-      
+
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header 
+        <Header
           setIsSidebarOpen={setIsSidebarOpen}
           isSidebarOpen={isSidebarOpen}
         />
