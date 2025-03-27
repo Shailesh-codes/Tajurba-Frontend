@@ -62,19 +62,19 @@ const ScheduleMeetings = () => {
           schedulesData = [
             ...(response.data.data.meetings?.map((meeting) => ({
               ...meeting,
-              type: "meeting",
+      type: "meeting",
             })) || []),
             ...(response.data.data.events?.map((event) => ({
               ...event,
-              type: "event",
+      type: "event",
             })) || []),
             ...(response.data.data.mdp?.map((mdp) => ({
               ...mdp,
-              type: "mdp",
+      type: "mdp",
             })) || []),
             ...(response.data.data.socialTraining?.map((st) => ({
               ...st,
-              type: "socialTraining",
+      type: "socialTraining",
             })) || []),
           ];
         }
@@ -119,16 +119,37 @@ const ScheduleMeetings = () => {
       .join(", ") || "No chapters";
   };
 
-  // Filter schedules based on search term
-  const filteredSchedules = schedules.filter(
-    (schedule) =>
-      !searchTerm ||
-      schedule.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      schedule.venue?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      JSON.stringify(schedule.chapters)
-        ?.toLowerCase()
-        .includes(searchTerm.toLowerCase())
-  );
+  // Update the filteredSchedules function to handle type checking more safely
+  const filteredSchedules = schedules.filter((schedule) => {
+    if (!searchTerm) return true;
+    
+    const searchValue = searchTerm.toLowerCase().trim();
+    
+    // Check title
+    const titleMatch = schedule.title?.toLowerCase().includes(searchValue) || false;
+    
+    // Check venue
+    const venueMatch = schedule.venue?.toLowerCase().includes(searchValue) || false;
+    
+    // Check type safely
+    let typeMatch = false;
+    try {
+      const scheduleType = schedule.type || getScheduleType(schedule);
+      if (scheduleType) {
+        const typeName = scheduleType === "socialTraining" 
+          ? "Social Training" 
+          : scheduleType === "mdp" 
+            ? "MDP" 
+            : scheduleType.charAt(0).toUpperCase() + scheduleType.slice(1);
+        typeMatch = typeName.toLowerCase().includes(searchValue);
+      }
+    } catch (error) {
+      console.error("Error checking type:", error);
+    }
+
+    // Return true if any of the fields match
+    return titleMatch || venueMatch || typeMatch;
+  });
 
   const getTypeColor = (type) => {
     switch (type) {
@@ -170,14 +191,14 @@ const ScheduleMeetings = () => {
         return "Invalid date";
       }
 
-      return dateObj.toLocaleString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
+    return dateObj.toLocaleString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
         hour: "numeric",
         minute: "2-digit",
-        hour12: true,
-      });
+      hour12: true,
+    });
     } catch (error) {
       console.error("Date formatting error:", error);
       return "Invalid date";
@@ -386,7 +407,7 @@ const ScheduleMeetings = () => {
         <td className="py-4 px-6">
           <div className="flex items-center justify-end gap-2">
             <button
-              onClick={() => navigate(`/view-schedule/${scheduleId}`)}
+              onClick={() => navigate(`/view-schedule/${scheduleType}/${scheduleId}`)}
               className="flex items-center justify-center w-9 h-9 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl transition-all duration-300 shadow-lg hover:shadow-blue-500/25"
             >
               <img
@@ -544,162 +565,162 @@ const ScheduleMeetings = () => {
             </p>
           </div>
         ) : (
-          <div className="relative min-h-[350px] max-h-[calc(100vh-500px)]">
-            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-transparent to-amber-500/5" />
-            <div className="absolute inset-0 overflow-auto scrollbar-thin scrollbar-track-gray-800/40 scrollbar-thumb-amber-600/50 hover:scrollbar-thumb-amber-500/80 scrollbar-hide">
-              <table className="w-full">
-                <thead className="sticky top-0 z-10">
-                  <tr className="bg-gradient-to-r from-gray-800/95 via-gray-800/98 to-gray-800/95 backdrop-blur-xl">
-                    <th className="px-6 py-4 text-left border-b border-gray-700">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-gray-300">
-                          Type
-                        </span>
-                        <svg
-                          className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-300"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
-                          />
-                        </svg>
-                      </div>
-                    </th>
-                    <th className="px-6 py-4 text-left border-b border-gray-700">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-gray-300">
-                          Title
-                        </span>
-                        <svg
-                          className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-300"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
-                          />
-                        </svg>
-                      </div>
-                    </th>
-                    <th className="px-6 py-4 text-left border-b border-gray-700">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-gray-300">
-                          Venue
-                        </span>
-                        <svg
-                          className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-300"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
-                          />
-                        </svg>
-                      </div>
-                    </th>
-                    <th className="px-6 py-4 text-left border-b border-gray-700">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-gray-300">
-                          Date & Time
-                        </span>
-                        <svg
-                          className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-300"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
-                          />
-                        </svg>
-                      </div>
-                    </th>
-                    <th className="px-6 py-4 text-left border-b border-gray-700">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-gray-300">
-                          Chapters
-                        </span>
-                        <svg
-                          className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-300"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
-                          />
-                        </svg>
-                      </div>
-                    </th>
-                    <th className="px-6 py-4 text-left border-b border-gray-700">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-gray-300">
-                          Fee
-                        </span>
-                        <svg
-                          className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-300"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
-                          />
-                        </svg>
-                      </div>
-                    </th>
-                    <th className="px-6 py-4 text-left border-b border-gray-700">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-gray-300">
-                          Actions
-                        </span>
-                        <svg
-                          className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-300"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
-                          />
-                        </svg>
-                      </div>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-700/50">
+        <div className="relative min-h-[350px] max-h-[calc(100vh-500px)]">
+          <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-transparent to-amber-500/5" />
+          <div className="absolute inset-0 overflow-auto scrollbar-thin scrollbar-track-gray-800/40 scrollbar-thumb-amber-600/50 hover:scrollbar-thumb-amber-500/80 scrollbar-hide">
+            <table className="w-full">
+              <thead className="sticky top-0 z-10">
+                <tr className="bg-gradient-to-r from-gray-800/95 via-gray-800/98 to-gray-800/95 backdrop-blur-xl">
+                  <th className="px-6 py-4 text-left border-b border-gray-700">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-gray-300">
+                        Type
+                      </span>
+                      <svg
+                        className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-300"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+                        />
+                      </svg>
+                    </div>
+                  </th>
+                  <th className="px-6 py-4 text-left border-b border-gray-700">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-gray-300">
+                        Title
+                      </span>
+                      <svg
+                        className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-300"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+                        />
+                      </svg>
+                    </div>
+                  </th>
+                  <th className="px-6 py-4 text-left border-b border-gray-700">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-gray-300">
+                        Venue
+                      </span>
+                      <svg
+                        className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-300"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+                        />
+                      </svg>
+                    </div>
+                  </th>
+                  <th className="px-6 py-4 text-left border-b border-gray-700">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-gray-300">
+                        Date & Time
+                      </span>
+                      <svg
+                        className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-300"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+                        />
+                      </svg>
+                    </div>
+                  </th>
+                  <th className="px-6 py-4 text-left border-b border-gray-700">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-gray-300">
+                        Chapters
+                      </span>
+                      <svg
+                        className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-300"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+                        />
+                      </svg>
+                    </div>
+                  </th>
+                  <th className="px-6 py-4 text-left border-b border-gray-700">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-gray-300">
+                        Fee
+                      </span>
+                      <svg
+                        className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-300"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+                        />
+                      </svg>
+                    </div>
+                  </th>
+                  <th className="px-6 py-4 text-left border-b border-gray-700">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-gray-300">
+                        Actions
+                      </span>
+                      <svg
+                        className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-300"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+                        />
+                      </svg>
+                    </div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-700/50">
                   {filteredSchedules.map((schedule, index) =>
                     renderTableRow(schedule, index)
                   )}
-                </tbody>
-              </table>
-            </div>
+              </tbody>
+            </table>
           </div>
+        </div>
         )}
       </motion.div>
 

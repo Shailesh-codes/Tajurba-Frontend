@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import axios from "axios";
+import api from "../hooks/api";
 
 // Import icons
 import eventIcon from "../assets/images/icons/event.svg";
@@ -8,86 +10,142 @@ import editIcon from "../assets/images/icons/edit.svg";
 import deleteIcon from "../assets/images/icons/delete.svg";
 
 const ViewScheduleMeeting = () => {
-  const { id } = useParams();
+  const { type, id } = useParams();
   const navigate = useNavigate();
 
-  // Dummy data
-  const schedule = {
-    id: 1,
-    type: "meeting",
-    title: "Monthly Chapter Meeting",
-    description:
-      "Monthly meeting to discuss chapter progress and upcoming events. All members are requested to attend.",
-    venue: "Grand Hotel Conference Room",
-    date: "2024-03-15",
-    time: "10:00",
-    chapters: "Chapter One, Chapter Two",
-    fee_amount: 1000,
-    organizer: "John Doe",
-    contact: "+1234567890",
-    max_participants: 50,
-    current_participants: 35,
-    agenda: [
-      "Welcome and Introduction",
-      "Previous Meeting Minutes",
-      "Financial Updates",
-      "Upcoming Events Discussion",
-      "Open Forum",
-      "Closing Remarks",
-    ],
-    additional_notes:
-      "Please bring your member ID cards. Refreshments will be provided.",
-    payment_method: "default",
-    qr_code: "https://example.com/qr-code.png",
-    upi_id: "business@upi",
-  };
+  const [schedule, setSchedule] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [allChapters, setAllChapters] = useState([]);
 
-  const getTypeColor = (type) => {
-    switch (type) {
-      case "meeting":
-        return "blue";
-      case "event":
-        return "amber";
-      case "mdp":
-        return "purple";
-      case "socialTraining":
-        return "orange";
-      default:
-        return "gray";
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        // Update the API endpoint to include type
+        const scheduleResponse = await axios.get(
+          `${api}/schedules/${type}/${id}`
+        );
+
+        // Fetch chapters data
+        const chaptersResponse = await axios.get(`${api}/chapters`);
+
+        if (
+          scheduleResponse.data.success &&
+          chaptersResponse.data.status === "success"
+        ) {
+          setSchedule(scheduleResponse.data.data);
+          setAllChapters(chaptersResponse.data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setError("Failed to load schedule details");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (type && id) {
+      fetchData();
     }
+  }, [type, id]);
+
+  const getScheduleType = () => {
+    return type || "unknown";
   };
 
-  const getTypeName = (type) => {
-    switch (type) {
-      case "socialTraining":
-        return "Social Training";
-      case "mdp":
-        return "MDP";
-      default:
-        return type.charAt(0).toUpperCase() + type.slice(1);
+  const getChapterNames = (chapterIds) => {
+    if (!chapterIds || !allChapters.length) return [];
+    try {
+      const ids = Array.isArray(chapterIds)
+        ? chapterIds
+        : JSON.parse(chapterIds);
+      return allChapters
+        .filter((chapter) => ids.includes(chapter.chapter_id))
+        .map((chapter) => chapter.chapter_name);
+    } catch (error) {
+      console.error("Error parsing chapters:", error);
+      return [];
     }
   };
 
   const formatDateTime = (date, time) => {
     if (!date) return "Not specified";
-    const dateObj = new Date(`${date} ${time || "00:00"}`);
-    return dateObj.toLocaleString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: time ? "numeric" : undefined,
-      minute: time ? "2-digit" : undefined,
-      hour12: true,
-    });
+    try {
+      // First convert the date string to a Date object
+      let dateObj;
+      
+      // Check if date is already a Date object
+      if (date instanceof Date) {
+        dateObj = date;
+      } else {
+        // Handle different date string formats
+        const dateStr = typeof date === 'string' ? date.split('T')[0] : date;
+        dateObj = new Date(dateStr);
+      }
+
+      // Format time if provided
+      if (time) {
+        // Ensure time is in HH:mm format
+        const timeStr = typeof time === 'string' ? time.split('.')[0] : time;
+        // Combine date and time
+        dateObj = new Date(`${dateObj.toISOString().split('T')[0]}T${timeStr}`);
+      }
+
+      // Check if date is valid
+      if (isNaN(dateObj.getTime())) {
+        console.error("Invalid date:", date, time);
+        return "Invalid date";
+      }
+
+      // Format the date and time
+      return dateObj.toLocaleString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: time ? "numeric" : undefined,
+        minute: time ? "2-digit" : undefined,
+        hour12: true,
+      });
+    } catch (error) {
+      console.error("Date formatting error:", error, "Date:", date, "Time:", time);
+      return "Invalid date";
+    }
   };
 
   const formatCurrency = (amount) => {
+    if (!amount) return "₹0";
     return new Intl.NumberFormat("en-IN", {
       style: "currency",
       currency: "INR",
       minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
     }).format(amount);
   };
+
+  if (loading) {
+    return (
+      <div className="mt-24 flex items-center justify-center min-h-[calc(100vh-6rem)]">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-amber-500 border-t-transparent"></div>
+      </div>
+    );
+  }
+
+  if (error || !schedule) {
+    return (
+      <div className="mt-24 flex flex-col items-center justify-center min-h-[calc(100vh-6rem)]">
+        <p className="text-red-400 mb-4">{error || "Schedule not found"}</p>
+        <button
+          onClick={() => navigate("/meetings")}
+          className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-all"
+        >
+          Back to Schedules
+        </button>
+      </div>
+    );
+  }
+
+  const scheduleType = getScheduleType();
 
   return (
     <div className="mt-24 lg:px-6 pb-6">
@@ -107,14 +165,24 @@ const ViewScheduleMeeting = () => {
         <div className="relative">
           <div className="flex justify-between items-start mb-6">
             <div>
-              <span className="px-4 py-1.5 rounded-full text-sm font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                {schedule.type.charAt(0).toUpperCase() + schedule.type.slice(1)}
+              <span
+                className={`px-4 py-1.5 rounded-full text-sm font-medium ${
+                  scheduleType === "meeting"
+                    ? "bg-blue-500/10 text-blue-400"
+                    : scheduleType === "event"
+                    ? "bg-amber-500/10 text-amber-400"
+                    : scheduleType === "mdp"
+                    ? "bg-purple-500/10 text-purple-400"
+                    : "bg-orange-500/10 text-orange-400"
+                }`}
+              >
+                {scheduleType.charAt(0).toUpperCase() + scheduleType.slice(1)}
               </span>
               <h1 className="mt-4 text-3xl font-bold text-white">
                 {schedule.title}
               </h1>
               <p className="mt-2 text-gray-400 max-w-2xl">
-                {schedule.description}
+                {schedule.description || "No description available"}
               </p>
             </div>
             <button
@@ -140,6 +208,7 @@ const ViewScheduleMeeting = () => {
 
           {/* Key Details */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+            {/* Date & Time */}
             <div className="flex items-center gap-4 p-4 rounded-2xl bg-gray-800/50 border border-gray-700/50">
               <div className="p-3 rounded-xl bg-blue-500/10">
                 <svg
@@ -164,6 +233,7 @@ const ViewScheduleMeeting = () => {
               </div>
             </div>
 
+            {/* Venue */}
             <div className="flex items-center gap-4 p-4 rounded-2xl bg-gray-800/50 border border-gray-700/50">
               <div className="p-3 rounded-xl bg-amber-500/10">
                 <svg
@@ -192,6 +262,7 @@ const ViewScheduleMeeting = () => {
               </div>
             </div>
 
+            {/* Fee Amount */}
             <div className="flex items-center gap-4 p-4 rounded-2xl bg-gray-800/50 border border-gray-700/50">
               <div className="p-3 rounded-xl bg-purple-500/10">
                 <svg
@@ -228,22 +299,14 @@ const ViewScheduleMeeting = () => {
           transition={{ delay: 0.1 }}
           className="lg:col-span-2 space-y-6"
         >
-          {/* Agenda Card */}
+          {/* Description Card */}
           <div className="p-6 rounded-2xl bg-gray-800 border border-gray-700">
-            <h2 className="text-xl font-semibold text-white mb-4">Agenda</h2>
-            <div className="space-y-4">
-              {schedule.agenda.map((item, index) => (
-                <div
-                  key={index}
-                  className="flex items-start gap-4 p-4 rounded-xl bg-gray-900/50 border border-gray-700/50"
-                >
-                  <span className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-blue-500/10 text-blue-400 font-medium">
-                    {index + 1}
-                  </span>
-                  <p className="text-gray-300">{item}</p>
-                </div>
-              ))}
-            </div>
+            <h2 className="text-xl font-semibold text-white mb-4">
+              Description
+            </h2>
+            <p className="text-gray-300">
+              {schedule.description || "No description available"}
+            </p>
           </div>
 
           {/* Chapters Card */}
@@ -252,16 +315,23 @@ const ViewScheduleMeeting = () => {
               Participating Chapters
             </h2>
             <div className="flex flex-wrap gap-2">
-              {schedule.chapters.split(", ").map((chapter, index) => (
-                <span
-                  key={index}
-                  className="px-4 py-2 rounded-xl bg-gray-900/50 text-gray-300 border border-gray-700/50"
-                >
-                  {chapter}
+              {getChapterNames(schedule.chapters).length > 0 ? (
+                getChapterNames(schedule.chapters).map((chapter, index) => (
+                  <span
+                    key={index}
+                    className="px-4 py-2 rounded-xl bg-gray-900/50 text-gray-300 border border-gray-700/50"
+                  >
+                    {chapter}
+                  </span>
+                ))
+              ) : (
+                <span className="px-4 py-2 rounded-xl bg-gray-900/50 text-gray-300 border border-gray-700/50">
+                  No chapters available
                 </span>
-              ))}
+              )}
             </div>
           </div>
+          
         </motion.div>
 
         {/* Right Column */}
@@ -279,96 +349,27 @@ const ViewScheduleMeeting = () => {
             <div className="space-y-4">
               <div className="p-4 rounded-xl bg-gray-900/50 border border-gray-700/50">
                 <div className="flex flex-col items-center">
-                  {schedule.qr_code && (
-                    <img
-                      src={schedule.qr_code}
-                      alt="Payment QR"
-                      className="w-48 h-48 rounded-xl mb-3"
-                    />
+                  {schedule.payment_method === "custom" && (
+                    <>
+                      {schedule.qr_code && (
+                        <img
+                          src={`data:image/png;base64,${schedule.qr_code}`}
+                          alt="Payment QR"
+                          className="w-48 h-48 rounded-xl mb-3"
+                        />
+                      )}
+                      {schedule.upi_id && (
+                        <p className="text-sm text-gray-400">
+                          UPI: {schedule.upi_id}
+                        </p>
+                      )}
+                    </>
                   )}
-                  {schedule.upi_id && (
-                    <p className="text-sm text-gray-400">
-                      UPI: {schedule.upi_id}
+                  {schedule.payment_method === "default" && (
+                    <p className="text-white opacity-80">
+                      Using default payment method
                     </p>
                   )}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Participants Card */}
-          <div className="p-6 rounded-2xl bg-gray-800 border border-gray-700">
-            <h2 className="text-xl font-semibold text-white mb-4">
-              Participation
-            </h2>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-400">Current Participants</span>
-                <span className="text-white font-medium">
-                  {schedule.current_participants} / {schedule.max_participants}
-                </span>
-              </div>
-              <div className="relative h-2 bg-gray-700 rounded-full overflow-hidden">
-                <div
-                  className="absolute top-0 left-0 h-full bg-amber-500 rounded-full transition-all duration-300"
-                  style={{
-                    width: `${
-                      (schedule.current_participants /
-                        schedule.max_participants) *
-                      100
-                    }%`,
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Contact Card */}
-          <div className="p-6 rounded-2xl bg-gray-800 border border-gray-700">
-            <h2 className="text-xl font-semibold text-white mb-4">
-              Contact Information
-            </h2>
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-blue-500/10">
-                  <svg
-                    className="w-5 h-5 text-blue-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                    />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-400">Organizer</p>
-                  <p className="text-white">{schedule.organizer}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-amber-500/10">
-                  <svg
-                    className="w-5 h-5 text-amber-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                    />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-400">Contact</p>
-                  <p className="text-white">{schedule.contact}</p>
                 </div>
               </div>
             </div>
