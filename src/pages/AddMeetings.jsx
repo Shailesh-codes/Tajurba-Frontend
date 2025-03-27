@@ -5,7 +5,6 @@ import Swal from "sweetalert2";
 import axios from "axios";
 import api from "../hooks/api";
 
-// Import icons (update paths as needed)
 import eventIcon from "../assets/images/icons/event.svg";
 
 const AddMeetings = () => {
@@ -69,7 +68,7 @@ const AddMeetings = () => {
       color: "yellow",
     },
     {
-      value: "socialTraining",
+      value: "social_training",
       label: "Social & Training",
       icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z",
       color: "purple",
@@ -114,12 +113,13 @@ const AddMeetings = () => {
     try {
       const formDataToSend = new FormData();
 
-      // Add event type
+      const timeValue = formData.time || "";
+
       formDataToSend.append("type", selectedType);
       formDataToSend.append("title", formData.title);
       formDataToSend.append("venue", formData.venue);
       formDataToSend.append("date", formData.date);
-      formDataToSend.append("time", formData.time);
+      formDataToSend.append("time", timeValue);
       formDataToSend.append("description", formData.description);
       formDataToSend.append("fee_amount", formData.fee_amount);
       formDataToSend.append("payment_method", formData.payment_method);
@@ -132,36 +132,40 @@ const AddMeetings = () => {
           formDataToSend.append("qr_code", qrFileInput.files[0]);
         }
       } else {
-        formDataToSend.append("default_payment_id", formData.default_payment_id);
         formDataToSend.append(
           "default_payment_id",
           formData.default_payment_id
         );
       }
 
-      const response = await axios.post(`${api}/meetings`, formDataToSend, {
+      const response = await axios.post(`${api}/schedules`, formDataToSend, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
 
       if (response.data.success) {
-        showAlert("success", "Meeting created successfully");
+        showAlert(
+          "success",
+          `${
+            selectedType.charAt(0).toUpperCase() + selectedType.slice(1)
+          } created successfully`
+        );
         resetForm();
-        navigate("/meetings"); // Adjust the route as needed
+        navigate("/meetings");
       }
     } catch (error) {
-      console.error("Error creating meeting:", error);
+      console.error("Error creating schedule:", error);
       showAlert(
         "error",
-        error.response?.data?.message || "Failed to create meeting"
+        error.response?.data?.error || "Failed to create schedule"
       );
     }
   };
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="min-h-screen bg-gray-900 pt-32 pb-16 lg:px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-gray-900 pt-32 pb-16 sm:px-6 lg:px-4">
         <div className="max-w-7xl mx-auto space-y-8">
           {/* Header Section with Enhanced Design */}
           <motion.div
