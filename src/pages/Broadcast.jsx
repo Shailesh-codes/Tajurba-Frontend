@@ -4,6 +4,7 @@ import Swal from "sweetalert2";
 import broadcastIcon from "../assets/images/icons/broadcast-icon.svg";
 import { useNavigate } from "react-router-dom";
 import api from "../hooks/api";
+import DeleteModal from "../layout/DeleteModal";
 
 const Broadcast = () => {
   const [chapters, setChapters] = useState([]);
@@ -18,6 +19,8 @@ const Broadcast = () => {
     startDate: "",
     endDate: "",
   });
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [broadcastToDelete, setBroadcastToDelete] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -44,7 +47,7 @@ const Broadcast = () => {
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-    
+
     try {
       // For each selected chapter, create a broadcast
       for (const chapterName of selectedChapters) {
@@ -54,13 +57,13 @@ const Broadcast = () => {
           announcementText: formData.announcementText,
           startDate: formData.startDate || new Date(),
           duration: formData.duration,
-          endDate: formData.duration === 'custom' ? formData.endDate : null
+          endDate: formData.duration === "custom" ? formData.endDate : null,
         };
 
-        console.log('Sending payload:', payload);
+        console.log("Sending payload:", payload);
 
         const response = await axios.post(`${api}/broadcasts`, payload);
-        
+
         if (response.data.success) {
           showSuccess("Broadcast created successfully");
           setShowForm(false);
@@ -86,7 +89,7 @@ const Broadcast = () => {
   const toggleBroadcast = async (id) => {
     try {
       const response = await axios.patch(`${api}/broadcasts/toggle-status`, {
-        broadcast_id: id
+        broadcast_id: id,
       });
 
       if (response.data.success) {
@@ -96,44 +99,30 @@ const Broadcast = () => {
       }
     } catch (error) {
       console.error("Error toggling broadcast:", error);
-      showError(error.response?.data?.message || "Error updating broadcast status");
+      showError(
+        error.response?.data?.message || "Error updating broadcast status"
+      );
     }
   };
 
-  const deleteBroadcast = async (id) => {
-    const result = await Swal.fire({
-      background: "#111827",
-      color: "#fff",
-      icon: "warning",
-      title: "Confirm Deletion",
-      text: "Are you sure you want to delete this broadcast?",
-      showCancelButton: true,
-      confirmButtonText: "Delete",
-      cancelButtonText: "Cancel",
-      customClass: {
-        popup: "bg-gray-900 border-gray-700 rounded-2xl border",
-        title: "text-white",
-        htmlContainer: "text-gray-300",
-        confirmButton:
-          "bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg px-6 py-2",
-        cancelButton:
-          "bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-lg px-6 py-2",
-      },
-    });
+  const handleDeleteClick = (broadcast) => {
+    setBroadcastToDelete(broadcast);
+    setIsDeleteModalOpen(true);
+  };
 
-    if (result.isConfirmed) {
-      try {
-        const response = await axios.delete(`${api}/broadcasts/${id}`);
+  const handleDeleteConfirm = async () => {
+    try {
+      const response = await axios.delete(`${api}/broadcasts/${broadcastToDelete.broadcast_id}`);
 
-        if (response.data.success) {
-          showSuccess("Broadcast deleted successfully");
-          // Refresh broadcasts list
-          fetchBroadcasts();
-        }
-      } catch (error) {
-        console.error("Error deleting broadcast:", error);
-        showError(error.response?.data?.message || "Error deleting broadcast");
+      if (response.data.success) {
+        showSuccess("Broadcast deleted successfully");
+        setIsDeleteModalOpen(false);
+        setBroadcastToDelete(null);
+        fetchBroadcasts();
       }
+    } catch (error) {
+      console.error("Error deleting broadcast:", error);
+      showError(error.response?.data?.message || "Error deleting broadcast");
     }
   };
 
@@ -658,7 +647,7 @@ const Broadcast = () => {
                 {/* Enhanced Action Buttons */}
                 <div className="flex justify-end gap-2">
                   <button
-                    onClick={() => deleteBroadcast(broadcast.broadcast_id)}
+                    onClick={() => handleDeleteClick(broadcast)}
                     className="px-4 py-1.5 rounded-lg bg-gradient-to-r from-gray-600 to-gray-800 hover:from-gray-700 hover:to-gray-900 text-sm text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2"
                   >
                     <svg
@@ -693,9 +682,17 @@ const Broadcast = () => {
           })}
         </div>
       </div>
+      <DeleteModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setBroadcastToDelete(null);
+        }}
+        onDelete={handleDeleteConfirm}
+        itemName="Broadcast"
+      />
     </div>
   );
 };
 
 export default Broadcast;
-

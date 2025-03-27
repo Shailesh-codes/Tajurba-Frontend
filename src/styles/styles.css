@@ -139,3 +139,57 @@
   transform: translateX(100%);
   transition: all 1500ms cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+@keyframes slide {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.sliding-text-container {
+  display: flex;
+  width: 100%;
+  overflow: hidden;
+}
+
+.sliding-text {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  animation: slide 30s linear infinite; /* Slightly slower for better readability */
+}
+
+/* Pause animation on hover */
+.sliding-text-container:hover .sliding-text {
+  animation-play-state: paused;
+}
+
+/* Optional: Add smooth transition when hovering */
+.sliding-text span {
+  transition: color 0.3s ease;
+}
+
+.sliding-text-container:hover .sliding-text span {
+  color: rgb(253 230 138);
+  text-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+  letter-spacing: 0.02em;
+}
+
+/* Enhanced shimmer effect */
+.shimmer-effect {
+  animation: shimmer 4s ease-in-out infinite;
+}
+
+/* Update the gradient animation to be smoother */
+.animate-gradient-x {
+  animation: gradient-x 18s ease infinite;
+  background-size: 200% 200%;
+}
+
+/* Add new separator style */
+.announcement-separator {
+  @apply mx-4 text-amber-500/30;
+}

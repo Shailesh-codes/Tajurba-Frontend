@@ -8,8 +8,8 @@ const DeleteModal = ({ isOpen, onClose, onDelete, itemName }) => {
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 px-4">
       <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-black/30 backdrop-blur-xl" />
-        <div className="absolute inset-0 bg-gradient-to-br from-rose-900/35 via-black/0 to-red-900/20" />
+        <div className="absolute inset-0 bg-black/10 backdrop-blur-xl" />
+        <div className="absolute inset-0 bg-gradient-to-br from-amber-900/35 via-black/0 to-amber-900/20" />
         <div
           className="absolute inset-0"
           style={{
@@ -28,11 +28,11 @@ const DeleteModal = ({ isOpen, onClose, onDelete, itemName }) => {
                     overflow-hidden"
         >
           {/* Decorative light effects */}
-          <div className="absolute -top-32 -left-32 w-64 h-64 bg-red-500 rounded-full blur-[100px] opacity-20 animate-pulse-slow" />
-          <div className="absolute -top-32 -right-32 w-64 h-64 bg-rose-500 rounded-full blur-[100px] opacity-20 animate-pulse-slow" />
+          <div className="absolute -top-32 -left-32 w-64 h-64 bg-red-500 rounded-full blur-[100px] opacity-10 animate-pulse-slow" />
+          <div className="absolute -top-32 -right-32 w-64 h-64 bg-red-500 rounded-full blur-[100px] opacity-10 animate-pulse-slow" />
 
           {/* Top gradient border */}
-          <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-red-500 to-transparent opacity-50" />
+          <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-red-500 to-transparent opacity-20" />
 
           <div className="relative p-6">
             <div className="flex flex-col items-center">
