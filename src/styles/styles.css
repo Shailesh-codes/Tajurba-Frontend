@@ -159,7 +159,7 @@
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  animation: slide 30s linear backwards; /* Slightly slower for better readability */
+  animation: slide 30s linear infinite;
 }
 
 /* Pause animation on hover */
@@ -169,7 +169,7 @@
 
 /* Optional: Add smooth transition when hovering */
 .sliding-text span {
-  transition: color 0.3s ease;
+  transition: color 0.3s ease-in-out infinite;
 }
 
 .sliding-text-container:hover .sliding-text span {

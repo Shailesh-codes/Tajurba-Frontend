@@ -71,7 +71,7 @@ const Calendar = () => {
           onMouseEnter={() => setHoveredDate(day)}
           onMouseLeave={() => setHoveredDate(null)}
           className={`h-24 sm:h-32 p-1 sm:p-3 rounded-xl transition-all duration-300 transform 
-            ${isToday ? 'bg-gradient-to-br from-green-500 to-green-600 shadow-lg shadow-green-500/20' : 
+            ${isToday ? 'bg-gradient-to-br from-amber-500 to-amber-600 shadow-lg shadow-amber-500/20' : 
               'bg-gradient-to-br from-gray-800 to-gray-900'}
             ${isHovered ? 'scale-105 shadow-xl' : 'hover:scale-102'}
             border border-gray-700/30 backdrop-blur-sm`}
@@ -111,14 +111,14 @@ const Calendar = () => {
       <div className="w-full py-4 sm:py-6 px-4 sm:px-8 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-800 shadow-2xl">
         {/* Calendar Header */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-6 sm:mb-8">
-          <h3 className="text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500 mb-4 md:mb-0">
+          <h3 className="text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-blue-500 mb-4 md:mb-0">
             Calendar
           </h3>
           <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
             <button 
               onClick={handleToday}
-              className="w-full sm:w-fit bg-gradient-to-r from-green-500 to-green-600 text-white px-8 sm:px-12 py-2.5 rounded-xl
-                hover:shadow-lg hover:shadow-green-500/20 transition-all duration-300 font-medium"
+              className="w-full sm:w-fit bg-gradient-to-r from-amber-500 to-amber-600 text-white px-8 sm:px-12 py-2.5 rounded-xl
+                hover:shadow-lg hover:shadow-amber-500/20 transition-all duration-300 font-medium"
             >
               Today
             </button>
