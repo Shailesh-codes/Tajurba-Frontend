@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import axios from 'axios';
-import Swal from 'sweetalert2';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import axios from "axios";
+import Swal from "sweetalert2";
+import { motion } from "framer-motion";
 import attendanceIcon from "../assets/images/icons/attendance-icon.svg";
 import calendarIcon from "../assets/images/icons/calender-icon.svg";
 
@@ -12,14 +12,14 @@ const MarkvenueFee = () => {
   const queryParams = new URLSearchParams(location.search);
   const type = queryParams.get("type");
   const meetingId = queryParams.get("meeting_id");
-  
+
   const [meetingDetails, setMeetingDetails] = useState({
     type: "-",
     title: "-",
     date: "-",
     time: "-",
   });
-  
+
   const [stats, setStats] = useState({
     total_members: 0,
     venue_fee: {
@@ -27,12 +27,12 @@ const MarkvenueFee = () => {
       total_expected: 0,
       paid_count: 0,
       unpaid_count: 0,
-    }
+    },
   });
-  
+
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     if (!type || !meetingId) {
@@ -49,7 +49,7 @@ const MarkvenueFee = () => {
       const response = await axios.get(
         `/api/attendance-venue-fee/meeting_stats?type=${type}&event_id=${meetingId}`
       );
-      
+
       if (response.data.status === "success") {
         setMeetingDetails(response.data.data.event_details);
         setStats(response.data.data);
@@ -58,7 +58,12 @@ const MarkvenueFee = () => {
       console.error("Error:", error);
       // For development, set dummy data on error
       setMeetingDetails({
-        type: type === 'meetings' ? 'Weekly Meeting' : type === 'mdp' ? 'MDP Session' : 'Social Event',
+        type:
+          type === "meetings"
+            ? "Weekly Meeting"
+            : type === "mdp"
+            ? "MDP Session"
+            : "Social Event",
         title: "Business Network Meeting",
         date: "2024-03-15",
         time: "10:00 AM",
@@ -71,7 +76,7 @@ const MarkvenueFee = () => {
           total_expected: 3000,
           paid_count: 20,
           unpaid_count: 5,
-        }
+        },
       });
     }
   };
@@ -82,7 +87,7 @@ const MarkvenueFee = () => {
       const response = await axios.get(
         `/api/attendance-venue-fee/meeting_members?type=${type}&meeting_id=${meetingId}`
       );
-      
+
       if (response.data.status === "success") {
         setMembers(response.data.data);
       }
@@ -94,8 +99,8 @@ const MarkvenueFee = () => {
         full_name: `Member ${i + 1}`,
         chapter_name: `Chapter ${Math.floor(i / 5) + 1}`,
         is_active: Math.random() > 0.2 ? 1 : 0,
-        venue_fee_status: Math.random() > 0.3 ? 'paid' : 'unpaid',
-        payment_date: Math.random() > 0.3 ? '2024-03-15' : null
+        venue_fee_status: Math.random() > 0.3 ? "paid" : "unpaid",
+        payment_date: Math.random() > 0.3 ? "2024-03-15" : null,
       }));
       setMembers(dummyMembers);
     } finally {
@@ -104,36 +109,41 @@ const MarkvenueFee = () => {
   };
 
   const handleVenueFeeChange = (memberId, status) => {
-    setMembers(members.map(member => {
-      if (member.id === memberId) {
-        return {
-          ...member,
-          venue_fee_status: status,
-          payment_date: status === 'paid' ? new Date().toISOString().split('T')[0] : null
-        };
-      }
-      return member;
-    }));
+    setMembers(
+      members.map((member) => {
+        if (member.id === memberId) {
+          return {
+            ...member,
+            venue_fee_status: status,
+            payment_date:
+              status === "paid" ? new Date().toISOString().split("T")[0] : null,
+          };
+        }
+        return member;
+      })
+    );
   };
 
   const handlePaymentDateChange = (memberId, date) => {
-    setMembers(members.map(member => {
-      if (member.id === memberId) {
-        return {
-          ...member,
-          payment_date: date,
-          venue_fee_status: date ? 'paid' : 'unpaid'
-        };
-      }
-      return member;
-    }));
+    setMembers(
+      members.map((member) => {
+        if (member.id === memberId) {
+          return {
+            ...member,
+            payment_date: date,
+            venue_fee_status: date ? "paid" : "unpaid",
+          };
+        }
+        return member;
+      })
+    );
   };
 
   const saveData = async () => {
-    const data = members.map(member => ({
+    const data = members.map((member) => ({
       member_id: member.id,
       venue_fee_status: member.venue_fee_status,
-      payment_date: member.payment_date
+      payment_date: member.payment_date,
     }));
 
     try {
@@ -186,7 +196,7 @@ const MarkvenueFee = () => {
   };
 
   const filteredMembers = members.filter(
-    member =>
+    (member) =>
       member.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       member.chapter_name.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -201,7 +211,9 @@ const MarkvenueFee = () => {
           </div>
           <div>
             <h2 className="text-2xl font-bold text-white">Update Venue Fees</h2>
-            <p className="text-sm text-gray-400">Record venue fees for meetings</p>
+            <p className="text-sm text-gray-400">
+              Record venue fees for meetings
+            </p>
           </div>
         </div>
         <button
@@ -229,7 +241,7 @@ const MarkvenueFee = () => {
       </div>
 
       {/* Meeting Details Card */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="bg-gray-800 rounded-xl p-6 mb-6 border border-gray-700"
@@ -237,23 +249,28 @@ const MarkvenueFee = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="space-y-2">
             <p className="text-gray-400">Meeting Type</p>
-            <h3 className="text-xl font-semibold text-white">{meetingDetails.type}</h3>
+            <h3 className="text-xl font-semibold text-white">
+              {meetingDetails.type}
+            </h3>
           </div>
           <div className="space-y-2">
             <p className="text-gray-400">Meeting Name</p>
-            <h3 className="text-xl font-semibold text-white">{meetingDetails.title}</h3>
+            <h3 className="text-xl font-semibold text-white">
+              {meetingDetails.title}
+            </h3>
           </div>
           <div className="space-y-2">
             <p className="text-gray-400">Meeting Date & Time</p>
             <h3 className="text-xl font-semibold text-white">
-              {new Date(meetingDetails.date).toLocaleDateString()} {meetingDetails.time}
+              {new Date(meetingDetails.date).toLocaleDateString()}{" "}
+              {meetingDetails.time}
             </h3>
           </div>
         </div>
       </motion.div>
 
       {/* Stats Grid */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
@@ -263,12 +280,19 @@ const MarkvenueFee = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-400">Total Members</p>
-              <h3 className="text-3xl font-bold text-white mt-2">{stats.total_members}</h3>
+              <h3 className="text-3xl font-bold text-white mt-2">
+                {stats.total_members}
+              </h3>
             </div>
             <div className="p-4 bg-blue-500/20 rounded-xl">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                <path d="M17 20H22V18C22 16.3431 20.6569 15 19 15C18.0444 15 17.1931 15.4468 16.6438 16.1429M17 20H7M17 20V18C17 17.3438 16.8736 16.717 16.6438 16.1429M7 20H2V18C2 16.3431 3.34315 15 5 15C5.95561 15 6.80686 15.4468 7.35625 16.1429M7 20V18C7 17.3438 7.12642 16.717 7.35625 16.1429M7.35625 16.1429C8.0935 14.301 9.89482 13 12 13C14.1052 13 15.9065 14.301 16.6438 16.1429" 
-                  stroke="#60A5FA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path
+                  d="M17 20H22V18C22 16.3431 20.6569 15 19 15C18.0444 15 17.1931 15.4468 16.6438 16.1429M17 20H7M17 20V18C17 17.3438 16.8736 16.717 16.6438 16.1429M7 20H2V18C2 16.3431 3.34315 15 5 15C5.95561 15 6.80686 15.4468 7.35625 16.1429M7 20V18C7 17.3438 7.12642 16.717 7.35625 16.1429M7.35625 16.1429C8.0935 14.301 9.89482 13 12 13C14.1052 13 15.9065 14.301 16.6438 16.1429"
+                  stroke="#60A5FA"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
             </div>
           </div>
@@ -284,17 +308,26 @@ const MarkvenueFee = () => {
             </div>
             <div className="p-4 bg-purple-500/20 rounded-xl">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                <path d="M12 6V12M12 12V18M12 12H18M12 12H6" 
-                  stroke="#A855F7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path
+                  d="M12 6V12M12 12V18M12 12H18M12 12H6"
+                  stroke="#A855F7"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <div className="px-3 py-1.5 bg-amber-500/20 rounded-lg">
-              <span className="text-sm text-amber-400">{stats.venue_fee.paid_count} Paid</span>
+              <span className="text-sm text-amber-400">
+                {stats.venue_fee.paid_count} Paid
+              </span>
             </div>
             <div className="px-3 py-1.5 bg-red-500/20 rounded-lg">
-              <span className="text-sm text-red-400">{stats.venue_fee.unpaid_count} Unpaid</span>
+              <span className="text-sm text-red-400">
+                {stats.venue_fee.unpaid_count} Unpaid
+              </span>
             </div>
           </div>
         </div>
@@ -313,7 +346,9 @@ const MarkvenueFee = () => {
         </div>
 
         {loading ? (
-          <div className="py-8 text-center text-gray-400">Loading members...</div>
+          <div className="py-8 text-center text-gray-400">
+            Loading members...
+          </div>
         ) : filteredMembers.length === 0 ? (
           <div className="py-8 text-center text-gray-400">No members found</div>
         ) : (
@@ -323,20 +358,35 @@ const MarkvenueFee = () => {
                 <tr className="bg-gray-700/50">
                   <th className="p-4 font-semibold text-gray-300">#</th>
                   <th className="p-4 font-semibold text-gray-300">Member</th>
-                  <th className="p-4 text-center font-semibold text-gray-300">Status</th>
-                  <th className="p-4 text-center font-semibold text-gray-300">Payment Date</th>
+                  <th className="p-4 text-center font-semibold text-gray-300">
+                    Status
+                  </th>
+                  <th className="p-4 text-center font-semibold text-gray-300">
+                    Payment Date
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-700">
                 {filteredMembers.map((member, index) => (
-                  <tr key={member.id} className="hover:bg-gray-700/50 transition-colors">
+                  <tr
+                    key={member.id}
+                    className="hover:bg-gray-700/50 transition-colors"
+                  >
                     <td className="p-4 text-gray-300">{index + 1}</td>
                     <td className="p-4">
                       <div className="flex items-center gap-3">
-                        <div className={`w-2 h-2 rounded-full ${member.is_active ? 'bg-amber-500' : 'bg-red-500'}`} />
+                        <div
+                          className={`w-2 h-2 rounded-full ${
+                            member.is_active ? "bg-amber-500" : "bg-red-500"
+                          }`}
+                        />
                         <div>
-                          <p className="font-medium text-white">{member.full_name}</p>
-                          <p className="text-sm text-gray-400">{member.chapter_name}</p>
+                          <p className="font-medium text-white">
+                            {member.full_name}
+                          </p>
+                          <p className="text-sm text-gray-400">
+                            {member.chapter_name}
+                          </p>
                         </div>
                       </div>
                     </td>
@@ -347,8 +397,10 @@ const MarkvenueFee = () => {
                             type="radio"
                             name={`venue_fee_${member.id}`}
                             value="paid"
-                            checked={member.venue_fee_status === 'paid'}
-                            onChange={() => handleVenueFeeChange(member.id, 'paid')}
+                            checked={member.venue_fee_status === "paid"}
+                            onChange={() =>
+                              handleVenueFeeChange(member.id, "paid")
+                            }
                             className="venue-fee-radio-paid"
                           />
                           <span className="text-amber-400">Paid</span>
@@ -358,8 +410,10 @@ const MarkvenueFee = () => {
                             type="radio"
                             name={`venue_fee_${member.id}`}
                             value="unpaid"
-                            checked={member.venue_fee_status === 'unpaid'}
-                            onChange={() => handleVenueFeeChange(member.id, 'unpaid')}
+                            checked={member.venue_fee_status === "unpaid"}
+                            onChange={() =>
+                              handleVenueFeeChange(member.id, "unpaid")
+                            }
                             className="venue-fee-radio-unpaid"
                           />
                           <span className="text-red-400">Unpaid</span>
@@ -371,7 +425,9 @@ const MarkvenueFee = () => {
                         <input
                           type="date"
                           value={member.payment_date || ""}
-                          onChange={(e) => handlePaymentDateChange(member.id, e.target.value)}
+                          onChange={(e) =>
+                            handlePaymentDateChange(member.id, e.target.value)
+                          }
                           disabled={member.venue_fee_status !== "paid"}
                           className="w-full bg-gray-700 text-white p-2 rounded-lg border border-gray-600 [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full"
                         />
@@ -391,7 +447,7 @@ const MarkvenueFee = () => {
       </div>
 
       {/* Save Button */}
-      <div className="sticky bottom-0 bg-gray-900 p-4 mt-4">
+      <div className="sticky -bottom-5 bg-gray-900 p-4 mt-4">
         <button
           onClick={saveData}
           className="ml-auto flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-600 to-amber-900 hover:from-amber-700 hover:to-amber-950 text-white rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-amber-900/30 hover:-translate-y-0.5"
@@ -422,13 +478,13 @@ const MarkvenueFee = () => {
         }
 
         .venue-fee-radio-paid:checked {
-          border-color: #22C55E;
-          background-color: #22C55E;
+          border-color: #22c55e;
+          background-color: #22c55e;
         }
 
         .venue-fee-radio-unpaid:checked {
-          border-color: #EF4444;
-          background-color: #EF4444;
+          border-color: #ef4444;
+          background-color: #ef4444;
         }
       `}</style>
     </div>

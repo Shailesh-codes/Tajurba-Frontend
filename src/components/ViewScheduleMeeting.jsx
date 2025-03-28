@@ -6,6 +6,7 @@ import api from "../hooks/api";
 import eventIcon from "../assets/images/icons/event.svg";
 import editIcon from "../assets/images/icons/edit.svg";
 import deleteIcon from "../assets/images/icons/delete.svg";
+import { showToast } from "../utils/toast";
 
 const ViewScheduleMeeting = () => {
   const { type, id } = useParams();
@@ -20,22 +21,35 @@ const ViewScheduleMeeting = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // Update the API endpoint to include type
         const scheduleResponse = await axios.get(
           `${api}/schedules/${type}/${id}`
         );
-
         const chaptersResponse = await axios.get(`${api}/chapters`);
 
         if (
           scheduleResponse.data.success &&
           chaptersResponse.data.status === "success"
         ) {
-          setSchedule(scheduleResponse.data.data);
+          const scheduleData = scheduleResponse.data.data;
+
+          // If QR code is a Buffer or Uint8Array, convert it to base64
+          if (scheduleData.qr_code && scheduleData.qr_code.type === "Buffer") {
+            scheduleData.qr_code = Buffer.from(scheduleData.qr_code).toString(
+              "base64"
+            );
+          }
+
+          setSchedule(scheduleData);
           setAllChapters(chaptersResponse.data.data);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
+        showToast({
+          title: "Error",
+          message: "Failed to load schedule details",
+          icon: "error",
+          status: "error",
+        });
         setError("Failed to load schedule details");
       } finally {
         setLoading(false);
@@ -150,7 +164,7 @@ const ViewScheduleMeeting = () => {
   const scheduleType = getScheduleType();
 
   return (
-    <div className="mt-24 lg:px-6 pb-6">
+    <div className="mt-32 lg:px-6 pb-6">
       {/* Hero Section */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -187,25 +201,35 @@ const ViewScheduleMeeting = () => {
                 {schedule.description || "No description available"}
               </p>
             </div>
-            <button
-              onClick={() => navigate(-1)}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-800/50 hover:bg-gray-700/50 text-gray-300 border border-gray-700/50 transition-all duration-300"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+            <div className="flex flex-col lg:flex-row items-center gap-3">
+              <button
+                onClick={() => navigate(-1)}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-800/50 hover:bg-gray-700/50 text-gray-300 border border-gray-700/50 transition-all duration-300"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                />
-              </svg>
-              <span>Back</span>
-            </button>
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                  />
+                </svg>
+                <span className="text-sm">Back</span>
+              </button>
+              
+              <button
+                onClick={() => navigate(`/edit-schedule/${type}/${id}`)}
+                className="flex items-center gap-2 px-6 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white transition-all duration-300 shadow-lg hover:shadow-amber-500/25"
+              >
+                <img src={editIcon} alt="Edit" className="w-4 h-4 transition-transform hover:scale-110" />
+                <span className="text-sm font-medium">Edit Schedule</span>
+              </button>
+            </div>
           </div>
 
           {/* Key Details */}
@@ -352,24 +376,79 @@ const ViewScheduleMeeting = () => {
                 <div className="flex flex-col items-center">
                   {schedule.payment_method === "custom" && (
                     <>
-                      {schedule.qr_code && (
-                        <img
-                          src={`data:image/png;base64,${schedule.qr_code}`}
-                          alt="Payment QR"
-                          className="w-48 h-48 rounded-xl mb-3"
-                        />
+                      {schedule.qr_code ? (
+                        <div className="mb-3">
+                          {typeof schedule.qr_code === "string" ? (
+                            // If QR code is already a base64 string
+                            <img
+                              src={`data:image/png;base64,${schedule.qr_code}`}
+                              alt="Payment QR"
+                              className="w-48 h-48 rounded-xl"
+                              onError={(e) => {
+                                console.error("Error loading QR code image");
+                                e.target.src = ""; // Clear the broken image
+                                e.target.alt = "QR code not available";
+                                e.target.className += " hidden";
+                              }}
+                            />
+                          ) : (
+                            // If QR code is a Uint8Array or Buffer
+                            <img
+                              src={`data:image/png;base64,${Buffer.from(
+                                schedule.qr_code
+                              ).toString("base64")}`}
+                              alt="Payment QR"
+                              className="w-48 h-48 rounded-xl"
+                              onError={(e) => {
+                                console.error("Error loading QR code image");
+                                e.target.src = ""; // Clear the broken image
+                                e.target.alt = "QR code not available";
+                                e.target.className += " hidden";
+                              }}
+                            />
+                          )}
+                        </div>
+                      ) : (
+                        <div className="mb-3 w-48 h-48 rounded-xl bg-gray-700/50 flex items-center justify-center">
+                          <p className="text-gray-400 text-sm">
+                            No QR code available
+                          </p>
+                        </div>
                       )}
                       {schedule.upi_id && (
-                        <p className="text-sm text-gray-400">
-                          UPI: {schedule.upi_id}
-                        </p>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-400 mb-1">UPI ID</p>
+                          <p className="text-white font-medium bg-gray-700/50 px-4 py-2 rounded-lg">
+                            {schedule.upi_id}
+                          </p>
+                        </div>
                       )}
                     </>
                   )}
                   {schedule.payment_method === "default" && (
-                    <p className="text-white opacity-80">
-                      Using default payment method
-                    </p>
+                    <div className="text-center">
+                      <svg
+                        className="w-12 h-12 text-gray-500 mb-3 mx-auto"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z"
+                        />
+                      </svg>
+                      <p className="text-white opacity-80">
+                        Using default payment method
+                      </p>
+                      {schedule.default_payment_id && (
+                        <p className="text-sm text-gray-400 mt-2">
+                          ID: {schedule.default_payment_id}
+                        </p>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>

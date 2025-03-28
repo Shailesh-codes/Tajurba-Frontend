@@ -19,6 +19,7 @@ const EditMemberModal = ({ member, chapters, onClose, onSubmit }) => {
 
   useEffect(() => {
     if (member) {
+      console.log("Member in Modal:", member);
       const formatDate = (dateString) => {
         if (!dateString) return "";
         const date = new Date(dateString);
@@ -26,6 +27,7 @@ const EditMemberModal = ({ member, chapters, onClose, onSubmit }) => {
       };
 
       setFormData({
+        id: member.id,
         member_id: member.member_id,
         name: member.name,
         mobile: member.mobile,

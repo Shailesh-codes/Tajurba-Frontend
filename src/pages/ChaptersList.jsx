@@ -317,7 +317,7 @@ const ChaptersList = () => {
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div
-            className="fixed inset-0 bg-gray-900/10 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/50"
             onClick={() => setShowAddModal(false)}
           ></div>
           <div className="relative z-50 bg-gray-800/95 p-6 rounded-2xl border border-gray-700 w-full max-w-md shadow-xl">
@@ -383,7 +383,7 @@ const ChaptersList = () => {
             className="fixed inset-0 bg-gray-900/70 backdrop-blur-sm"
             onClick={() => setShowEditModal(false)}
           ></div>
-          <div className="relative z-50 bg-gray-800/95 p-6 rounded-2xl border border-gray-700 w-full max-w-md shadow-xl">
+          <div className="relative z-50 bg-gray-900/95 p-6 rounded-2xl border border-gray-700 w-full max-w-md shadow-xl">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold text-white">Edit Chapter</h2>
               <button

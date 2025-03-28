@@ -8,7 +8,7 @@ const DeleteModal = ({ isOpen, onClose, onDelete, itemName }) => {
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 px-4">
       <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-black/10 backdrop-blur-xl" />
+        <div className="absolute inset-0 bg-black/50" />
         <div className="absolute inset-0 bg-gradient-to-br from-amber-900/35 via-black/0 to-amber-900/20" />
         <div
           className="absolute inset-0"

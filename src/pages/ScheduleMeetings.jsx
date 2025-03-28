@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import axios from "axios";
 import api from "../hooks/api";
+import DeleteModal from "../layout/DeleteModal";
+import { showToast } from "../utils/toast";
 
 // Import icons
 import eventIcon from "../assets/images/icons/event.svg";
@@ -20,6 +22,11 @@ const ScheduleMeetings = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [allChapters, setAllChapters] = useState([]);
+  const [deleteModalState, setDeleteModalState] = useState({
+    isOpen: false,
+    type: null,
+    id: null
+  });
 
   // Helper function to determine schedule type
   const getScheduleType = (schedule) => {
@@ -62,19 +69,19 @@ const ScheduleMeetings = () => {
           schedulesData = [
             ...(response.data.data.meetings?.map((meeting) => ({
               ...meeting,
-      type: "meeting",
+              type: "meeting",
             })) || []),
             ...(response.data.data.events?.map((event) => ({
               ...event,
-      type: "event",
+              type: "event",
             })) || []),
             ...(response.data.data.mdp?.map((mdp) => ({
               ...mdp,
-      type: "mdp",
+              type: "mdp",
             })) || []),
             ...(response.data.data.socialTraining?.map((st) => ({
               ...st,
-      type: "socialTraining",
+              type: "socialTraining",
             })) || []),
           ];
         }
@@ -82,6 +89,12 @@ const ScheduleMeetings = () => {
       }
     } catch (error) {
       console.error("Error fetching schedules:", error);
+      showToast({
+        title: "Error",
+        message: "Failed to load schedules",
+        icon: "error",
+        status: "error",
+      });
       setError("Failed to load schedules");
     } finally {
       setIsLoading(false);
@@ -109,37 +122,42 @@ const ScheduleMeetings = () => {
   // Helper function to get chapter names from chapter IDs
   const getChapterNames = (chapterIds) => {
     if (!chapterIds) return "No chapters";
-    
+
     // Handle both array and JSON string cases
     const ids = Array.isArray(chapterIds) ? chapterIds : JSON.parse(chapterIds);
-    
-    return allChapters
-      .filter(chapter => ids.includes(chapter.chapter_id))
-      .map(chapter => chapter.chapter_name)
-      .join(", ") || "No chapters";
+
+    return (
+      allChapters
+        .filter((chapter) => ids.includes(chapter.chapter_id))
+        .map((chapter) => chapter.chapter_name)
+        .join(", ") || "No chapters"
+    );
   };
 
   // Update the filteredSchedules function to handle type checking more safely
   const filteredSchedules = schedules.filter((schedule) => {
     if (!searchTerm) return true;
-    
+
     const searchValue = searchTerm.toLowerCase().trim();
-    
+
     // Check title
-    const titleMatch = schedule.title?.toLowerCase().includes(searchValue) || false;
-    
+    const titleMatch =
+      schedule.title?.toLowerCase().includes(searchValue) || false;
+
     // Check venue
-    const venueMatch = schedule.venue?.toLowerCase().includes(searchValue) || false;
-    
+    const venueMatch =
+      schedule.venue?.toLowerCase().includes(searchValue) || false;
+
     // Check type safely
     let typeMatch = false;
     try {
       const scheduleType = schedule.type || getScheduleType(schedule);
       if (scheduleType) {
-        const typeName = scheduleType === "socialTraining" 
-          ? "Social Training" 
-          : scheduleType === "mdp" 
-            ? "MDP" 
+        const typeName =
+          scheduleType === "socialTraining"
+            ? "Social Training"
+            : scheduleType === "mdp"
+            ? "MDP"
             : scheduleType.charAt(0).toUpperCase() + scheduleType.slice(1);
         typeMatch = typeName.toLowerCase().includes(searchValue);
       }
@@ -182,7 +200,7 @@ const ScheduleMeetings = () => {
     if (!date) return "Not specified";
     try {
       // Format date to YYYY-MM-DD
-      const formattedDate = new Date(date).toISOString().split('T')[0];
+      const formattedDate = new Date(date).toISOString().split("T")[0];
       // Combine date and time
       const dateTimeString = `${formattedDate}T${time}`;
       const dateObj = new Date(dateTimeString);
@@ -191,14 +209,14 @@ const ScheduleMeetings = () => {
         return "Invalid date";
       }
 
-    return dateObj.toLocaleString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
+      return dateObj.toLocaleString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
         hour: "numeric",
         minute: "2-digit",
-      hour12: true,
-    });
+        hour12: true,
+      });
     } catch (error) {
       console.error("Date formatting error:", error);
       return "Invalid date";
@@ -216,58 +234,54 @@ const ScheduleMeetings = () => {
   };
 
   const handleDelete = async (type, id) => {
-    const result = await Swal.fire({
-      title: '<span class="text-white">Are you sure?</span>',
-      html: `<span class="text-gray-300">This ${getTypeName(
-        type
-      )} will be permanently deleted.</span>`,
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Yes, delete it!",
-      cancelButtonText: "Cancel",
-      background: "#1F2937",
-      customClass: {
-        popup: "bg-gray-800 rounded-xl border border-gray-700",
-        title: "text-white",
-        htmlContainer: "text-gray-300",
-        confirmButton:
-          "bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg px-6 py-2",
-        cancelButton:
-          "bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-lg px-6 py-2",
-      },
+    setDeleteModalState({
+      isOpen: true,
+      type,
+      id
     });
+  };
 
-    if (result.isConfirmed) {
-      // Add delete logic here
-      Swal.fire({
-        icon: "success",
-        title: '<span class="text-white">Deleted!</span>',
-        text: "Schedule has been deleted.",
-        background: "#1F2937",
-        customClass: {
-          popup: "bg-gray-800 rounded-xl border border-gray-700",
-          title: "text-white",
-          htmlContainer: "text-gray-300",
-        },
+  const handleDeleteConfirm = async () => {
+    const { type, id } = deleteModalState;
+    try {
+      const response = await axios.delete(`${api}/schedules/${type}/${id}`);
+
+      if (response.data.success) {
+        setSchedules(schedules.filter((schedule) => {
+          const scheduleId = getScheduleId(schedule);
+          return !(scheduleId === id && (schedule.type === type || getScheduleType(schedule) === type));
+        }));
+
+        showToast({
+          title: "Success",
+          message: "Schedule has been deleted successfully",
+          icon: "success",
+          status: "success",
+        });
+      }
+    } catch (error) {
+      console.error("Error deleting schedule:", error);
+      showToast({
+        title: "Error",
+        message: "Failed to delete schedule. Please try again.",
+        icon: "error",
+        status: "error",
       });
+    } finally {
+      setDeleteModalState({ isOpen: false, type: null, id: null });
     }
   };
 
+  const handleDeleteCancel = () => {
+    setDeleteModalState({ isOpen: false, type: null, id: null });
+  };
+
   const showAttendanceInfo = (type) => {
-    Swal.fire({
+    showToast({
+      title: "Cannot Delete",
+      message: `This ${getTypeName(type)} cannot be deleted because attendance or venue fee records exist.`,
       icon: "info",
-      title: '<span class="text-white">Cannot Delete</span>',
-      html: `<span class="text-gray-300">This ${getTypeName(
-        type
-      )} cannot be deleted because attendance or venue fee records exist.</span>`,
-      background: "#1F2937",
-      customClass: {
-        popup: "bg-gray-800 rounded-xl border border-gray-700",
-        title: "text-white",
-        htmlContainer: "text-gray-300",
-        confirmButton:
-          "bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg px-6 py-2",
-      },
+      status: "warning",
     });
   };
 
@@ -407,7 +421,9 @@ const ScheduleMeetings = () => {
         <td className="py-4 px-6">
           <div className="flex items-center justify-end gap-2">
             <button
-              onClick={() => navigate(`/view-schedule/${scheduleType}/${scheduleId}`)}
+              onClick={() =>
+                navigate(`/view-schedule/${scheduleType}/${scheduleId}`)
+              }
               className="flex items-center justify-center w-9 h-9 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl transition-all duration-300 shadow-lg hover:shadow-blue-500/25"
             >
               <img
@@ -417,7 +433,9 @@ const ScheduleMeetings = () => {
               />
             </button>
             <button
-              onClick={() => navigate(`/edit-schedule/${scheduleId}`)}
+              onClick={() =>
+                navigate(`/edit-schedule/${scheduleType}/${scheduleId}`)
+              }
               className="flex items-center justify-center w-9 h-9 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white rounded-xl transition-all duration-300 shadow-lg hover:shadow-amber-500/25"
             >
               <img
@@ -565,162 +583,162 @@ const ScheduleMeetings = () => {
             </p>
           </div>
         ) : (
-        <div className="relative min-h-[350px] max-h-[calc(100vh-500px)]">
-          <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-transparent to-amber-500/5" />
-          <div className="absolute inset-0 overflow-auto scrollbar-thin scrollbar-track-gray-800/40 scrollbar-thumb-amber-600/50 hover:scrollbar-thumb-amber-500/80 scrollbar-hide">
-            <table className="w-full">
-              <thead className="sticky top-0 z-10">
-                <tr className="bg-gradient-to-r from-gray-800/95 via-gray-800/98 to-gray-800/95 backdrop-blur-xl">
-                  <th className="px-6 py-4 text-left border-b border-gray-700">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-gray-300">
-                        Type
-                      </span>
-                      <svg
-                        className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-300"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
-                        />
-                      </svg>
-                    </div>
-                  </th>
-                  <th className="px-6 py-4 text-left border-b border-gray-700">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-gray-300">
-                        Title
-                      </span>
-                      <svg
-                        className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-300"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
-                        />
-                      </svg>
-                    </div>
-                  </th>
-                  <th className="px-6 py-4 text-left border-b border-gray-700">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-gray-300">
-                        Venue
-                      </span>
-                      <svg
-                        className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-300"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
-                        />
-                      </svg>
-                    </div>
-                  </th>
-                  <th className="px-6 py-4 text-left border-b border-gray-700">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-gray-300">
-                        Date & Time
-                      </span>
-                      <svg
-                        className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-300"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
-                        />
-                      </svg>
-                    </div>
-                  </th>
-                  <th className="px-6 py-4 text-left border-b border-gray-700">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-gray-300">
-                        Chapters
-                      </span>
-                      <svg
-                        className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-300"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
-                        />
-                      </svg>
-                    </div>
-                  </th>
-                  <th className="px-6 py-4 text-left border-b border-gray-700">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-gray-300">
-                        Fee
-                      </span>
-                      <svg
-                        className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-300"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
-                        />
-                      </svg>
-                    </div>
-                  </th>
-                  <th className="px-6 py-4 text-left border-b border-gray-700">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-gray-300">
-                        Actions
-                      </span>
-                      <svg
-                        className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-300"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
-                        />
-                      </svg>
-                    </div>
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-700/50">
+          <div className="relative min-h-[350px] max-h-[calc(100vh-500px)]">
+            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-transparent to-amber-500/5" />
+            <div className="absolute inset-0 overflow-auto scrollbar-thin scrollbar-track-gray-800/40 scrollbar-thumb-amber-600/50 hover:scrollbar-thumb-amber-500/80 scrollbar-hide">
+              <table className="w-full">
+                <thead className="sticky top-0 z-10">
+                  <tr className="bg-gradient-to-r from-gray-800/95 via-gray-800/98 to-gray-800/95 backdrop-blur-xl">
+                    <th className="px-6 py-4 text-left border-b border-gray-700">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-gray-300">
+                          Type
+                        </span>
+                        <svg
+                          className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-300"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+                          />
+                        </svg>
+                      </div>
+                    </th>
+                    <th className="px-6 py-4 text-left border-b border-gray-700">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-gray-300">
+                          Title
+                        </span>
+                        <svg
+                          className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-300"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+                          />
+                        </svg>
+                      </div>
+                    </th>
+                    <th className="px-6 py-4 text-left border-b border-gray-700">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-gray-300">
+                          Venue
+                        </span>
+                        <svg
+                          className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-300"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+                          />
+                        </svg>
+                      </div>
+                    </th>
+                    <th className="px-6 py-4 text-left border-b border-gray-700">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-gray-300">
+                          Date & Time
+                        </span>
+                        <svg
+                          className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-300"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+                          />
+                        </svg>
+                      </div>
+                    </th>
+                    <th className="px-6 py-4 text-left border-b border-gray-700">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-gray-300">
+                          Chapters
+                        </span>
+                        <svg
+                          className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-300"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+                          />
+                        </svg>
+                      </div>
+                    </th>
+                    <th className="px-6 py-4 text-left border-b border-gray-700">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-gray-300">
+                          Fee
+                        </span>
+                        <svg
+                          className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-300"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+                          />
+                        </svg>
+                      </div>
+                    </th>
+                    <th className="px-6 py-4 text-left border-b border-gray-700">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-gray-300">
+                          Actions
+                        </span>
+                        <svg
+                          className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-300"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+                          />
+                        </svg>
+                      </div>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-700/50">
                   {filteredSchedules.map((schedule, index) =>
                     renderTableRow(schedule, index)
                   )}
-              </tbody>
-            </table>
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
         )}
       </motion.div>
 
@@ -746,6 +764,13 @@ const ScheduleMeetings = () => {
           </div>
         </div>
       </div>
+
+      <DeleteModal
+        isOpen={deleteModalState.isOpen}
+        onClose={handleDeleteCancel}
+        onDelete={handleDeleteConfirm}
+        itemName={deleteModalState.type ? getTypeName(deleteModalState.type) : "Schedule"}
+      />
     </div>
   );
 };

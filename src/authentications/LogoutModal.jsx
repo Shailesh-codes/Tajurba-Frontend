@@ -18,7 +18,7 @@ const LogoutModal = ({ isOpen, onClose }) => {
     <div className="fixed inset-0 flex items-center justify-center z-50 px-4">
       {/* Enhanced animated backdrop with multiple layers */}
       <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-black/70 backdrop-blur-xl" />
+        <div className="absolute inset-0 bg-black/30" />
         <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-black/0 to-orange-900/20" />
         <div className="absolute inset-0" 
              style={{ background: 'radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 0%, rgba(0,0,0,0.5) 100%)' }} />

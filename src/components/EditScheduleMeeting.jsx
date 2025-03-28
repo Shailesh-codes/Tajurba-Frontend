@@ -1,18 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import Swal from "sweetalert2";
+import axios from "axios";
+import api from "../hooks/api";
+import { showToast } from "../utils/toast";
 
 import eventIcon from "../assets/images/icons/event.svg";
 import infoIcon from "../assets/images/icons/info.svg";
 
 const EditScheduleMeeting = () => {
-  const { id } = useParams();
+  const { type, id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [allChapters, setAllChapters] = useState([]);
   const [formData, setFormData] = useState({
     type: "",
-    title: "",
+    title: "",        
     venue: "",
     date: "",
     time: "",
@@ -20,35 +23,60 @@ const EditScheduleMeeting = () => {
     fee_amount: "",
     payment_method: "default",
     upi_id: "",
-    qr_code: "",
+    qr_code: null,
+    default_payment_id: "",
     chapters: [],
   });
 
-  // Dummy chapters data (replace with API call)
-  const chapters = [
-    { id: 1, name: "Chapter One" },
-    { id: 2, name: "Chapter Two" },
-    { id: 3, name: "Chapter Three" },
-  ];
-
   useEffect(() => {
-    loadExistingData();
-  }, [id]);
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        // Fetch schedule data
+        const scheduleResponse = await axios.get(`${api}/schedules/${type}/${id}`);
+        // Fetch chapters data
+        const chaptersResponse = await axios.get(`${api}/chapters`);
 
-  const loadExistingData = async () => {
-    try {
-      setLoading(true);
-      // Replace with your actual API call
-      const response = await fetch(`/api/schedule/${id}`);
-      const data = await response.json();
-      setFormData(data);
-    } catch (error) {
-      console.error("Error loading data:", error);
-      showError("Failed to load schedule data");
-    } finally {
-      setLoading(false);
+        if (scheduleResponse.data.success && chaptersResponse.data.status === "success") {
+          const scheduleData = scheduleResponse.data.data;
+          
+          // Parse chapters if it's a string
+          const parsedChapters = typeof scheduleData.chapters === 'string' 
+            ? JSON.parse(scheduleData.chapters) 
+            : scheduleData.chapters;
+
+          // Format date for input field
+          const formattedDate = new Date(scheduleData.date).toISOString().split('T')[0];
+          // Format time for input field
+          const formattedTime = scheduleData.time.split('.')[0];
+
+          setFormData({
+            ...scheduleData,
+            date: formattedDate,
+            time: formattedTime,
+            type: type,
+            chapters: parsedChapters,
+          });
+          
+          setAllChapters(chaptersResponse.data.data);
+        }
+      } catch (error) {
+        console.error("Error loading data:", error);
+        showToast({
+          title: "Error",
+          message: "Failed to load schedule data",
+          icon: "error",
+          status: "error",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (type && id) {
+      fetchData();
     }
-  };
+  }, [type, id]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -56,6 +84,21 @@ const EditScheduleMeeting = () => {
       ...prev,
       [name]: value,
     }));
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Clean up previous preview URL if it exists
+      if (formData.qr_code instanceof File) {
+        URL.revokeObjectURL(getQRCodePreview());
+      }
+      
+      setFormData(prev => ({
+        ...prev,
+        qr_code: file
+      }));
+    }
   };
 
   const handleChapterToggle = (chapterId) => {
@@ -70,53 +113,75 @@ const EditScheduleMeeting = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Replace with your actual API call
-      const response = await fetch(`/api/schedule/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
+      const formDataToSend = new FormData();
+      
+      // Append all form fields
+      Object.keys(formData).forEach(key => {
+        if (key === 'chapters') {
+          formDataToSend.append(key, JSON.stringify(formData[key]));
+        } else if (key === 'qr_code' && formData[key] instanceof File) {
+          formDataToSend.append(key, formData[key]);
+        } else if (key !== 'qr_code') {
+          formDataToSend.append(key, formData[key]);
+        }
       });
 
-      if (response.ok) {
-        showSuccess("Schedule updated successfully");
-        navigate(-1);
-      } else {
-        throw new Error("Failed to update schedule");
+      const response = await axios.put(
+        `${api}/schedules/${type}/${id}`,
+        formDataToSend,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+
+      if (response.data.success) {
+        showToast({
+          title: "Success",
+          message: "Schedule updated successfully",
+          icon: "success",
+          status: "success",
+        });
+        navigate(`/view-schedule/${type}/${id}`);
       }
     } catch (error) {
-      showError(error.message);
+      console.error("Error updating schedule:", error);
+      showToast({
+        title: "Error",
+        message: error.response?.data?.message || "Failed to update schedule",
+        icon: "error",
+        status: "error",
+      });
     }
   };
 
-  const showSuccess = (message) => {
-    Swal.fire({
-      icon: "success",
-      title: "Success!",
-      text: message,
-      background: "#1F2937",
-      customClass: {
-        popup: "bg-gray-800 rounded-xl border border-gray-700",
-        title: "text-white",
-        htmlContainer: "text-gray-300",
-      },
-    });
+  // Add this function to handle QR code preview
+  const getQRCodePreview = () => {
+    if (!formData.qr_code) return null;
+    
+    // If it's a File object (new upload)
+    if (formData.qr_code instanceof File) {
+      return URL.createObjectURL(formData.qr_code);
+    }
+    
+    // If it's a base64 string (existing QR code)
+    if (typeof formData.qr_code === 'string') {
+      return `data:image/png;base64,${formData.qr_code}`;
+    }
+    
+    return null;
   };
 
-  const showError = (message) => {
-    Swal.fire({
-      icon: "error",
-      title: "Error!",
-      text: message,
-      background: "#1F2937",
-      customClass: {
-        popup: "bg-gray-800 rounded-xl border border-gray-700",
-        title: "text-white",
-        htmlContainer: "text-gray-300",
-      },
-    });
-  };
+  // Add cleanup for URL objects when component unmounts
+  useEffect(() => {
+    return () => {
+      // Cleanup any created URLs when component unmounts
+      if (formData.qr_code instanceof File) {
+        URL.revokeObjectURL(getQRCodePreview());
+      }
+    };
+  }, []);
 
   if (loading) {
     return (
@@ -141,7 +206,7 @@ const EditScheduleMeeting = () => {
           <div>
             <h2 className="text-2xl font-bold text-white">Update Schedule</h2>
             <p className="text-sm text-gray-400">
-              Update existing {formData.type.toLowerCase()}
+              Update existing {type.toLowerCase()}
             </p>
           </div>
         </div>
@@ -305,18 +370,18 @@ const EditScheduleMeeting = () => {
               </div>
 
               <div className="space-y-4">
-                {chapters.map((chapter) => (
+                {allChapters.map((chapter) => (
                   <label
-                    key={chapter.id}
+                    key={`chapter-${chapter.chapter_id}`}
                     className="flex items-center gap-3 p-3 rounded-xl bg-gray-700/50 border border-gray-600 cursor-pointer hover:bg-gray-700 transition-all duration-300"
                   >
                     <input
                       type="checkbox"
-                      checked={formData.chapters.includes(chapter.id)}
-                      onChange={() => handleChapterToggle(chapter.id)}
+                      checked={formData.chapters.includes(chapter.chapter_id)}
+                      onChange={() => handleChapterToggle(chapter.chapter_id)}
                       className="form-checkbox bg-gray-600 border-gray-500 rounded text-amber-500 focus:ring-0 focus:ring-offset-0"
                     />
-                    <span className="text-gray-300">{chapter.name}</span>
+                    <span className="text-gray-300">{chapter.chapter_name}</span>
                   </label>
                 ))}
               </div>
@@ -435,9 +500,7 @@ const EditScheduleMeeting = () => {
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={(e) => {
-                        // Handle file upload
-                      }}
+                      onChange={handleFileChange}
                       className="hidden"
                       id="qr-upload"
                     />
@@ -445,8 +508,13 @@ const EditScheduleMeeting = () => {
                       htmlFor="qr-upload"
                       className="block px-4 py-2 bg-gray-700 text-gray-300 rounded-xl border border-gray-600 cursor-pointer hover:bg-gray-600 transition-colors"
                     >
-                      Choose File
+                      {formData.qr_code ? 'Change QR Code' : 'Choose File'}
                     </label>
+                    {formData.qr_code instanceof File && (
+                      <p className="text-sm text-gray-400">
+                        Selected: {formData.qr_code.name}
+                      </p>
+                    )}
                   </div>
                 </div>
               )}
@@ -480,9 +548,13 @@ const EditScheduleMeeting = () => {
               <div className="flex flex-col items-center justify-center">
                 {formData.qr_code ? (
                   <img
-                    src={formData.qr_code}
+                    src={getQRCodePreview()}
                     alt="QR Code"
                     className="max-w-[200px] rounded-lg"
+                    onError={(e) => {
+                      console.error('Error loading QR code image');
+                      e.target.style.display = 'none';
+                    }}
                   />
                 ) : (
                   <div className="text-gray-400 text-sm">

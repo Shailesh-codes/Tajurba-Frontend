@@ -10,6 +10,7 @@ import EditMemberModal from "../components/EditMemberModal";
 import Swal from "sweetalert2";
 import api from "../hooks/api";
 import axios from "axios";
+import { showToast } from "../utils/toast";
 
 const MemberList = () => {
   const navigate = useNavigate();
@@ -62,64 +63,56 @@ const MemberList = () => {
 
   const handleEditSubmit = async (formData) => {
     try {
-      const response = await axios.patch(
-        `${api}/members/members/${formData.id}`,
-        formData
-      );
+      const response = await axios.put(`${api}/members/members/${selectedMember.id}`, {
+        name: formData.name,
+        mobile: formData.mobile,
+        email: formData.email,
+        chapter: formData.chapter,
+        company: formData.company,
+        business_category: formData.business_category,
+        joiningDate: formData.date
+      });
 
       if (response.data.success) {
-        const updatedMembersRes = await axios.get(`${api}/members/members`);
-        if (updatedMembersRes.data.success) {
-          setMembers(updatedMembersRes.data.data);
+        const membersResponse = await axios.get(`${api}/members/members`);
+        if (membersResponse.data.success) {
+          setMembers(membersResponse.data.data);
         }
 
-        Swal.fire({
-          icon: "success",
-          title: "Success",
-          text: "Member updated successfully",
-          toast: true,
-          position: "top-end",
-          showConfirmButton: false,
-          timer: 3000,
-          background: "#1F2937",
-          color: "#fff",
-        });
-
         setEditModalOpen(false);
+        
+        showToast({
+          title: "Profile Updated",
+          message: "Member profile has been successfully updated",
+          icon: "success",
+          status: "success"
+        });
       }
     } catch (error) {
       console.error("Error updating member:", error);
-      Swal.fire({
+      
+      showToast({
+        title: "Update Failed",
+        message: error.response?.data?.message || "Failed to update member profile. Please try again.",
         icon: "error",
-        title: "Error",
-        text: error.response?.data?.message || "Failed to update member",
-        toast: true,
-        position: "top-end",
-        showConfirmButton: false,
-        timer: 3000,
-        background: "#1F2937",
-        color: "#fff",
+        status: "error"
       });
     }
   };
 
   const handleEditClick = (member) => {
+    console.log("Selected Member:", member);
     setSelectedMember(member);
     setEditModalOpen(true);
   };
 
   const toggleMemberStatus = async (member) => {
     if (!member || !member.id) {
-      Swal.fire({
+      showToast({
+        title: "Error",
+        message: "Invalid member data",
         icon: "error",
-        title: '<span class="text-lg font-semibold text-white">Error</span>',
-        text: "Invalid member data",
-        toast: true,
-        position: "top-end",
-        showConfirmButton: false,
-        timer: 3000,
-        background: "#1F2937",
-        color: "#fff",
+        status: "error"
       });
       return;
     }
@@ -219,51 +212,21 @@ const MemberList = () => {
           );
           setMembers(updatedMembers);
 
-          Swal.fire({
+          showToast({
+            title: isActive ? "Member Deactivated" : "Member Activated",
+            message: isActive 
+              ? "The member has been successfully deactivated"
+              : "The member has been successfully activated",
             icon: "success",
-            title: `<span class="text-lg font-semibold text-white">
-              ${isActive ? "Member Deactivated" : "Member Activated"}
-            </span>`,
-            html: `
-              <div class="flex items-center gap-3 mt-2">
-                <div class="p-2 ${
-                  isActive ? "bg-red-500/20" : "bg-green-500/20"
-                } rounded-lg">
-                  <i class="fas ${
-                    isActive ? "fa-user-slash" : "fa-user-check"
-                  } ${isActive ? "text-red-400" : "text-green-400"}"></i>
-                </div>
-                <p class="text-sm text-gray-300">
-                  ${
-                    isActive
-                      ? "The member has been successfully deactivated"
-                      : "The member has been successfully activated"
-                  }
-                </p>
-              </div>
-            `,
-            toast: true,
-            position: "top-end",
-            showConfirmButton: false,
-            timer: 3000,
-            background: "#1F2937",
-            customClass: {
-              popup: "bg-gray-800 rounded-xl border border-gray-700 shadow-lg",
-            },
+            status: "success"
           });
         }
       } catch (error) {
-        Swal.fire({
+        showToast({
+          title: "Error",
+          message: error.response?.data?.message || "Failed to update member status",
           icon: "error",
-          title: '<span class="text-lg font-semibold text-white">Error</span>',
-          text:
-            error.response?.data?.message || "Failed to update member status",
-          toast: true,
-          position: "top-end",
-          showConfirmButton: false,
-          timer: 3000,
-          background: "#1F2937",
-          color: "#fff",
+          status: "error"
         });
       }
     } else {

@@ -234,9 +234,9 @@ const SideBar = ({ isOpen, setIsOpen, setIsLogoutModalOpen }) => {
             <div className="pb-10 space-y-1 border-t border-gray-700/30">
               <button
                 className="w-full flex items-center gap-4 px-6 py-4 rounded-lg 
-                text-red-400 hover:bg-gradient-to-r hover:from-red-500/20 hover:to-red-500/5 
-                hover:text-red-300 transition-all duration-200
-                font-semibold border-l-4 border-transparent hover:border-red-400"
+                text-red-400 hover:bg-gradient-to-r hover:from-amber-600/20 hover:to-amber-500/5 
+                hover:text-amber-600 transition-all duration-200
+                font-semibold border-l-4 border-transparent hover:border-amber-600"
                 onClick={() => setIsLogoutModalOpen(true)}
               >
                 <FiLogOut className="text-xl" />

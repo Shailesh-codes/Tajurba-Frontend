@@ -1,5 +1,4 @@
-import { useState, useEffect } from "react";
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import AddMember from "./pages/AddMember";
 import SignIn from "./authentications/SignIn";
@@ -55,12 +54,21 @@ import PageTitle from "./layout/PageTitile";
 function App() {
   return (
     <Routes>
+      <Route
+        path="/"
+        element={
+          <>
+            <PageTitle title="Sign In | Tajurba" />
+            <SignIn />
+          </>
+        }
+      />
       <Route element={<Layout />}>
         <Route
-          index
+          path="/dashboard"
           element={
             <>
-              <PageTitle title="Dashnboard | Tajurba" />
+              <PageTitle title="Dashboard | Tajurba" />
               <Dashboard />
             </>
           }
@@ -185,6 +193,15 @@ function App() {
         />
         <Route
           path="/edit-schedule/:id"
+          element={
+            <>
+              <PageTitle title="Edit Schedule | Tajurba" />
+              <EditScheduleMeeting />
+            </>
+          }
+        />
+        <Route
+          path="/edit-schedule/:type/:id"
           element={
             <>
               <PageTitle title="Edit Schedule | Tajurba" />
@@ -529,15 +546,6 @@ function App() {
           }
         />
       </Route>
-      <Route
-        path="/signin"
-        element={
-          <>
-            <PageTitle title="Sign In | Tajurba" />
-            <SignIn />
-          </>
-        }
-      />
     </Routes>
   );
 }

@@ -159,7 +159,7 @@
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  animation: slide 30s linear infinite; /* Slightly slower for better readability */
+  animation: slide 30s linear backwards; /* Slightly slower for better readability */
 }
 
 /* Pause animation on hover */
@@ -180,7 +180,7 @@
 
 /* Enhanced shimmer effect */
 .shimmer-effect {
-  animation: shimmer 4s ease-in-out infinite;
+  animation: shimmer 1.5s ease-in-out normal;
 }
 
 /* Update the gradient animation to be smoother */
@@ -192,4 +192,36 @@
 /* Add new separator style */
 .announcement-separator {
   @apply mx-4 text-amber-500/30;
+}
+
+/* Enhanced shimmer effect for icons */
+.shimmer-icon {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer-icon::after {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    to bottom right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: rotate(45deg);
+  animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%) rotate(45deg);
+  }
+  100% {
+    transform: translateX(100%) rotate(45deg);
+  }
 }
