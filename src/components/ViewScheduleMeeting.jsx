@@ -3,8 +3,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import axios from "axios";
 import api from "../hooks/api";
-
-// Import icons
 import eventIcon from "../assets/images/icons/event.svg";
 import editIcon from "../assets/images/icons/edit.svg";
 import deleteIcon from "../assets/images/icons/delete.svg";
@@ -27,7 +25,6 @@ const ViewScheduleMeeting = () => {
           `${api}/schedules/${type}/${id}`
         );
 
-        // Fetch chapters data
         const chaptersResponse = await axios.get(`${api}/chapters`);
 
         if (
@@ -72,24 +69,22 @@ const ViewScheduleMeeting = () => {
   const formatDateTime = (date, time) => {
     if (!date) return "Not specified";
     try {
-      // First convert the date string to a Date object
       let dateObj;
-      
-      // Check if date is already a Date object
+
       if (date instanceof Date) {
         dateObj = date;
       } else {
-        // Handle different date string formats
-        const dateStr = typeof date === 'string' ? date.split('T')[0] : date;
+        // Handle different date string format
+        const dateStr = typeof date === "string" ? date.split("T")[0] : date;
         dateObj = new Date(dateStr);
       }
 
       // Format time if provided
       if (time) {
         // Ensure time is in HH:mm format
-        const timeStr = typeof time === 'string' ? time.split('.')[0] : time;
+        const timeStr = typeof time === "string" ? time.split(".")[0] : time;
         // Combine date and time
-        dateObj = new Date(`${dateObj.toISOString().split('T')[0]}T${timeStr}`);
+        dateObj = new Date(`${dateObj.toISOString().split("T")[0]}T${timeStr}`);
       }
 
       // Check if date is valid
@@ -108,7 +103,14 @@ const ViewScheduleMeeting = () => {
         hour12: true,
       });
     } catch (error) {
-      console.error("Date formatting error:", error, "Date:", date, "Time:", time);
+      console.error(
+        "Date formatting error:",
+        error,
+        "Date:",
+        date,
+        "Time:",
+        time
+      );
       return "Invalid date";
     }
   };
@@ -331,7 +333,6 @@ const ViewScheduleMeeting = () => {
               )}
             </div>
           </div>
-          
         </motion.div>
 
         {/* Right Column */}
