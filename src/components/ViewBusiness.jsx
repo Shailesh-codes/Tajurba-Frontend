@@ -8,8 +8,12 @@ import {
   FiGlobe,
   FiBriefcase,
   FiFolder,
+  FiCalendar,
 } from "react-icons/fi";
 import { useNavigate, useParams } from "react-router-dom";
+import axios from "axios";
+import api from "../hooks/api";
+import { format } from "date-fns";
 
 const ViewBusiness = () => {
   const navigate = useNavigate();
@@ -33,10 +37,14 @@ const ViewBusiness = () => {
       instagram: "",
       whatsapp: "",
     },
-    verifyStatus: "pending",
+    status: "pending",
     verifiedDate: null,
     verifiedBy: null,
+    created_at: "",
+    joiningDate: "",
+    memberStatus: "active",
   });
+  const [loading, setLoading] = useState(true);
 
   // Status badge styles based on status
   const getStatusBadgeStyle = (status) => {
@@ -53,37 +61,50 @@ const ViewBusiness = () => {
   useEffect(() => {
     const fetchBusinessData = async () => {
       try {
-        const response = await fetch(`/api/business/${id}`);
-        if (!response.ok) {
-          throw new Error("Failed to fetch business data");
-        }
-        const data = await response.json();
+        setLoading(true);
+        // Fetch business data
+        const businessResponse = await axios.get(`${api}/business/${id}`);
+        const businessData = businessResponse.data;
+
+        // Fetch member details using receiver_memberId
+        const memberResponse = await axios.get(`${api}/members/members`);
+        const member = memberResponse.data.data.find(
+          (m) => m.id === businessData.receiver_memberId
+        );
+
+        // Combine business and member data
         setBusinessData({
-          memberName: data.received_member_name,
-          chapter: data.received_chapter_name,
-          amount: data.amount,
-          businessDate: data.business_date,
-          email: data.received_email,
-          mobile: data.received_mobile,
-          website: data.received_website,
-          company: data.received_company,
-          businessCategory: data.received_business,
-          description: data.description,
+          memberName: businessData.memberName,
+          chapter: businessData.chapter,
+          amount: businessData.amount,
+          businessDate: businessData.businessDate,
+          email: member?.email || "",
+          mobile: member?.mobile || "",
+          website: member?.website || "",
+          company: member?.company || "",
+          businessCategory: member?.business_category || "",
+          description: businessData.description || "",
           profileImage:
-            data.received_profile_image || businessData.profileImage,
+            member?.profile_image || "https://avatar.iran.liara.run/public",
+          joiningDate: member?.joiningDate || "",
+          memberStatus: member?.status || "active",
           socialMedia: {
-            facebook: data.received_facebook,
-            twitter: data.received_twitter,
-            linkedin: data.received_linkedin,
-            instagram: data.received_instagram,
-            whatsapp: data.received_whatsapp,
+            facebook: member?.facebook || "",
+            twitter: member?.twitter || "",
+            linkedin: member?.linkedin || "",
+            instagram: member?.instagram || "",
+            whatsapp: member?.whatsapp || "",
           },
-          verifyStatus: data.verify_status,
-          verifiedDate: data.verified_date,
-          verifiedBy: data.verified_by,
+          status: businessData.status,
+          verifiedDate: businessData.updated_at,
+          verifiedBy: businessData.verifiedBy,
+          created_at: businessData.created_at,
         });
       } catch (err) {
-        console.error("Error fetching business data:", err);
+        console.error("Error fetching data:", err);
+        toast.error("Failed to fetch business details");
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -91,6 +112,55 @@ const ViewBusiness = () => {
       fetchBusinessData();
     }
   }, [id]);
+
+  // Add loading indicator
+  if (loading) {
+    return (
+      <div className="mt-32 flex justify-center items-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-500"></div>
+      </div>
+    );
+  }
+
+  // Update the Edit button visibility based on status
+  if (businessData.status === "pending") {
+    <button
+      onClick={() => navigate(`/add-business/${id}`)}
+      className="group flex items-center gap-2.5 px-5 py-2.5 bg-gradient-to-r from-amber-600 to-amber-800 hover:from-amber-700 hover:to-amber-900 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-amber-900/30 hover:-translate-y-0.5"
+    >
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+        />
+      </svg>
+      <span>Edit Business</span>
+    </button>;
+  }
+
+  // Update the amount display to use proper formatting
+  const formatAmount = (amount) => {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+    }).format(amount);
+  };
+
+  // Update the date formatting function
+  const formatDate = (dateString) => {
+    try {
+      return format(new Date(dateString), "dd MMM yyyy");
+    } catch (error) {
+      return "Invalid Date";
+    }
+  };
 
   return (
     <motion.div
@@ -102,8 +172,8 @@ const ViewBusiness = () => {
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div className="flex items-center gap-4">
-          <div className="p-3 bg-gradient-to-r from-gray-800 to-gray-900 rounded-xl shadow-lg">
-            <BsClipboardData className="w-6 h-6 text-amber-500" />
+          <div className="p-3 bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] rounded-xl shadow-lg">
+            <BsClipboardData className="w-6 h-6" />
           </div>
           <div>
             <h2 className="text-2xl font-bold text-white">Business Details</h2>
@@ -112,25 +182,27 @@ const ViewBusiness = () => {
         </div>
 
         <div className="flex flex-wrap gap-3">
-          <button
-            onClick={() => navigate(`/add-business/${id}`)}
-            className="group flex items-center gap-2.5 px-5 py-2.5 bg-gradient-to-r from-amber-600 to-amber-800 hover:from-amber-700 hover:to-amber-900 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-amber-900/30 hover:-translate-y-0.5"
-          >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+          {businessData.status === "pending" && (
+            <button
+              onClick={() => navigate(`/add-business/${id}`)}
+              className="group flex items-center gap-2.5 px-5 py-2.5 bg-gradient-to-r from-amber-600 to-amber-800 hover:from-amber-700 hover:to-amber-900 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-amber-900/30 hover:-translate-y-0.5"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-              />
-            </svg>
-            <span>Edit Business</span>
-          </button>
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                />
+              </svg>
+              <span>Edit Business</span>
+            </button>
+          )}
 
           <button
             onClick={() => navigate(-1)}
@@ -215,13 +287,13 @@ const ViewBusiness = () => {
                 <div>
                   <p className="text-sm text-gray-400">Amount</p>
                   <p className="text-base font-semibold text-white">
-                    ₹{parseFloat(businessData.amount).toLocaleString()}
+                    {formatAmount(parseFloat(businessData.amount))}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-400">Business Date</p>
                   <p className="text-base font-semibold text-white">
-                    {new Date(businessData.businessDate).toLocaleDateString()}
+                    {formatDate(businessData.businessDate)}
                   </p>
                 </div>
               </div>
@@ -302,18 +374,18 @@ const ViewBusiness = () => {
           <div className="flex items-center gap-3 mb-6">
             <div
               className={`p-2 rounded-lg ${
-                businessData.verifyStatus === "verified"
+                businessData.status === "verified"
                   ? "bg-green-500/20"
-                  : businessData.verifyStatus === "rejected"
+                  : businessData.status === "rejected"
                   ? "bg-red-500/20"
                   : "bg-amber-500/20"
               }`}
             >
               <svg
                 className={`w-5 h-5 ${
-                  businessData.verifyStatus === "verified"
+                  businessData.status === "verified"
                     ? "text-green-400"
-                    : businessData.verifyStatus === "rejected"
+                    : businessData.status === "rejected"
                     ? "text-red-400"
                     : "text-amber-400"
                 }`}
@@ -334,16 +406,14 @@ const ViewBusiness = () => {
             </h3>
           </div>
           <div className="p-4 bg-gray-700/50 rounded-xl">
-            {businessData.verifyStatus === "verified" ? (
+            {businessData.status === "verified" ? (
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-green-400"></div>
                   <p className="text-gray-300">
                     Verified on{" "}
                     <span className="text-green-400 font-medium">
-                      {new Date(businessData.verifiedDate).toLocaleDateString()}{" "}
-                      at{" "}
-                      {new Date(businessData.verifiedDate).toLocaleTimeString()}
+                      {formatDate(businessData.verifiedDate)}
                     </span>
                   </p>
                 </div>
@@ -364,16 +434,14 @@ const ViewBusiness = () => {
                   </div>
                 </div>
               </div>
-            ) : businessData.verifyStatus === "rejected" ? (
+            ) : businessData.status === "rejected" ? (
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-red-400"></div>
                   <p className="text-gray-300">
                     Rejected on{" "}
                     <span className="text-red-400 font-medium">
-                      {new Date(businessData.verifiedDate).toLocaleDateString()}{" "}
-                      at{" "}
-                      {new Date(businessData.verifiedDate).toLocaleTimeString()}
+                      {formatDate(businessData.verifiedDate)}
                     </span>
                   </p>
                 </div>

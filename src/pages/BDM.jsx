@@ -98,22 +98,22 @@ const BDM = () => {
 
       // Apply search filter
       if (search) {
-        filteredBdms = filteredBdms.filter(bdm => 
+        filteredBdms = filteredBdms.filter((bdm) =>
           bdm.memberName.toLowerCase().includes(search.toLowerCase())
         );
       }
 
       // Apply status filter
-      if (statusFilter !== 'all') {
-        filteredBdms = filteredBdms.filter(bdm => 
-          bdm.status === statusFilter
+      if (statusFilter !== "all") {
+        filteredBdms = filteredBdms.filter(
+          (bdm) => bdm.status === statusFilter
         );
       }
 
       // Apply chapter filter
-      if (chapterFilter !== 'all') {
-        filteredBdms = filteredBdms.filter(bdm => 
-          bdm.chapter === chapterFilter
+      if (chapterFilter !== "all") {
+        filteredBdms = filteredBdms.filter(
+          (bdm) => bdm.chapter === chapterFilter
         );
       }
 
@@ -124,7 +124,10 @@ const BDM = () => {
 
       // Apply pagination
       const startIndex = (currentPage - 1) * resultsPerPage;
-      const paginatedBdms = filteredBdms.slice(startIndex, startIndex + resultsPerPage);
+      const paginatedBdms = filteredBdms.slice(
+        startIndex,
+        startIndex + resultsPerPage
+      );
 
       setBdms(paginatedBdms);
     } catch (error) {
@@ -220,11 +223,9 @@ const BDM = () => {
   const confirmDelete = async () => {
     if (selectedBdmId) {
       try {
-        await axios.delete(`${API_URL}/${selectedBdmId}`);
-        toast.success("BDM deleted successfully");
+        await axios.delete(`${api}/bdm/${selectedBdmId}`);
         fetchBDMs(); // Refresh the list
       } catch (error) {
-        toast.error("Failed to delete BDM");
         console.error("Error deleting BDM:", error);
       }
       setShowDeleteModal(false);

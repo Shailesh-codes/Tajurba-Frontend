@@ -10,57 +10,19 @@ import { BsClipboardData } from "react-icons/bs";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import DeleteModal from "../layout/DeleteModal";
+import axios from "axios";
+import api from "../hooks/api";
+import { format } from "date-fns";
+import {
+  Search,
+  Bell,
+  Building2,
+  ListFilter,
+  ChevronDown,
+  Plus,
+} from "lucide-react";
 
-// Dummy data for testing
-const dummyBusinessData = [
-  {
-    id: 1,
-    memberName: "John Doe",
-    chapter: "Chapter A",
-    amount: 50000,
-    status: "verified",
-    businessDate: "2024-03-15",
-    createdDate: "2024-03-10",
-  },
-  {
-    id: 2,
-    memberName: "Jane Smith",
-    chapter: "Chapter B",
-    amount: 75000,
-    status: "pending",
-    businessDate: "2024-03-16",
-    createdDate: "2024-03-11",
-  },
-  {
-    id: 3,
-    memberName: "Mike Johnson",
-    chapter: "Chapter C",
-    amount: 100000,
-    status: "rejected",
-    businessDate: "2024-03-17",
-    createdDate: "2024-03-12",
-  },
-  {
-    id: 4,
-    memberName: "Sarah Williams",
-    chapter: "Chapter A",
-    amount: 25000,
-    status: "pending",
-    businessDate: "2024-03-18",
-    createdDate: "2024-03-13",
-  },
-  {
-    id: 5,
-    memberName: "Robert Brown",
-    chapter: "Chapter B",
-    amount: 150000,
-    status: "verified",
-    businessDate: "2024-03-19",
-    createdDate: "2024-03-14",
-  },
-];
-
-// Add these constants for table headers
+// Update table headers to match business data
 const tableHeaders = [
   "SR No.",
   "Member Name",
@@ -68,49 +30,115 @@ const tableHeaders = [
   "Amount",
   "Status",
   "Business Date",
+  "Created Date",
   "Actions",
+];
+
+// Add status options constant
+const STATUS_OPTIONS = [
+  { value: "all", label: "All Status" },
+  { value: "pending", label: "Pending" },
+  { value: "verified", label: "Verified" },
+  { value: "rejected", label: "Rejected" },
 ];
 
 const BusinessGiven = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [businessData, setBusinessData] = useState(dummyBusinessData);
+  const [businesses, setBusinesses] = useState([]);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [chapterFilter, setChapterFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [resultsPerPage, setResultsPerPage] = useState(10);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [businessToDelete, setBusinessToDelete] = useState(null);
+  const [chapters, setChapters] = useState([]);
+
+  // Fetch businesses with filters
+  const fetchBusinesses = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${api}/business`);
+      let filteredData = response.data;
+
+      // Apply search filter
+      if (search) {
+        filteredData = filteredData.filter((business) =>
+          business.memberName.toLowerCase().includes(search.toLowerCase())
+        );
+      }
+
+      // Apply status filter
+      if (statusFilter !== "all") {
+        filteredData = filteredData.filter(
+          (business) => business.status === statusFilter
+        );
+      }
+
+      // Apply chapter filter
+      if (chapterFilter !== "all") {
+        filteredData = filteredData.filter(
+          (business) => business.chapter === chapterFilter
+        );
+      }
+
+      // Calculate pagination
+      const totalItems = filteredData.length;
+      const calculatedTotalPages = Math.ceil(totalItems / resultsPerPage);
+      setTotalPages(calculatedTotalPages);
+
+      // Apply pagination
+      const startIndex = (currentPage - 1) * resultsPerPage;
+      const paginatedData = filteredData.slice(
+        startIndex,
+        startIndex + resultsPerPage
+      );
+
+      setBusinesses(paginatedData);
+    } catch (error) {
+      console.error("Error fetching businesses:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch chapters for filter
+  const fetchChapters = async () => {
+    try {
+      const response = await axios.get(`${api}/chapters`);
+      setChapters(response.data.data);
+    } catch (error) {
+      console.error("Error fetching chapters:", error);
+    }
+  };
+
+  // Add filter handlers
+  const handleStatusFilter = (e) => {
+    setStatusFilter(e.target.value);
+    setCurrentPage(1); // Reset to first page when filter changes
+  };
+
+  const handleChapterFilter = (e) => {
+    setChapterFilter(e.target.value);
+    setCurrentPage(1); // Reset to first page when filter changes
+  };
 
   useEffect(() => {
-    // Simulating data fetch
-    setLoading(true);
-    setTimeout(() => {
-      setBusinessData(dummyBusinessData);
-      setLoading(false);
-    }, 1000);
+    fetchChapters();
   }, []);
 
   useEffect(() => {
-    const total = Math.ceil(businessData.length / resultsPerPage);
-    setTotalPages(total);
-  }, [businessData, resultsPerPage]);
-
-  const getPaginatedData = () => {
-    const startIndex = (currentPage - 1) * resultsPerPage;
-    const endIndex = startIndex + resultsPerPage;
-    return businessData.slice(startIndex, endIndex);
-  };
+    fetchBusinesses();
+  }, [search, statusFilter, chapterFilter, currentPage, resultsPerPage]);
 
   const handleView = (id) => {
     navigate(`/view-business/${id}`);
   };
 
   const handleEdit = (id) => {
-    // Find the business data for the selected ID
-    const businessToEdit = businessData.find((business) => business.id === id);
-    // Navigate to add-business with state containing the business data
-    navigate(`/add-business/${id}`, { state: { businessToEdit } });
+    navigate(`/add-business/${id}`);
   };
 
   const handleDelete = (id) => {
@@ -118,22 +146,31 @@ const BusinessGiven = () => {
     setIsDeleteModalOpen(true);
   };
 
-  const confirmDelete = () => {
-    const updatedBusinessData = businessData.filter(
-      (business) => business.id !== businessToDelete
-    );
-    setBusinessData(updatedBusinessData);
-    setIsDeleteModalOpen(false);
-    setBusinessToDelete(null);
+  const confirmDelete = async () => {
+    try {
+      await axios.delete(`${api}/business/${businessToDelete}`);
 
-    // You would typically make an API call here
-    // Example:
-    // try {
-    //   await axios.delete(`/api/business/${businessToDelete}`);
-    //   setBusinessData(updatedBusinessData);
-    // } catch (error) {
-    //   console.error('Error deleting business:', error);
-    // }
+      fetchBusinesses();
+      setIsDeleteModalOpen(false);
+      setBusinessToDelete(null);
+    } catch (error) {
+      console.error("Error deleting business:", error);
+    }
+  };
+
+  const formatDate = (dateString) => {
+    try {
+      return format(new Date(dateString), "dd MMM yyyy");
+    } catch (error) {
+      return "Invalid Date";
+    }
+  };
+
+  const formatAmount = (amount) => {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+    }).format(amount);
   };
 
   return (
@@ -177,38 +214,89 @@ const BusinessGiven = () => {
         </button>
       </div>
 
-      {/* Search and Add New Section */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="w-full sm:w-auto order-2 sm:order-1">
-          <div className="relative h-[56px]">
-            <input
-              type="text"
-              placeholder="Search by member name or chapter..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full sm:w-[400px] lg:w-[500px] h-full bg-gray-800 text-gray-300 pl-12 rounded-lg border-none focus:outline-none focus:ring-0 text-sm placeholder:text-gray-400"
-            />
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <svg
-                className="w-5 h-5 text-gray-400"
-                viewBox="0 0 20 20"
-                fill="none"
+      {/* Update Search and Filters Section */}
+      <div className="flex flex-col lg:flex-row gap-4">
+        <div className="flex-1 flex flex-col gap-4">
+          {/* Search Bar */}
+          <div className="w-full lg:max-w-[350px]">
+            <div className="relative h-[56px]">
+              <input
+                type="text"
+                placeholder="Search by member name..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full h-full bg-gray-800 text-gray-300 pl-12 rounded-lg border-none focus:outline-none focus:ring-0 text-sm placeholder:text-gray-400"
+              />
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <Search className="w-5 h-5 text-gray-400" />
+              </div>
+            </div>
+          </div>
+
+          {/* Filters Group */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Status Filter */}
+            <div className="relative h-[56px]">
+              <select
+                value={statusFilter}
+                onChange={handleStatusFilter}
+                className="w-full h-full bg-gray-800 text-gray-300 pl-12 pr-10 rounded-lg border-none focus:outline-none focus:ring-0 text-sm placeholder:text-gray-400 appearance-none"
               >
-                <path
-                  d="M9 17C13.4183 17 17 13.4183 17 9C17 4.58172 13.4183 1 9 1C4.58172 1 1 4.58172 1 9C1 13.4183 4.58172 17 9 17Z"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M19 19L14.65 14.65"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+                {STATUS_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <Bell className="w-5 h-5 text-gray-400" />
+              </div>
+              <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                <ChevronDown className="w-4 h-4 text-gray-400" />
+              </div>
+            </div>
+
+            {/* Chapter Filter */}
+            <div className="relative h-[56px]">
+              <select
+                value={chapterFilter}
+                onChange={handleChapterFilter}
+                className="w-full h-full bg-gray-800 text-gray-300 pl-12 pr-10 rounded-lg border-none focus:outline-none focus:ring-0 text-sm placeholder:text-gray-400 appearance-none"
+              >
+                <option value="all">All Chapters</option>
+                {chapters.map((chapter) => (
+                  <option key={chapter.chapter_id} value={chapter.chapter_name}>
+                    {chapter.chapter_name}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <Building2 className="w-5 h-5 text-gray-400" />
+              </div>
+              <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                <ChevronDown className="w-4 h-4 text-gray-400" />
+              </div>
+            </div>
+
+            {/* Results per page dropdown */}
+            <div className="relative h-[56px]">
+              <select
+                value={resultsPerPage}
+                onChange={(e) => setResultsPerPage(Number(e.target.value))}
+                className="w-full h-full bg-gray-800 text-gray-300 pl-12 pr-10 rounded-lg border-none focus:outline-none focus:ring-0 text-sm placeholder:text-gray-400 appearance-none"
+              >
+                {[10, 25, 50, 100].map((value) => (
+                  <option key={value} value={value}>
+                    {value} per page
+                  </option>
+                ))}
+              </select>
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <ListFilter className="w-5 h-5 text-gray-400" />
+              </div>
+              <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                <ChevronDown className="w-4 h-4 text-gray-400" />
+              </div>
             </div>
           </div>
         </div>
@@ -218,20 +306,7 @@ const BusinessGiven = () => {
             to="/add-business"
             className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white/90 hover:text-white rounded-lg flex items-center justify-center gap-2 h-[56px] transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-amber-900/30 hover:-translate-y-0.5"
           >
-            <svg
-              className="w-5 h-5"
-              viewBox="0 0 20 20"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M10 4V16M4 10H16"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            <Plus className="w-5 h-5" />
             <span>Add New Business</span>
           </Link>
         </div>
@@ -274,7 +349,7 @@ const BusinessGiven = () => {
               <tbody className="divide-y divide-gray-700/50">
                 {loading ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-8 text-center">
+                    <td colSpan={8} className="px-6 py-8 text-center">
                       <div className="flex flex-col items-center gap-3">
                         <svg
                           className="w-12 h-12 text-gray-500 animate-spin"
@@ -290,14 +365,14 @@ const BusinessGiven = () => {
                           />
                         </svg>
                         <div className="text-gray-400 text-sm">
-                          Loading business entries...
+                          Loading businesses...
                         </div>
                       </div>
                     </td>
                   </tr>
-                ) : getPaginatedData().length === 0 ? (
+                ) : businesses.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-8 text-center">
+                    <td colSpan={8} className="px-6 py-8 text-center">
                       <div className="flex flex-col items-center gap-3">
                         <svg
                           className="w-12 h-12 text-gray-500"
@@ -314,24 +389,24 @@ const BusinessGiven = () => {
                         </svg>
                         <div className="text-gray-400 text-sm">
                           {search
-                            ? "No business entries found matching your search"
-                            : "No business entries have been added yet"}
+                            ? "No businesses found matching your search"
+                            : "No businesses have been added yet"}
                         </div>
                       </div>
                     </td>
                   </tr>
                 ) : (
-                  getPaginatedData().map((business, index) => (
+                  businesses.map((business, index) => (
                     <motion.tr
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      key={business.id}
+                      key={business.business_id}
                       className="group hover:bg-gradient-to-r hover:from-gray-700/30 hover:via-gray-700/40 hover:to-gray-700/30 transition-all duration-300"
                     >
                       <td className="px-6 py-4">
                         <span className="flex items-center justify-center w-6 h-6 rounded-full bg-gray-700/50 text-amber-500 font-medium">
-                          {index + 1}
+                          {(currentPage - 1) * resultsPerPage + index + 1}
                         </span>
                       </td>
                       <td className="px-6 py-4">
@@ -346,7 +421,7 @@ const BusinessGiven = () => {
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-sm text-gray-300">
-                          ₹{business.amount.toLocaleString()}
+                          {formatAmount(business.amount)}
                         </span>
                       </td>
                       <td className="px-6 py-4">
@@ -365,13 +440,18 @@ const BusinessGiven = () => {
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-sm text-gray-400">
-                          {business.businessDate}
+                          {formatDate(business.businessDate)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm text-gray-400">
+                          {formatDate(business.created_at)}
                         </span>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-center gap-2">
                           <button
-                            onClick={() => handleView(business.id)}
+                            onClick={() => handleView(business.business_id)}
                             className="relative group/btn flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-r from-amber-600/90 to-amber-800/90 hover:from-amber-600 hover:to-amber-800 transition-all duration-300 shadow-lg hover:shadow-amber-900/30"
                           >
                             <div className="absolute inset-0 rounded-xl bg-amber-600 opacity-0 group-hover/btn:opacity-20 blur-lg transition-opacity" />
@@ -380,14 +460,16 @@ const BusinessGiven = () => {
                           {business.status === "pending" && (
                             <>
                               <button
-                                onClick={() => handleEdit(business.id)}
+                                onClick={() => handleEdit(business.business_id)}
                                 className="relative group/btn flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-r from-green-600/90 to-green-800/90 hover:from-green-600 hover:to-green-800 transition-all duration-300 shadow-lg hover:shadow-green-900/30"
                               >
                                 <div className="absolute inset-0 rounded-xl bg-green-600 opacity-0 group-hover/btn:opacity-20 blur-lg transition-opacity" />
                                 <FiEdit className="w-5 h-5 text-white/90 group-hover/btn:text-white transition-colors relative" />
                               </button>
                               <button
-                                onClick={() => handleDelete(business.id)}
+                                onClick={() =>
+                                  handleDelete(business.business_id)
+                                }
                                 className="relative group/btn flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-r from-red-600/90 to-red-800/90 hover:from-red-600 hover:to-red-800 transition-all duration-300 shadow-lg hover:shadow-red-900/30"
                               >
                                 <div className="absolute inset-0 rounded-xl bg-red-600 opacity-0 group-hover/btn:opacity-20 blur-lg transition-opacity" />
@@ -407,7 +489,7 @@ const BusinessGiven = () => {
       </motion.div>
 
       {/* Pagination Section */}
-      {!loading && getPaginatedData().length > 0 && (
+      {!loading && businesses.length > 0 && (
         <div className="flex items-center justify-center gap-3 py-4">
           <button
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}

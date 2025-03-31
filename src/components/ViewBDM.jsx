@@ -11,6 +11,7 @@ import {
   FiBriefcase,
   FiFolder,
 } from "react-icons/fi";
+import { CheckCircle, UserCheck, XCircle, Clock } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import api from "../hooks/api";
@@ -317,9 +318,21 @@ const ViewBDM = () => {
           className="lg:col-span-3 bg-gradient-to-b from-gray-800/40 to-gray-900/40 backdrop-blur-xl rounded-xl border border-gray-700 shadow-xl p-6"
         >
           <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-amber-500/20 rounded-lg">
+            <div className={`p-2 rounded-lg ${
+              bdmData.status === "verified"
+                ? "bg-green-500/20"
+                : bdmData.status === "rejected"
+                ? "bg-red-500/20"
+                : "bg-amber-500/20"
+            }`}>
               <svg
-                className="w-5 h-5 text-amber-400"
+                className={`w-5 h-5 ${
+                  bdmData.status === "verified"
+                    ? "text-green-400"
+                    : bdmData.status === "rejected"
+                    ? "text-red-400"
+                    : "text-amber-400"
+                }`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -343,8 +356,8 @@ const ViewBDM = () => {
                   <div className="w-2 h-2 rounded-full bg-green-400"></div>
                   <p className="text-gray-300">
                     Verified on{" "}
-                    <span className="text-white font-medium">
-                      {formatDate(bdmData.created_at)}
+                    <span className="text-green-400 font-medium">
+                      {formatDate(bdmData.verifiedDate)}
                     </span>
                   </p>
                 </div>
@@ -353,26 +366,57 @@ const ViewBDM = () => {
                     <div className="w-2 h-2 rounded-full bg-green-400"></div>
                     <p className="text-gray-300">
                       Verified by{" "}
-                      <span className="text-white font-medium">
+                      <span className="text-green-400 font-medium">
                         {bdmData.verifiedBy}
                       </span>
                     </p>
                   </div>
                 )}
+                <div className="flex items-center gap-2 mt-2">
+                  <div className="px-3 py-1.5 bg-green-500/20 text-green-400 rounded-lg text-sm font-medium">
+                    ✓ Verification Approved
+                  </div>
+                </div>
               </div>
             ) : bdmData.status === "rejected" ? (
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-red-400"></div>
-                <p className="text-red-400 font-medium">
-                  Verification rejected
-                </p>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-red-400"></div>
+                  <p className="text-gray-300">
+                    Rejected on{" "}
+                    <span className="text-red-400 font-medium">
+                      {formatDate(bdmData.verifiedDate)}
+                    </span>
+                  </p>
+                </div>
+                {bdmData.verifiedBy && (
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-red-400"></div>
+                    <p className="text-gray-300">
+                      Rejected by{" "}
+                      <span className="text-red-400 font-medium">
+                        {bdmData.verifiedBy}
+                      </span>
+                    </p>
+                  </div>
+                )}
+                <div className="flex items-center gap-2 mt-2">
+                  <div className="px-3 py-1.5 bg-red-500/20 text-red-400 rounded-lg text-sm font-medium">
+                    ✕ Verification Rejected
+                  </div>
+                </div>
               </div>
             ) : (
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-amber-400"></div>
-                <p className="text-amber-400 font-medium">
-                  Pending verification
-                </p>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-amber-400"></div>
+                  <p className="text-gray-300">Awaiting verification</p>
+                </div>
+                <div className="flex items-center gap-2 mt-2">
+                  <div className="px-3 py-1.5 bg-amber-500/20 text-amber-400 rounded-lg text-sm font-medium">
+                    ⏳ Pending Verification
+                  </div>
+                </div>
               </div>
             )}
           </div>

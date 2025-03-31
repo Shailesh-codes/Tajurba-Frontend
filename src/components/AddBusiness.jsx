@@ -3,18 +3,144 @@ import { motion } from "framer-motion";
 import { BsClipboardData } from "react-icons/bs";
 import { FiCalendar, FiUsers, FiHome, FiDollarSign } from "react-icons/fi";
 import { useNavigate, useParams } from "react-router-dom";
+import axios from "axios";
+import api from "../hooks/api";
 import calendarIcon from "../assets/images/icons/calender-icon.svg";
 
 const AddBusiness = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const [loading, setLoading] = useState(false);
+  const [members, setMembers] = useState([]);
   const [formData, setFormData] = useState({
+    receiver_memberId: "",
+    memberName: "",
     chapter: "",
-    member: "",
     amount: "",
-    businessDate: "",
+    businessDate: new Date().toISOString().split("T")[0],
     description: "",
   });
+
+  // Updated fetchMembers function with better debugging
+  const fetchMembers = async () => {
+    try {
+      setLoading(true);
+
+      const response = await axios.get(`${api}/members/members`);
+
+      if (response.data && response.data.data) {
+        // Check for nested data structure
+        setMembers(response.data.data);
+      } else if (Array.isArray(response.data)) {
+        // Check if response is direct array
+        setMembers(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching members:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Updated member selection dropdown
+  const renderMemberOptions = () => {
+    if (!Array.isArray(members)) {
+      return <option value="">No members available</option>;
+    }
+
+    return (
+      <>
+        <option value="">Select Member</option>
+        {members.map((member) => (
+          <option
+            key={member.id || member.member_id}
+            value={member.id || member.member_id}
+          >
+            {member.name || member.member_name}
+          </option>
+        ))}
+      </>
+    );
+  };
+
+  // Updated handleMemberSelect
+  const handleMemberSelect = (e) => {
+    const selectedMember = members.find(
+      (member) => member.id === parseInt(e.target.value)
+    );
+    if (selectedMember) {
+      setFormData({
+        ...formData,
+        receiver_memberId: selectedMember.id,
+        memberName: selectedMember.name,
+        chapter: selectedMember.chapter_name || selectedMember.chapter,
+      });
+    }
+  };
+
+  // Updated handleSubmit function with proper data formatting
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // Validate required fields
+    if (
+      !formData.receiver_memberId ||
+      !formData.amount ||
+      !formData.businessDate
+    ) {
+      return;
+    }
+
+    // Format the data properly
+    const businessData = {
+      receiver_memberId: parseInt(formData.receiver_memberId),
+      memberName: formData.memberName,
+      chapter: formData.chapter,
+      amount: parseFloat(formData.amount),
+      businessDate: new Date(formData.businessDate).toISOString().split("T")[0],
+      description: formData.description || "",
+    };
+
+    try {
+      setLoading(true);
+
+      if (id) {
+        await axios.put(`${api}/business/${id}`, businessData);
+      } else {
+        await axios.post(`${api}/business`, businessData);
+      }
+      navigate("/business-given");
+    } catch (error) {
+      console.error("Error saving business:", error.response?.data || error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch initial data
+  useEffect(() => {
+    fetchMembers();
+  }, []);
+
+  // Fetch business data if editing
+  useEffect(() => {
+    if (id) {
+      const fetchBusiness = async () => {
+        try {
+          setLoading(true);
+          const response = await axios.get(`${api}/business/${id}`);
+          if (response.data) {
+            setFormData(response.data);
+          }
+        } catch (error) {
+          console.error("Error fetching business:", error);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchBusiness();
+    }
+  }, [id]);
 
   return (
     <motion.div
@@ -80,30 +206,9 @@ const AddBusiness = () => {
         transition={{ delay: 0.2 }}
         className="bg-gradient-to-b from-gray-800/40 to-gray-900/40 backdrop-blur-xl rounded-xl border border-gray-700 shadow-xl p-6"
       >
-        <form className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
           {/* Grid Layout for Form Fields */}
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            {/* Chapter Selection */}
-            <div className="relative group">
-              <label className="text-sm font-medium text-gray-300 mb-2 block">
-                Chapter <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <select
-                  required
-                  value={formData.chapter}
-                  onChange={(e) =>
-                    setFormData({ ...formData, chapter: e.target.value })
-                  }
-                  className="w-full p-3 bg-gray-700/50 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 text-white transition-all duration-300"
-                >
-                  <option value="">Select Chapter</option>
-                  {/* Add chapter options here */}
-                </select>
-                <FiHome className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-amber-500 transition-colors duration-300" />
-              </div>
-            </div>
-
             {/* Member Selection */}
             <div className="relative group">
               <label className="text-sm font-medium text-gray-300 mb-2 block">
@@ -112,17 +217,33 @@ const AddBusiness = () => {
               <div className="relative">
                 <select
                   required
-                  value={formData.member}
-                  onChange={(e) =>
-                    setFormData({ ...formData, member: e.target.value })
-                  }
+                  value={formData.receiver_memberId}
+                  onChange={handleMemberSelect}
+                  disabled={loading}
                   className="w-full p-3 bg-gray-700/50 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 text-white transition-all duration-300"
                 >
                   <option value="">Select Member</option>
-                  {/* Add member options here */}
+                  {Array.isArray(members) &&
+                    members.map((member) => (
+                      <option key={member.id} value={member.id}>
+                        {member.name}
+                      </option>
+                    ))}
                 </select>
-                <FiUsers className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-amber-500 transition-colors duration-300" />
               </div>
+            </div>
+
+            {/* Chapter (Read-only) */}
+            <div className="relative group">
+              <label className="text-sm font-medium text-gray-300 mb-2 block">
+                Chapter
+              </label>
+              <input
+                type="text"
+                value={formData.chapter}
+                readOnly
+                className="w-full p-3 bg-gray-700/50 rounded-xl border border-gray-600 text-white transition-all duration-300"
+              />
             </div>
 
             {/* Amount Input */}
@@ -135,7 +256,7 @@ const AddBusiness = () => {
                   type="number"
                   required
                   min="0"
-                  step="5"
+                  step="0.01"
                   value={formData.amount}
                   onChange={(e) =>
                     setFormData({ ...formData, amount: e.target.value })
@@ -143,7 +264,7 @@ const AddBusiness = () => {
                   className="w-full p-3 bg-gray-700/50 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 text-white transition-all duration-300"
                   placeholder="Enter amount"
                 />
-                <span className="absolute right-8 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-amber-500 transition-colors duration-300">
+                <span className="absolute right-8 top-1/2 -translate-y-1/2 text-gray-400">
                   ₹
                 </span>
               </div>
@@ -162,12 +283,12 @@ const AddBusiness = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, businessDate: e.target.value })
                   }
-                  className="w-full p-3 bg-gray-700/50 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 text-white transition-all duration-300 [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full"
+                  className="w-full p-3 bg-gray-700/50 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 text-white transition-all duration-300"
                 />
                 <img
                   src={calendarIcon}
                   alt="calendar"
-                  className="absolute right-4 top-[50%] -translate-y-[50%] w-6 h-6 pointer-events-none"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 w-6 h-6 pointer-events-none"
                 />
               </div>
             </div>
@@ -195,23 +316,27 @@ const AddBusiness = () => {
               type="button"
               onClick={() =>
                 setFormData({
+                  receiver_memberId: "",
+                  memberName: "",
                   chapter: "",
-                  member: "",
                   amount: "",
-                  businessDate: "",
+                  businessDate: new Date().toISOString().split("T")[0],
                   description: "",
                 })
               }
+              disabled={loading}
               className="px-6 py-2.5 rounded-xl border border-gray-700 text-gray-300 hover:bg-gray-700/50 transition-all duration-300"
             >
               Reset
             </button>
             <button
               type="submit"
+              disabled={loading}
               className="relative group px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white font-semibold shadow-lg hover:shadow-xl hover:shadow-amber-900/30 hover:-translate-y-0.5 transition-all duration-300"
             >
-              <div className="absolute inset-0 rounded-xl bg-amber-600 opacity-0 group-hover:opacity-20 blur-xl transition-opacity" />
-              <span className="relative z-10">Save Business</span>
+              <span className="relative z-10">
+                {loading ? "Saving..." : "Save Business"}
+              </span>
             </button>
           </div>
         </form>
