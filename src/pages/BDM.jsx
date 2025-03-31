@@ -13,6 +13,9 @@ import { BsClipboardData, BsPlus } from "react-icons/bs";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import DeleteModal from "../layout/DeleteModal";
+import axios from "axios";
+import api from "../hooks/api";
+import { format } from "date-fns";
 
 // Add this dummy data array
 const dummyBDMs = [
@@ -81,9 +84,65 @@ const BDM = () => {
   const [resultsPerPage, setResultsPerPage] = useState(10);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedBdmId, setSelectedBDMId] = useState(null);
+  const [chapters, setChapters] = useState([]);
 
   // Options for results per page dropdown
   const resultsPerPageOptions = [10, 25, 50, 100];
+
+  // Fetch BDMs
+  const fetchBDMs = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${api}/bdm`);
+      let filteredBdms = response.data;
+
+      // Apply search filter
+      if (search) {
+        filteredBdms = filteredBdms.filter(bdm => 
+          bdm.memberName.toLowerCase().includes(search.toLowerCase())
+        );
+      }
+
+      // Apply status filter
+      if (statusFilter !== 'all') {
+        filteredBdms = filteredBdms.filter(bdm => 
+          bdm.status === statusFilter
+        );
+      }
+
+      // Apply chapter filter
+      if (chapterFilter !== 'all') {
+        filteredBdms = filteredBdms.filter(bdm => 
+          bdm.chapter === chapterFilter
+        );
+      }
+
+      // Calculate pagination
+      const totalItems = filteredBdms.length;
+      const calculatedTotalPages = Math.ceil(totalItems / resultsPerPage);
+      setTotalPages(calculatedTotalPages);
+
+      // Apply pagination
+      const startIndex = (currentPage - 1) * resultsPerPage;
+      const paginatedBdms = filteredBdms.slice(startIndex, startIndex + resultsPerPage);
+
+      setBdms(paginatedBdms);
+    } catch (error) {
+      console.error("Error fetching BDMs:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch chapters for filter
+  const fetchChapters = async () => {
+    try {
+      const response = await axios.get(`${api}/chapters`);
+      setChapters(response.data.data);
+    } catch (error) {
+      console.error("Error fetching chapters:", error);
+    }
+  };
 
   // Handle results per page change
   const handleResultsPerPageChange = (e) => {
@@ -157,11 +216,53 @@ const BDM = () => {
     setShowDeleteModal(true);
   };
 
-  const confirmDelete = () => {
+  // Delete BDM
+  const confirmDelete = async () => {
     if (selectedBdmId) {
-      console.log("Deleting BDM:", selectedBdmId);
+      try {
+        await axios.delete(`${API_URL}/${selectedBdmId}`);
+        toast.success("BDM deleted successfully");
+        fetchBDMs(); // Refresh the list
+      } catch (error) {
+        toast.error("Failed to delete BDM");
+        console.error("Error deleting BDM:", error);
+      }
       setShowDeleteModal(false);
       setSelectedBDMId(null);
+    }
+  };
+
+  // Update the search input handler
+  const handleSearch = (e) => {
+    setSearch(e.target.value);
+    setCurrentPage(1); // Reset to first page when searching
+  };
+
+  // Update the status filter handler
+  const handleStatusFilter = (e) => {
+    setStatusFilter(e.target.value);
+    setCurrentPage(1);
+  };
+
+  // Update the chapter filter handler
+  const handleChapterFilter = (e) => {
+    setChapterFilter(e.target.value);
+    setCurrentPage(1);
+  };
+
+  useEffect(() => {
+    fetchChapters();
+  }, []);
+
+  useEffect(() => {
+    fetchBDMs();
+  }, [search, statusFilter, chapterFilter, currentPage, resultsPerPage]);
+
+  const formatDate = (dateString) => {
+    try {
+      return format(new Date(dateString), "dd MMM yyyy");
+    } catch (error) {
+      return "Invalid Date";
     }
   };
 
@@ -235,6 +336,8 @@ const BDM = () => {
                 </span>
                 <input
                   type="text"
+                  value={search}
+                  onChange={handleSearch}
                   placeholder="Search by member name..."
                   className="w-full bg-gray-800 text-white border-none px-0 focus:outline-none focus:ring-0 text-sm placeholder:text-gray-400"
                 />
@@ -246,7 +349,11 @@ const BDM = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Status Filter */}
             <div className="relative h-[56px]">
-              <select className="w-full h-full bg-gray-800 text-gray-300 pl-12 pr-10 rounded-lg border-none focus:outline-none focus:ring-0 text-sm placeholder:text-gray-400 select-reset">
+              <select
+                value={statusFilter}
+                onChange={handleStatusFilter}
+                className="w-full h-full bg-gray-800 text-gray-300 pl-12 pr-10 rounded-lg border-none focus:outline-none focus:ring-0 text-sm placeholder:text-gray-400 select-reset"
+              >
                 <option value="all">All Status</option>
                 <option value="pending">Pending</option>
                 <option value="verified">Verified</option>
@@ -256,9 +363,17 @@ const BDM = () => {
 
             {/* Chapter Filter */}
             <div className="relative h-[56px]">
-              <select className="w-full h-full bg-gray-800 text-gray-300 pl-12 pr-10 rounded-lg border-none focus:outline-none focus:ring-0 text-sm placeholder:text-gray-400 select-reset">
+              <select
+                value={chapterFilter}
+                onChange={handleChapterFilter}
+                className="w-full h-full bg-gray-800 text-gray-300 pl-12 pr-10 rounded-lg border-none focus:outline-none focus:ring-0 text-sm placeholder:text-gray-400 select-reset"
+              >
                 <option value="all">All Chapters</option>
-                {/* ... chapter options ... */}
+                {chapters.map((chapter) => (
+                  <option key={chapter.chapter_id} value={chapter.chapter_name}>
+                    {chapter.chapter_name}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -425,7 +540,7 @@ const BDM = () => {
                         <span
                           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                             bdm.status === "verified"
-                              ? "bg-amber-500/10 text-amber-500"
+                              ? "bg-green-500/10 text-green-500"
                               : bdm.status === "rejected"
                               ? "bg-red-500/10 text-red-500"
                               : "bg-yellow-500/10 text-yellow-500"
@@ -437,12 +552,12 @@ const BDM = () => {
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-sm text-gray-400">
-                          {bdm.bdmDate}
+                          {formatDate(bdm.bdmDate)}
                         </span>
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-sm text-gray-400">
-                          {bdm.createdDate}
+                          {formatDate(bdm.created_at)}
                         </span>
                       </td>
                       <td className="px-6 py-4">

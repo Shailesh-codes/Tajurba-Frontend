@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, useParams } from "react-router-dom";
+import axios from "axios";
+import api from "../hooks/api";
 import {
   Mail,
   Phone,
@@ -13,42 +15,80 @@ import {
   Edit3,
   Users,
 } from "lucide-react";
+import { showToast } from "../utils/toast";
 
 const ViewMemberVisitor = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [visitorData, setVisitorData] = useState({
-    visitorName: "",
-    visitorEmail: "",
+    visitor_name: "",
+    visitor_email: "",
     mobile: "",
-    companyName: "",
-    companyCategory: "",
-    inviteDate: "",
+    company_name: "",
+    company_category: "",
+    invite_date: "",
     description: "",
   });
 
   useEffect(() => {
     const fetchVisitorData = async () => {
       try {
-        const response = await fetch(`/api/visitor/${id}`);
-        if (!response.ok) throw new Error("Failed to fetch visitor data");
-        const data = await response.json();
-        setVisitorData({
-          visitorName: data.visitor_name,
-          visitorEmail: data.visitor_email,
-          mobile: data.mobile,
-          companyName: data.company_name,
-          companyCategory: data.company_category,
-          inviteDate: data.invite_date,
-          description: data.description,
+        setLoading(true);
+        const response = await axios.get(`${api}/visitors/${id}`, {
+          withCredentials: true
         });
+
+        if (response.data.success) {
+          const data = response.data.data;
+          setVisitorData({
+            visitor_name: data.visitor_name,
+            visitor_email: data.visitor_email,
+            mobile: data.mobile,
+            company_name: data.company_name,
+            company_category: data.company_category,
+            invite_date: new Date(data.invite_date).toLocaleDateString(),
+            description: data.description || "No description provided",
+          });
+        }
       } catch (err) {
         console.error("Error fetching visitor data:", err);
+        setError("Failed to load visitor information");
+        showToast({
+          message: "Failed to load visitor information",
+          status: "error",
+          icon: "error"
+        });
+      } finally {
+        setLoading(false);
       }
     };
 
     if (id) fetchVisitorData();
   }, [id]);
+
+  if (loading) {
+    return (
+      <div className="mt-32 flex justify-center items-center">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-amber-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="mt-32 flex flex-col items-center gap-4">
+        <div className="text-red-500 text-lg">{error}</div>
+        <button
+          onClick={() => navigate(-1)}
+          className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600"
+        >
+          Go Back
+        </button>
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -105,10 +145,10 @@ const ViewMemberVisitor = () => {
               </div>
             </div>
             <h3 className="text-xl font-bold text-white mb-2">
-              {visitorData.visitorName}
+              {visitorData.visitor_name}
             </h3>
             <span className="px-3 py-1 bg-amber-500/20 text-amber-400 rounded-full text-sm font-medium mb-4">
-              {visitorData.companyName}
+              {visitorData.company_name}
             </span>
           </div>
         </div>
@@ -125,12 +165,12 @@ const ViewMemberVisitor = () => {
               {
                 icon: User,
                 label: "Visitor Name",
-                value: visitorData.visitorName,
+                value: visitorData.visitor_name,
               },
               {
                 icon: Mail,
                 label: "Email Address",
-                value: visitorData.visitorEmail,
+                value: visitorData.visitor_email,
               },
               {
                 icon: Phone,
@@ -140,17 +180,17 @@ const ViewMemberVisitor = () => {
               {
                 icon: Building2,
                 label: "Company Name",
-                value: visitorData.companyName,
+                value: visitorData.company_name,
               },
               {
                 icon: Briefcase,
                 label: "Business Category",
-                value: visitorData.companyCategory,
+                value: visitorData.company_category,
               },
               {
                 icon: Calendar,
                 label: "Invite Date",
-                value: visitorData.inviteDate,
+                value: visitorData.invite_date,
               },
             ].map((item, index) => (
               <div key={index} className="space-y-2">

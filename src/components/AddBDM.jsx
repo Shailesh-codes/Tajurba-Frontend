@@ -4,16 +4,89 @@ import { BsClipboardData } from "react-icons/bs";
 import { FiCalendar, FiUsers, FiHome } from "react-icons/fi";
 import { useNavigate, useParams } from "react-router-dom";
 import calendarIcon from "../assets/images/icons/calender-icon.svg";
-
+import axios from "axios";
+import api from "../hooks/api";
 const AddBDM = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const [members, setMembers] = useState([]);
   const [formData, setFormData] = useState({
+    memberId: "",
+    memberName: "",
     chapter: "",
-    member: "",
     bdmDate: "",
     description: "",
   });
+
+  useEffect(() => {
+    const fetchMembers = async () => {
+      try {
+        const response = await axios.get(`${api}/members/members`);
+        const membersWithChapter = response.data.data.map((member) => ({
+          ...member,
+          chapterName:
+            member.Chapter?.chapter_name ||
+            member.chapter_name ||
+            member.chapter,
+        }));
+        setMembers(membersWithChapter);
+      } catch (error) {
+        console.error("Error fetching members:", error);
+      }
+    };
+
+    fetchMembers();
+  }, []);
+
+  useEffect(() => {
+    const fetchBDM = async () => {
+      if (id) {
+        try {
+          const response = await axios.get(`${api}/bdm/${id}`);
+          const bdmData = response.data;
+          setFormData({
+            memberId: bdmData.memberId,
+            memberName: bdmData.memberName,
+            chapter: bdmData.chapter,
+            bdmDate: bdmData.bdmDate.split("T")[0], // Format date for input
+            description: bdmData.description || "",
+          });
+        } catch (error) {
+          console.error("Error fetching BDM:", error);
+        }
+      }
+    };
+
+    fetchBDM();
+  }, [id]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      if (id) {
+        await axios.put(`${api}/bdm/${id}`, formData);
+      } else {
+        await axios.post(`${api}/bdm`, formData);
+      }
+      navigate("/bdm");
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+
+  const handleMemberSelect = (e) => {
+    const selectedMember = members.find(
+      (member) => member.id === parseInt(e.target.value)
+    );
+    if (selectedMember) {
+      setFormData({
+        ...formData,
+        memberId: selectedMember.id,
+        memberName: selectedMember.name,
+        chapter: selectedMember.chapterName,
+      });
+    }
+  };
 
   return (
     <motion.div
@@ -79,30 +152,9 @@ const AddBDM = () => {
         transition={{ delay: 0.2 }}
         className="bg-gradient-to-b from-gray-800/40 to-gray-900/40 backdrop-blur-xl rounded-xl border border-gray-700 shadow-xl p-6"
       >
-        <form className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
           {/* Grid Layout for Form Fields */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Chapter Selection */}
-            <div className="relative group">
-              <label className="text-sm font-medium text-gray-300 mb-2 block">
-                Chapter <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <select
-                  required
-                  value={formData.chapter}
-                  onChange={(e) =>
-                    setFormData({ ...formData, chapter: e.target.value })
-                  }
-                  className="w-full p-3 bg-gray-700/50 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 text-white transition-all duration-300"
-                >
-                  <option value="">Select Chapter</option>
-                  {/* Add chapter options here */}
-                </select>
-                <FiHome className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-amber-500 transition-colors duration-300" />
-              </div>
-            </div>
-
             {/* Member Selection */}
             <div className="relative group">
               <label className="text-sm font-medium text-gray-300 mb-2 block">
@@ -111,16 +163,34 @@ const AddBDM = () => {
               <div className="relative">
                 <select
                   required
-                  value={formData.member}
-                  onChange={(e) =>
-                    setFormData({ ...formData, member: e.target.value })
-                  }
+                  value={formData.memberId}
+                  onChange={handleMemberSelect}
                   className="w-full p-3 bg-gray-700/50 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 text-white transition-all duration-300"
                 >
                   <option value="">Select Member</option>
-                  {/* Add member options here */}
+                  {members.map((member) => (
+                    <option key={member.id} value={member.id}>
+                      {member.name}
+                    </option>
+                  ))}
                 </select>
                 <FiUsers className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-amber-500 transition-colors duration-300" />
+              </div>
+            </div>
+
+            {/* Chapter Selection - Now disabled and populated from member selection */}
+            <div className="relative group">
+              <label className="text-sm font-medium text-gray-300 mb-2 block">
+                Chapter <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={formData.chapter}
+                  disabled
+                  className="w-full p-3 bg-gray-700/50 rounded-xl border border-gray-600 text-white transition-all duration-300 cursor-not-allowed"
+                />
+                <FiHome className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" />
               </div>
             </div>
 
@@ -170,8 +240,9 @@ const AddBDM = () => {
               type="button"
               onClick={() =>
                 setFormData({
+                  memberId: "",
+                  memberName: "",
                   chapter: "",
-                  member: "",
                   bdmDate: "",
                   description: "",
                 })

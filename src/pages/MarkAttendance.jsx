@@ -10,6 +10,7 @@ const MarkAttendance = () => {
     meetings: { total: 0, marked: 0, pending: 0 },
     mdp: { total: 0, marked: 0, pending: 0 },
     social: { total: 0, marked: 0, pending: 0 },
+    events: { total: 0, marked: 0, pending: 0 },
   });
   const [formData, setFormData] = useState({
     markingType: "attendance",
@@ -74,6 +75,7 @@ const MarkAttendance = () => {
       meetings: { total: 15, marked: 10, pending: 5 },
       mdp: { total: 8, marked: 6, pending: 2 },
       social: { total: 5, marked: 3, pending: 2 },
+      events: { total: 10, marked: 7, pending: 3 },
     });
   }, []);
 
@@ -271,6 +273,7 @@ const MarkAttendance = () => {
               className="w-full bg-gray-800 text-white p-3 rounded-xl border border-gray-700 focus:border-amber-500 focus:ring-0"
             >
               <option value="">Choose Meeting Type</option>
+              <option value="events">Events</option>
               <option value="meetings">Meetings</option>
               <option value="mdp">MDP</option>
               <option value="social">Social & Training</option>

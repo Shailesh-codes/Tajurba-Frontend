@@ -10,26 +10,11 @@ import { BsPersonPlus } from "react-icons/bs";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import DeleteModal from "../layout/DeleteModal";
+import axios from "axios";
+import api from "../hooks/api";
+import { showToast } from "../utils/toast";
 
-// Dummy data for testing
-const dummyVisitorData = [
-  {
-    id: 1,
-    visitorName: "John Smith",
-    visitorEmail: "john.smith@email.com",
-    company: "Tech Corp",
-    inviteDate: "2024-03-15",
-  },
-  {
-    id: 2,
-    visitorName: "Sarah Johnson",
-    visitorEmail: "sarah.j@email.com",
-    company: "Digital Solutions",
-    inviteDate: "2024-03-16",
-  },
-  // Add more dummy data as needed
-];
-
+// Define table headers that were missing
 const tableHeaders = [
   "SR No.",
   "Visitor Name",
@@ -42,33 +27,45 @@ const tableHeaders = [
 const MemberVisitorsInvite = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [visitorData, setVisitorData] = useState(dummyVisitorData);
-  const [search, setSearch] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [visitorData, setVisitorData] = useState([]);
   const [totalPages, setTotalPages] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [search, setSearch] = useState("");
   const [resultsPerPage] = useState(10);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [visitorToDelete, setVisitorToDelete] = useState(null);
 
-  useEffect(() => {
-    // Simulating data fetch
-    setLoading(true);
-    setTimeout(() => {
-      setVisitorData(dummyVisitorData);
+  const fetchVisitors = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${api}/visitors`, {
+        params: {
+          page: currentPage,
+          limit: resultsPerPage,
+          search: search,
+        },
+        withCredentials: true,
+      });
+
+      if (response.data.success) {
+        setVisitorData(response.data.data);
+        setTotalPages(response.data.pagination.pages);
+      }
+    } catch (error) {
+      console.error("Error fetching visitors:", error);
+      showToast({
+        message: "Failed to fetch visitors",
+        status: "error",
+        icon: "error"
+      });
+    } finally {
       setLoading(false);
-    }, 1000);
-  }, []);
+    }
+  };
 
   useEffect(() => {
-    const total = Math.ceil(visitorData.length / resultsPerPage);
-    setTotalPages(total);
-  }, [visitorData, resultsPerPage]);
-
-  const getPaginatedData = () => {
-    const startIndex = (currentPage - 1) * resultsPerPage;
-    const endIndex = startIndex + resultsPerPage;
-    return visitorData.slice(startIndex, endIndex);
-  };
+    fetchVisitors();
+  }, [currentPage, search]);
 
   const handleView = (id) => {
     navigate(`/view-visitor/${id}`);
@@ -83,13 +80,154 @@ const MemberVisitorsInvite = () => {
     setIsDeleteModalOpen(true);
   };
 
-  const confirmDelete = () => {
-    const updatedVisitorData = visitorData.filter(
-      (visitor) => visitor.id !== visitorToDelete
-    );
-    setVisitorData(updatedVisitorData);
-    setIsDeleteModalOpen(false);
-    setVisitorToDelete(null);
+  const confirmDelete = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.delete(
+        `${api}/visitors/${visitorToDelete}`,
+        {
+          withCredentials: true,
+        }
+      );
+
+      if (response.data.success) {
+        showToast({
+          message: "Visitor invite deleted successfully",
+          status: "success",
+          icon: "success"
+        });
+        fetchVisitors();
+      }
+    } catch (error) {
+      showToast({
+        message: error.response?.data?.error || "Failed to delete visitor",
+        status: "error",
+        icon: "error"
+      });
+    } finally {
+      setIsDeleteModalOpen(false);
+      setVisitorToDelete(null);
+      setLoading(false);
+    }
+  };
+
+  const renderTableBody = () => {
+    if (loading) {
+      return (
+        <tr>
+          <td colSpan={6} className="px-6 py-8 text-center">
+            <div className="flex flex-col items-center gap-3">
+              <svg
+                className="w-12 h-12 text-amber-500 animate-spin"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="1.5"
+                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                />
+              </svg>
+              <div className="text-gray-400 text-sm">
+                Loading visitor invites...
+              </div>
+            </div>
+          </td>
+        </tr>
+      );
+    }
+
+    if (visitorData.length === 0) {
+      return (
+        <tr>
+          <td colSpan={6} className="px-6 py-8 text-center">
+            <div className="flex flex-col items-center gap-3">
+              <svg
+                className="w-12 h-12 text-gray-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="1.5"
+                  d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <div className="text-gray-400 text-sm">
+                {search
+                  ? "No visitor invites found matching your search"
+                  : "No visitor invites have been added yet"}
+              </div>
+            </div>
+          </td>
+        </tr>
+      );
+    }
+
+    return visitorData.map((visitor, index) => (
+      <motion.tr
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: index * 0.05 }}
+        key={visitor.invite_id}
+        className="group hover:bg-gradient-to-r hover:from-gray-700/30 hover:via-gray-700/40 hover:to-gray-700/30 transition-all duration-300"
+      >
+        <td className="px-6 py-4">
+          <span className="flex items-center justify-center w-6 h-6 rounded-full bg-gray-700/50 text-amber-500 font-medium">
+            {index + 1}
+          </span>
+        </td>
+        <td className="px-6 py-4">
+          <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
+            {visitor.visitor_name}
+          </span>
+        </td>
+        <td className="px-6 py-4">
+          <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
+            {visitor.visitor_email}
+          </span>
+        </td>
+        <td className="px-6 py-4">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-700 text-amber-500">
+            {visitor.company_name}
+          </span>
+        </td>
+        <td className="px-6 py-4">
+          <span className="text-sm text-gray-400">
+            {new Date(visitor.invite_date).toLocaleDateString()}
+          </span>
+        </td>
+        <td className="px-6 py-4">
+          <div className="flex items-center justify-center gap-2">
+            <button
+              onClick={() => handleView(visitor.invite_id)}
+              className="relative group/btn flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-r from-amber-600/90 to-amber-800/90 hover:from-amber-600 hover:to-amber-800 transition-all duration-300 shadow-lg hover:shadow-amber-900/30"
+            >
+              <div className="absolute inset-0 rounded-xl bg-amber-600 opacity-0 group-hover/btn:opacity-20 blur-lg transition-opacity" />
+              <FiEye className="w-5 h-5 text-white/90 group-hover/btn:text-white transition-colors relative" />
+            </button>
+            <button
+              onClick={() => handleEdit(visitor.invite_id)}
+              className="relative group/btn flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-r from-green-600/90 to-green-800/90 hover:from-green-600 hover:to-green-800 transition-all duration-300 shadow-lg hover:shadow-amber-900/30"
+            >
+              <div className="absolute inset-0 rounded-xl bg-green-600 opacity-0 group-hover/btn:opacity-20 blur-lg transition-opacity" />
+              <FiEdit className="w-5 h-5 text-white/90 group-hover/btn:text-white transition-colors relative" />
+            </button>
+            <button
+              onClick={() => handleDelete(visitor.invite_id)}
+              className="relative group/btn flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-r from-red-600/90 to-red-800/90 hover:from-red-600 hover:to-red-800 transition-all duration-300 shadow-lg hover:shadow-red-900/30"
+            >
+              <div className="absolute inset-0 rounded-xl bg-red-600 opacity-0 group-hover/btn:opacity-20 blur-lg transition-opacity" />
+              <FiTrash2 className="w-5 h-5 text-white/90 group-hover/btn:text-white transition-colors relative" />
+            </button>
+          </div>
+        </td>
+      </motion.tr>
+    ));
   };
 
   return (
@@ -238,116 +376,7 @@ const MemberVisitorsInvite = () => {
 
               {/* Enhanced Table Body */}
               <tbody className="divide-y divide-gray-700/50">
-                {loading ? (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-8 text-center">
-                      <div className="flex flex-col items-center gap-3">
-                        <svg
-                          className="w-12 h-12 text-amber-500 animate-spin"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="1.5"
-                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                          />
-                        </svg>
-                        <div className="text-gray-400 text-sm">
-                          Loading visitor invites...
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                ) : getPaginatedData().length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-8 text-center">
-                      <div className="flex flex-col items-center gap-3">
-                        <svg
-                          className="w-12 h-12 text-gray-500"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="1.5"
-                            d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
-                        <div className="text-gray-400 text-sm">
-                          {search
-                            ? "No visitor invites found matching your search"
-                            : "No visitor invites have been added yet"}
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  getPaginatedData().map((visitor, index) => (
-                    <motion.tr
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                      key={visitor.id}
-                      className="group hover:bg-gradient-to-r hover:from-gray-700/30 hover:via-gray-700/40 hover:to-gray-700/30 transition-all duration-300"
-                    >
-                      <td className="px-6 py-4">
-                        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-gray-700/50 text-amber-500 font-medium">
-                          {index + 1}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
-                          {visitor.visitorName}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
-                          {visitor.visitorEmail}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-700 text-amber-500">
-                          {visitor.company}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-sm text-gray-400">
-                          {visitor.inviteDate}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center justify-center gap-2">
-                          <button
-                            onClick={() => handleView(visitor.id)}
-                            className="relative group/btn flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-r from-amber-600/90 to-amber-800/90 hover:from-amber-600 hover:to-amber-800 transition-all duration-300 shadow-lg hover:shadow-amber-900/30"
-                          >
-                            <div className="absolute inset-0 rounded-xl bg-amber-600 opacity-0 group-hover/btn:opacity-20 blur-lg transition-opacity" />
-                            <FiEye className="w-5 h-5 text-white/90 group-hover/btn:text-white transition-colors relative" />
-                          </button>
-                          <button
-                            onClick={() => handleEdit(visitor.id)}
-                            className="relative group/btn flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-r from-green-600/90 to-green-800/90 hover:from-green-600 hover:to-green-800 transition-all duration-300 shadow-lg hover:shadow-amber-900/30"
-                          >
-                            <div className="absolute inset-0 rounded-xl bg-green-600 opacity-0 group-hover/btn:opacity-20 blur-lg transition-opacity" />
-                            <FiEdit className="w-5 h-5 text-white/90 group-hover/btn:text-white transition-colors relative" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(visitor.id)}
-                            className="relative group/btn flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-r from-red-600/90 to-red-800/90 hover:from-red-600 hover:to-red-800 transition-all duration-300 shadow-lg hover:shadow-red-900/30"
-                          >
-                            <div className="absolute inset-0 rounded-xl bg-red-600 opacity-0 group-hover/btn:opacity-20 blur-lg transition-opacity" />
-                            <FiTrash2 className="w-5 h-5 text-white/90 group-hover/btn:text-white transition-colors relative" />
-                          </button>
-                        </div>
-                      </td>
-                    </motion.tr>
-                  ))
-                )}
+                {renderTableBody()}
               </tbody>
             </table>
           </div>
@@ -355,7 +384,7 @@ const MemberVisitorsInvite = () => {
       </motion.div>
 
       {/* Pagination Section */}
-      {!loading && getPaginatedData().length > 0 && (
+      {!loading && visitorData.length > 0 && (
         <div className="flex items-center justify-center gap-3 py-4">
           <button
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}

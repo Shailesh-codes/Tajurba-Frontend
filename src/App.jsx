@@ -10,7 +10,7 @@ import CreativeList from "./pages/CreativeList";
 import CertificateLists from "./pages/CertificateLists";
 import MarkAttendance from "./pages/MarkAttendance";
 import AttendanceVenueFee from "./pages/AttendanceVenueFee";
-import MarkvenueFee from "./pages/MarkvenueFee";
+import MarkvenueFee from "./pages/MarkVenueFee";
 import MemberList from "./pages/MemberList";
 import EditMemberModal from "./components/EditMemberModal";
 import MemberView from "./components/MemberView";
