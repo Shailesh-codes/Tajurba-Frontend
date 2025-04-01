@@ -1,10 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import VisitorIcon from "../assets/images/icons/users.svg";
+import { Download, Eye } from "lucide-react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import axios from "axios";
+import api from "../hooks/api";
 
 const VisitorList = () => {
   const navigate = useNavigate();
@@ -23,35 +28,8 @@ const VisitorList = () => {
     total: 0,
   });
   const [filteredVisitors, setFilteredVisitors] = useState([]);
-
-  // Dummy data - replace with API call
-  const dummyVisitors = [
-    {
-      sr_no: 1,
-      invited_by_name: "John Doe",
-      chapter_name: "Chapter One",
-      visitor_name: "Alice Smith",
-      company_name: "Tech Corp",
-      company_category: "IT",
-      mobile: "1234567890",
-      visitor_email: "alice@techcorp.com",
-      invite_date: "2024-02-20",
-      invited_by_id: "1",
-    },
-    {
-      sr_no: 2,
-      invited_by_name: "Jane Smith",
-      chapter_name: "Chapter Two",
-      visitor_name: "Bob Johnson",
-      company_name: "Digital Solutions",
-      company_category: "Software",
-      mobile: "9876543210",
-      visitor_email: "bob@digital.com",
-      invite_date: "2024-02-21",
-      invited_by_id: "2",
-    },
-    // Add more dummy data as needed
-  ];
+  const [downloadingId, setDownloadingId] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const headers = [
     "Sr No",
@@ -66,9 +44,52 @@ const VisitorList = () => {
     "Actions",
   ];
 
+  // Fetch visitors data
   useEffect(() => {
-    const filterVisitors = () => {
-      return dummyVisitors.filter((visitor) => {
+    const fetchVisitors = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(`${api}/visitors`, {
+          params: {
+            page: pagination.currentPage,
+            limit: pagination.limit,
+            search: searchTerm,
+          },
+        });
+
+        if (response.data.success) {
+        const { data, pagination: paginationData } = response.data;
+        setVisitors(data);
+        setFilteredVisitors(data);
+          setPagination(prev => ({
+          ...prev,
+            total: paginationData.total || 0,
+            totalPages: paginationData.pages || 1
+        }));
+        }
+        
+      } catch (error) {
+        console.error("Error fetching visitors:", error);
+        Swal.fire({
+          icon: "error",
+          title: "Failed to fetch visitors",
+          text: "There was an error loading the visitor data.",
+          background: "#1F2937",
+          color: "#fff",
+          confirmButtonColor: "#F59E0B",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVisitors();
+  }, [pagination.currentPage, pagination.limit, searchTerm]);
+
+  // Filter visitors based on search and chapter
+  useEffect(() => {
+    if (visitors.length > 0) {
+      const filtered = visitors.filter((visitor) => {
         const matchesSearch =
           searchTerm === ""
             ? true
@@ -84,10 +105,10 @@ const VisitorList = () => {
 
         return matchesSearch && matchesChapter;
       });
-    };
 
-    setFilteredVisitors(filterVisitors());
-  }, [searchTerm, selectedChapter, dummyVisitors]);
+      setFilteredVisitors(filtered);
+    }
+  }, [visitors, searchTerm, selectedChapter]);
 
   const exportToCSV = () => {
     try {
@@ -181,6 +202,93 @@ const VisitorList = () => {
         confirmButtonColor: "#F59E0B",
       });
     }
+  };
+
+  const downloadVisitorPDF = useCallback(
+    async (visitor) => {
+      if (!visitor || downloadingId) return;
+
+      try {
+        setDownloadingId(visitor.id);
+        const doc = new jsPDF();
+
+        // Add title
+        doc.setFontSize(20);
+        doc.setTextColor(44, 62, 80);
+        doc.text("Visitor Information", 15, 15);
+
+        // Add metadata
+        doc.setFontSize(10);
+        doc.setTextColor(128, 128, 128);
+        doc.text(`Generated: ${new Date().toLocaleString()}`, 15, 25);
+
+        // Prepare table data
+        const tableData = [
+          ["Name", visitor.visitor_name || "N/A"],
+          ["Email", visitor.visitor_email || "N/A"],
+          ["Mobile", visitor.mobile || "N/A"],
+          ["Purpose", visitor.purpose || "N/A"],
+          [
+            "Visit Date",
+            visitor.visitDate
+              ? new Date(visitor.visitDate).toLocaleDateString()
+              : "N/A",
+          ],
+
+          ["Company", visitor.company_name || "N/A"],
+        ];
+
+        // Generate table
+        autoTable(doc, {
+          startY: 35,
+          head: [["Field", "Information"]],
+          body: tableData,
+          theme: "grid",
+          styles: {
+            fontSize: 10,
+            cellPadding: 5,
+          },
+          headStyles: {
+            fillColor: [211, 184, 106],
+            textColor: [0, 0, 0],
+            fontSize: 12,
+            fontStyle: "bold",
+          },
+          columnStyles: {
+            0: { fontStyle: "bold", cellWidth: 40 },
+            1: { cellWidth: "auto" },
+          },
+        });
+
+        // Save PDF
+        doc.save(
+          `visitor-${
+            visitor.visitor_name?.toLowerCase().replace(/\s+/g, "-") || "info"
+          }.pdf`
+        );
+      } catch (error) {
+        console.error("Error generating PDF:", error);
+        Swal.fire({
+          icon: "error",
+          title: "PDF Generation Error",
+          text: "Failed to generate PDF. Please try again later.",
+          background: "#1F2937",
+          color: "#fff",
+          confirmButtonColor: "#F59E0B",
+        });
+      } finally {
+        setDownloadingId(null);
+      }
+    },
+    [downloadingId]
+  );
+
+  // Handle page change
+  const handlePageChange = (newPage) => {
+    setPagination((prev) => ({
+      ...prev,
+      currentPage: newPage,
+    }));
   };
 
   return (
@@ -327,68 +435,28 @@ const VisitorList = () => {
           transition={{ delay: 0.2 }}
           className="relative bg-gradient-to-b from-gray-800/40 to-gray-900/40 backdrop-blur-xl rounded-xl border border-gray-700 shadow-xl"
         >
-          {/* Dynamic height container with max-height limit */}
           <div className="relative min-h-[300px] max-h-[calc(100vh-500px)]">
-            {/* Subtle gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-transparent to-amber-500/5" />
-
-            {/* Table container with custom scrollbar */}
-            <div className="absolute inset-0 overflow-auto scrollbar-thin scrollbar-track-gray-800/40 scrollbar-thumb-amber-600/50 hover:scrollbar-thumb-amber-500/80">
-              <table className="w-full">
-                {/* Enhanced Header */}
-                <thead className="sticky top-0 z-10">
-                  <tr className="bg-gradient-to-r from-gray-800/95 via-gray-800/98 to-gray-800/95 backdrop-blur-xl">
-                    {headers.map((header, index) => (
-                      <th
-                        key={index}
-                        className="px-6 py-4 text-left border-b border-gray-700 first:rounded-tl-lg last:rounded-tr-lg"
-                      >
-                        <div className="flex items-center gap-2 group">
-                          <span className="text-sm font-semibold text-gray-300 group-hover:text-amber-500 transition-colors">
-                            {header}
-                          </span>
-                          {header !== "Actions" && (
-                            <svg
-                              className="w-4 h-4 text-gray-500 group-hover:text-amber-500 transition-colors"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M7 16V4m0 0L3 8m4-4l4 4m-4 4v8m0 0l4-4m-4 4l-4-4"
-                              />
-                            </svg>
-                          )}
-                        </div>
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-
-                {/* Enhanced Table Body */}
-                <tbody className="divide-y divide-gray-700/50">
-                  {filteredVisitors.length > 0 ? (
-                    filteredVisitors.map((visitor, index) => (
-                      <motion.tr
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.05 }}
-                        key={visitor.sr_no}
-                        className="group hover:bg-gradient-to-r hover:from-gray-700/30 hover:via-gray-700/40 hover:to-gray-700/30 transition-all duration-300"
-                      >
-                        <td className="px-6 py-4 text-sm">
-                          <span className="flex items-center justify-center w-6 h-6 rounded-full bg-gray-700/50 text-amber-500 font-medium">
-                            {visitor.sr_no}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-500/20 to-amber-600/20 flex items-center justify-center">
+            {loading ? (
+              <div className="flex justify-center items-center h-[300px]">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-500"></div>
+              </div>
+            ) : (
+              <div className="absolute inset-0 overflow-auto scrollbar-thin scrollbar-track-gray-800/40 scrollbar-thumb-amber-600/50 hover:scrollbar-thumb-amber-500/80">
+                <table className="w-full">
+                  <thead className="sticky top-0 z-10">
+                    <tr className="bg-gradient-to-r from-gray-800/95 via-gray-800/98 to-gray-800/95 backdrop-blur-xl">
+                      {headers.map((header, index) => (
+                        <th
+                          key={index}
+                          className="px-6 py-4 text-left border-b border-gray-700 first:rounded-tl-lg last:rounded-tr-lg"
+                        >
+                          <div className="flex items-center gap-2 group">
+                            <span className="text-sm font-semibold text-gray-300 group-hover:text-amber-500 transition-colors">
+                              {header}
+                            </span>
+                            {header !== "Actions" && (
                               <svg
-                                className="w-4 h-4 text-amber-500"
+                                className="w-4 h-4 text-gray-500 group-hover:text-amber-500 transition-colors"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -397,65 +465,118 @@ const VisitorList = () => {
                                   strokeLinecap="round"
                                   strokeLinejoin="round"
                                   strokeWidth="2"
-                                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                                  d="M7 16V4m0 0L3 8m4-4l4 4m-4 4v8m0 0l4-4m-4 4l-4-4"
                                 />
                               </svg>
-                            </div>
-                            <span className="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">
-                              {visitor.invited_by_name}
-                            </span>
+                            )}
                           </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-700 text-amber-500">
-                            {visitor.chapter_name}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="text-sm text-gray-300">
-                            {visitor.visitor_name}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-amber-500" />
-                            <span className="text-sm text-gray-300">
-                              {visitor.company_name}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="text-sm text-gray-400">
-                            {visitor.company_category}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="text-sm text-gray-400 font-mono">
-                            {visitor.mobile}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="text-sm text-gray-400">
-                            {visitor.visitor_email}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="text-sm text-gray-400">
-                            {visitor.invite_date}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <button
-                            onClick={() =>
-                              navigate(`/member-view/${visitor.invited_by_id}`)
-                            }
-                            className="relative group/btn flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-r from-blue-600/90 to-blue-800/90 hover:from-blue-600 hover:to-blue-800 transition-all duration-300 shadow-lg hover:shadow-blue-900/30"
-                          >
-                            {/* Glow effect */}
-                            <div className="absolute inset-0 rounded-xl bg-blue-600 opacity-0 group-hover/btn:opacity-20 blur-lg transition-opacity" />
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
 
+                  <tbody className="divide-y divide-gray-700/50">
+                    {filteredVisitors.length > 0 ? (
+                      filteredVisitors.map((visitor, index) => (
+                        <motion.tr
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.05 }}
+                          key={visitor.invite_id || index}
+                          className="group hover:bg-gradient-to-r hover:from-gray-700/30 hover:via-gray-700/40 hover:to-gray-700/30 transition-all duration-300"
+                        >
+                          <td className="px-6 py-4 text-sm">
+                            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-gray-700/50 text-amber-500 font-medium">
+                              {(pagination.currentPage - 1) * pagination.limit + index + 1}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-500/20 to-amber-600/20 flex items-center justify-center">
+                                <svg
+                                  className="w-4 h-4 text-amber-500"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                                  />
+                                </svg>
+                              </div>
+                              <span className="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">
+                                {visitor.invited_by_name || 'N/A'}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-700 text-amber-500">
+                              {visitor.chapter_name || 'N/A'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="text-sm text-gray-300">
+                              {visitor.visitor_name}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-amber-500" />
+                              <span className="text-sm text-gray-300">
+                                {visitor.company_name}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="text-sm text-gray-400">
+                              {visitor.company_category}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="text-sm text-gray-400 font-mono">
+                              {visitor.mobile}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="text-sm text-gray-400">
+                              {visitor.visitor_email}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="text-sm text-gray-400">
+                              {new Date(visitor.invite_date).toLocaleDateString()}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center justify-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => downloadVisitorPDF(visitor)}
+                                disabled={downloadingId === visitor.invite_id}
+                                className={`relative group/btn flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-r from-blue-600/90 to-blue-800/90 hover:from-blue-600 hover:to-blue-800 transition-all duration-300 shadow-lg hover:shadow-blue-900/30 ${
+                                  downloadingId === visitor.invite_id ? "opacity-75 cursor-not-allowed" : ""
+                                }`}
+                              >
+                                <div className="absolute inset-0 rounded-xl bg-blue-600 opacity-0 group-hover/btn:opacity-20 blur-lg transition-opacity" />
+                                {downloadingId === visitor.invite_id ? (
+                                  <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
+                                ) : (
+                                  <Download className="w-5 h-5 text-white/90 group-hover/btn:text-white transition-colors relative z-10" />
+                                )}
+                              </button>
+                            </div>
+                          </td>
+                        </motion.tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={10} className="px-6 py-8 text-center">
+                          <div className="flex flex-col items-center gap-3">
                             <svg
-                              className="w-5 h-5 text-white/90 group-hover/btn:text-white transition-colors relative z-10"
+                              className="w-12 h-12 text-gray-500"
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
@@ -463,56 +584,21 @@ const VisitorList = () => {
                               <path
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                              />
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                                strokeWidth="1.5"
+                                d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                               />
                             </svg>
-                          </button>
-                        </td>
-                      </motion.tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="10" className="px-6 py-8 text-center">
-                        <div className="flex flex-col items-center gap-3">
-                          <svg
-                            className="w-12 h-12 text-gray-500"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="1.5"
-                              d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                          </svg>
-                          <div className="text-gray-400 text-sm">
-                            No visitors found matching your search criteria
+                            <div className="text-gray-400 text-sm">
+                              No visitors found matching your search criteria
+                            </div>
                           </div>
-                          <button
-                            onClick={() => {
-                              setSearchTerm("");
-                              setSelectedChapter("all");
-                            }}
-                            className="mt-2 text-amber-500 hover:text-amber-400 text-sm font-medium"
-                          >
-                            Clear filters
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </motion.div>
 

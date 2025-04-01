@@ -1,35 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { FiEye } from "react-icons/fi";
 import referralIcon from "../assets/images/icons/ref-given.svg";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import api from "../hooks/api";
+import Swal from "sweetalert2";
 
 const MemberReferGiven = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
-
-  // Dummy data for demonstration
-  const referrals = [
-    {
-      id: 1,
-      referredTo: "John Smith",
-      mobile: "+91 9876543210",
-      chapter: "Chapter A",
-      status: "pending",
-      verifiedDate: "-",
-      referralDate: "2024-03-15",
-    },
-    {
-      id: 2,
-      referredTo: "Sarah Johnson",
-      mobile: "+91 9876543211",
-      chapter: "Chapter B",
-      status: "verified",
-      verifiedDate: "2024-03-18",
-      referralDate: "2024-03-10",
-    },
-  ];
+  const [referrals, setReferrals] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   // Table headers
   const tableHeaders = [
@@ -43,17 +26,47 @@ const MemberReferGiven = () => {
     "Actions",
   ];
 
+  // Fetch referrals data
+  useEffect(() => {
+    const fetchReferrals = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(`${api}/referrals`);
+        
+        if (response.data.success) {
+          setReferrals(response.data.data);
+        } else {
+          throw new Error(response.data.message || 'Failed to fetch referrals');
+        }
+      } catch (error) {
+        console.error("Error fetching referrals:", error);
+        Swal.fire({
+          icon: "error",
+          title: "Failed to fetch referrals",
+          text: error.message || "There was an error loading the referrals data.",
+          background: "#1F2937",
+          color: "#fff",
+          confirmButtonColor: "#F59E0B",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchReferrals();
+  }, []);
+
   // Filter referrals based on search and status
   const filteredReferrals = referrals.filter((referral) => {
     const searchLower = search.toLowerCase();
     const matchesSearch =
       search === "" ||
-      referral.referredTo.toLowerCase().includes(searchLower) ||
-      referral.chapter.toLowerCase().includes(searchLower) ||
-      referral.mobile.includes(search);
+      referral.refer_name?.toLowerCase().includes(searchLower) ||
+      referral.receivedByMember?.Chapter?.chapter_name?.toLowerCase().includes(searchLower) ||
+      referral.mobile?.includes(search);
 
     const matchesStatus =
-      selectedStatus === "" || referral.status === selectedStatus;
+      selectedStatus === "" || referral.verify_status === selectedStatus;
 
     return matchesSearch && matchesStatus;
   });
@@ -101,7 +114,7 @@ const MemberReferGiven = () => {
           <div className="relative h-[56px]">
             <input
               type="text"
-              placeholder="Search by name or chapter..."
+              placeholder="Search by name, mobile or chapter..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full sm:w-[400px] lg:w-[500px] h-full bg-gray-800 text-gray-300 pl-12 rounded-lg border-none focus:outline-none focus:ring-0 text-sm placeholder:text-gray-400"
@@ -125,7 +138,7 @@ const MemberReferGiven = () => {
         <div className="order-1 sm:order-2 sm:ml-auto">
           <button
             onClick={() => navigate("/add-edit-ref-given")}
-            className="flex justify-center w-full sm:w-auto px-10 py-2 bg-gradient-to-r from-amber-500 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white text-lg font-normal rounded-2xl h-[56px] border border-gray-600/50 focus:outline-none transition-colors flex items-center gap-2"
+            className="flex justify-center w-full sm:w-auto px-10 py-2 bg-gradient-to-r from-amber-500 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white text-lg font-normal rounded-2xl h-[56px] border border-gray-600/50 focus:outline-none transition-colors items-center gap-2"
           >
             <svg
               className="w-5 h-5"
@@ -157,7 +170,7 @@ const MemberReferGiven = () => {
           <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-transparent to-amber-500/5" />
           <div className="absolute inset-0 overflow-auto scrollbar-thin scrollbar-track-gray-800/40 scrollbar-thumb-amber-600/50 hover:scrollbar-thumb-amber-500/80">
             <table className="w-full">
-              <thead className="sticky top-0 z-10">
+              <thead className="sticky top-0 z-20">
                 <tr className="bg-gradient-to-r from-gray-800/95 via-gray-800/98 to-gray-800/95 backdrop-blur-xl">
                   {tableHeaders.map((header, index) => (
                     <th
@@ -172,13 +185,24 @@ const MemberReferGiven = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-700/50">
-                {filteredReferrals.length > 0 ? (
+                {loading ? (
+                  <tr>
+                    <td colSpan={8} className="px-6 py-8 text-center">
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-500"></div>
+                        <div className="text-gray-400 text-sm">
+                          Loading referrals...
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                ) : filteredReferrals.length > 0 ? (
                   filteredReferrals.map((referral, index) => (
                     <motion.tr
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      key={referral.id}
+                      key={referral.referral_id}
                       className="group hover:bg-gradient-to-r hover:from-gray-700/30 hover:via-gray-700/40 hover:to-gray-700/30 transition-all duration-300"
                     >
                       <td className="px-6 py-4">
@@ -188,7 +212,7 @@ const MemberReferGiven = () => {
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
-                          {referral.referredTo}
+                          {referral.refer_name}
                         </span>
                       </td>
                       <td className="px-6 py-4">
@@ -198,38 +222,40 @@ const MemberReferGiven = () => {
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-sm text-gray-300">
-                          {referral.chapter}
+                          {referral.receivedByMember?.Chapter?.chapter_name || 'N/A'}
                         </span>
                       </td>
                       <td className="px-6 py-4">
                         <span
                           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            referral.status === "pending"
+                            referral.verify_status === "pending"
                               ? "bg-yellow-500/10 text-yellow-500"
-                              : referral.status === "verified"
+                              : referral.verify_status === "verified"
                               ? "bg-green-500/10 text-green-500"
                               : "bg-red-500/10 text-red-500"
                           }`}
                         >
-                          {referral.status.charAt(0).toUpperCase() +
-                            referral.status.slice(1)}
+                          {referral.verify_status.charAt(0).toUpperCase() +
+                            referral.verify_status.slice(1)}
                         </span>
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-sm text-gray-400">
-                          {referral.verifiedDate}
+                          {referral.verified_date 
+                            ? new Date(referral.verified_date).toLocaleDateString()
+                            : "-"}
                         </span>
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-sm text-gray-400">
-                          {referral.referralDate}
+                          {new Date(referral.referral_date).toLocaleDateString()}
                         </span>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-center">
                           <button
                             onClick={() =>
-                              navigate(`/view-ref-given/${referral.id}`)
+                              navigate(`/view-ref-given/${referral.referral_id}`)
                             }
                             className="relative group/btn flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-r from-amber-600/90 to-amber-800/90 hover:from-amber-600 hover:to-amber-800 transition-all duration-300 shadow-lg hover:shadow-amber-900/30"
                           >
@@ -242,11 +268,25 @@ const MemberReferGiven = () => {
                   ))
                 ) : (
                   <tr>
-                    <td
-                      colSpan={8}
-                      className="px-6 py-8 text-center text-gray-400"
-                    >
-                      No referrals found matching your search criteria
+                    <td colSpan={8} className="px-6 py-8 text-center">
+                      <div className="flex flex-col items-center gap-3">
+                        <svg
+                          className="w-12 h-12 text-gray-500"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="1.5"
+                            d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                        <div className="text-gray-400 text-sm">
+                          No referrals found matching your search criteria
+                        </div>
+                      </div>
                     </td>
                   </tr>
                 )}

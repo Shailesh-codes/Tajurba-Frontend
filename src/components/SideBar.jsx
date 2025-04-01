@@ -62,7 +62,7 @@ const SideBar = ({ isOpen, setIsOpen, setIsLogoutModalOpen }) => {
               Main Menu
               <hr className="border-gray-700/30 mt-3" />
             </span>
-            <NavLink to="/" className={navLinkClass}>
+            <NavLink to="/dashboard" className={navLinkClass}>
               <DashboardIcon color="currentColor" />
               <span className="text-sm font-semibold text-white">
                 Dashboard

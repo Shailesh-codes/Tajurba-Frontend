@@ -6,6 +6,8 @@ import chaptersIcon from "../assets/images/icons/list.svg";
 import { motion } from "framer-motion";
 import api from "../hooks/api";
 import { format } from "date-fns";
+import deleteIcon from "../assets/images/icons/delete.svg";
+import DeleteModal from "../layout/DeleteModal";
 
 const ChaptersList = () => {
   const navigate = useNavigate();
@@ -15,10 +17,37 @@ const ChaptersList = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editChapter, setEditChapter] = useState({ id: "", name: "" });
   const [newChapterName, setNewChapterName] = useState("");
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [chapterToDelete, setChapterToDelete] = useState(null);
 
   useEffect(() => {
     loadChapters();
   }, []);
+
+  const handleDeleteChapter = async () => {
+    try {
+      console.log("Deleting chapter:", chapterToDelete.chapter_id);
+
+      const response = await axios.delete(
+        `${api}/chapters/${chapterToDelete.chapter_id}`
+      );
+
+      if (response.data.status === "success") {
+        showAlert("success", "Chapter deleted successfully");
+        loadChapters();
+      }
+    } catch (error) {
+      console.error("Error deleting chapter:", error.response?.data || error);
+      showAlert(
+        "error",
+        error.response?.data?.message || "Failed to delete chapter. Please try again.",
+        5000
+      );
+    } finally {
+      setShowDeleteModal(false);
+      setChapterToDelete(null);
+    }
+  };
 
   const loadChapters = async () => {
     try {
@@ -75,7 +104,7 @@ const ChaptersList = () => {
     }
   };
 
-  const showAlert = (icon, text) => {
+  const showAlert = (icon, text, duration = 3000) => {
     Swal.fire({
       background: "#111827",
       color: "#fff",
@@ -84,7 +113,7 @@ const ChaptersList = () => {
       toast: true,
       position: "top-end",
       showConfirmButton: false,
-      timer: 3000,
+      timer: duration,
       customClass: {
         popup: "bg-gray-900 border-gray-700 rounded-2xl border",
       },
@@ -204,7 +233,7 @@ const ChaptersList = () => {
             <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-transparent to-amber-500/5" />
             <div className="absolute inset-0 overflow-auto scrollbar-thin scrollbar-track-gray-800/40 scrollbar-thumb-amber-600/50 hover:scrollbar-thumb-amber-500/80 scrollbar-hide">
               <table className="w-full">
-                <thead className="sticky top-0 z-10">
+                <thead className="sticky top-0 z-20">
                   <tr className="bg-gradient-to-r from-gray-800/95 via-gray-800/98 to-gray-800/95 backdrop-blur-xl">
                     <th className="px-6 py-4 text-left border-b border-gray-700">
                       <span className="text-sm font-semibold text-gray-300">
@@ -275,7 +304,7 @@ const ChaptersList = () => {
                           </span>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="flex items-center justify-center">
+                          <div className="flex gap-2 items-center justify-center">
                             <button
                               onClick={() => {
                                 setEditChapter({
@@ -300,6 +329,19 @@ const ChaptersList = () => {
                                   d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                                 />
                               </svg>
+                            </button>
+                            <button
+                              onClick={() => {
+                                setChapterToDelete(chapter);
+                                setShowDeleteModal(true);
+                              }}
+                              className="flex items-center justify-center w-9 h-9 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white rounded-xl transition-all duration-300 shadow-lg hover:shadow-red-500/25"
+                            >
+                              <img
+                                src={deleteIcon}
+                                alt="Delete"
+                                className="w-4 h-4 transition-transform hover:scale-110"
+                              />
                             </button>
                           </div>
                         </td>
@@ -380,7 +422,7 @@ const ChaptersList = () => {
       {showEditModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div
-            className="fixed inset-0 bg-gray-900/70 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/50"
             onClick={() => setShowEditModal(false)}
           ></div>
           <div className="relative z-50 bg-gray-900/95 p-6 rounded-2xl border border-gray-700 w-full max-w-md shadow-xl">
@@ -440,6 +482,15 @@ const ChaptersList = () => {
           </div>
         </div>
       )}
+      <DeleteModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setChapterToDelete(null);
+        }}
+        onDelete={handleDeleteChapter}
+        itemName={`Chapter  "${chapterToDelete?.chapter_name}"`}
+      />
     </div>
   );
 };

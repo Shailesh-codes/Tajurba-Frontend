@@ -1,27 +1,96 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Users, Mail, Phone, Globe, Briefcase, Folder } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import memberIcon from "../assets/images/icons/members.svg";
+import axios from "axios";
+import api from "../hooks/api";
 
 const ChapterMemberView = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const [loading, setLoading] = useState(true);
+  const [chapters, setChapters] = useState([]);
   const [memberData, setMemberData] = useState({
-    fullName: "John Smith",
-    chapterName: "Chapter A",
-    email: "john@example.com",
-    mobile: "+91 9876543210",
-    websiteLink: "www.johnsmith.com",
-    companyName: "Tech Solutions Ltd",
-    businessCategory: "IT Services",
-    joiningDate: "2024-03-15",
-    createdAt: "2024-01-01",
+    fullName: "",
+    chapterName: "",
+    email: "",
+    mobile: "",
+    websiteLink: "",
+    companyName: "",
+    businessCategory: "",
+    joiningDate: "",
+    createdAt: "",
     profileImage: "https://avatar.iran.liara.run/public",
     socialMedia: {
-      whatsapp: "https://wa.me/919876543210",
+      whatsapp: "",
+      facebook: "",
+      twitter: "",
+      linkedin: "",
+      instagram: "",
     },
   });
+
+  useEffect(() => {
+    const fetchMemberData = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(`${api}/members/members/${id}`);
+        const member = response.data.data;
+        const chaptersResponse = await axios.get(`${api}/chapters`);
+        setChapters(chaptersResponse.data.data);
+
+        setMemberData({
+          fullName: member.name || "",
+          chapterName: member.chapter_name || member.chapter || "",
+          email: member.email || "",
+          mobile: member.mobile || "",
+          websiteLink: member.website || "",
+          companyName: member.company || "",
+          businessCategory: member.business_category || "",
+          joiningDate: member.joiningDate || "",
+          createdAt: member.created_at || member.createdAt || "",
+          profileImage:
+            member.profile_image || "https://avatar.iran.liara.run/public",
+          socialMedia: {
+            whatsapp: member.whatsapp || "",
+            facebook: member.facebook || "",
+            twitter: member.twitter || "",
+            linkedin: member.linkedin || "",
+            instagram: member.instagram || "",
+          },
+        });
+      } catch (error) {
+        console.error("Error fetching member data:", error);
+        if (error.response?.status === 404) {
+          navigate(-1);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchMemberData();
+    }
+  }, [id, navigate]);
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    try {
+      return new Date(dateString).toLocaleDateString();
+    } catch (error) {
+      return "Invalid Date";
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="mt-32 flex justify-center items-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-500"></div>
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -154,13 +223,13 @@ const ChapterMemberView = () => {
                 <div>
                   <p className="text-sm text-gray-400">Created At</p>
                   <p className="font-semibold text-white">
-                    {new Date(memberData.createdAt).toLocaleDateString()}
+                    {formatDate(memberData.createdAt)}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-400">Join Date</p>
                   <p className="font-semibold text-white">
-                    {new Date(memberData.joiningDate).toLocaleDateString()}
+                    {formatDate(memberData.joiningDate)}
                   </p>
                 </div>
               </div>

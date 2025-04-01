@@ -12,32 +12,125 @@ import {
   ClipboardList,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
+import axios from "axios";
+import api from "../hooks/api";
+import Swal from "sweetalert2";
 
 const MemberReferView = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const [loading, setLoading] = useState(true);
   const [referralData, setReferralData] = useState({
-    receivedMemberName: "John Smith",
-    receivedChapter: "Chapter B",
-    referralDate: "2024-03-20",
-    verifyStatus: "verified",
-    verifiedDate: "2024-03-21",
-    receivedEmail: "john@example.com",
-    receivedMobile: "+91 9876543210",
-    receivedWebsite: "www.johnsmith.com",
-    receivedCompany: "Digital Solutions Inc",
-    receivedBusiness: "Digital Marketing",
-    description:
-      "Referred for digital marketing services and social media management. Expertise in SEO and content strategy.",
+    receivedMemberName: "",
+    receivedChapter: "",
+    referralDate: "",
+    verifyStatus: "pending",
+    verifiedDate: "",
+    email: "",
+    receivedMobile: "",
+    refer_name: "",
+    company: "",
+    business_category: "",
+    description: "",
+    givenByMember: null,
+    receivedByMember: null,
     profileImage: "https://avatar.iran.liara.run/public",
     socialMedia: {
-      facebook: "https://facebook.com/john",
-      twitter: "https://twitter.com/john",
-      linkedin: "https://linkedin.com/in/john",
-      instagram: "https://instagram.com/john",
-      whatsapp: "https://wa.me/919876543210",
+      facebook: "",
+      twitter: "",
+      linkedin: "",
+      instagram: "",
+      whatsapp: "",
     },
   });
+  const [memberData, setMemberData] = useState(null);
+
+  useEffect(() => {
+    const fetchMemberData = async () => {
+      try {
+        setLoading(true);
+        // First fetch referral data to get member IDs
+        const referralResponse = await axios.get(`${api}/referrals/${id}`);
+
+        if (referralResponse.data.success) {
+          const referralData = referralResponse.data.data;
+
+          const membersResponse = await axios.get(`${api}/members/members`);
+          if (membersResponse.data.success) {
+            const allMembers = membersResponse.data.data;
+
+            const givenByMember = allMembers.find(
+              (m) => m.id === referralData.given_by_member_id
+            );
+            const receivedByMember = allMembers.find(
+              (m) => m.id === referralData.received_member_id
+            );
+
+            setReferralData((prevData) => ({
+              ...prevData,
+
+              refer_name: referralData.refer_name || "N/A",
+              referralDate:
+                referralData.referral_date || new Date().toISOString(),
+              description:
+                referralData.description || "No description provided",
+              verifyStatus: referralData.verify_status || "pending",
+              verifiedDate: referralData.verified_date || "",
+              receivedMobile: referralData.mobile || "N/A",
+
+              givenByMember: givenByMember || null,
+              receivedByMember: receivedByMember || null,
+              receivedMemberName: receivedByMember?.name || "N/A",
+              receivedChapter: receivedByMember?.chapter_name || "N/A",
+              email: receivedByMember?.email || "N/A",
+              company: receivedByMember?.company_name || "N/A",
+              business_category: receivedByMember?.business_category || "N/A",
+
+              // Social Media
+              socialMedia: {
+                ...prevData.socialMedia,
+                whatsapp: referralData.mobile
+                  ? `https://wa.me/${referralData.mobile.replace(
+                      /[^0-9]/g,
+                      ""
+                    )}`
+                  : "",
+              },
+            }));
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        Swal.fire({
+          icon: "error",
+          title: "Failed to fetch details",
+          text: error.message || "There was an error loading the data.",
+          background: "#1F2937",
+          color: "#fff",
+          confirmButtonColor: "#F59E0B",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchMemberData();
+    }
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="mt-32 p-1 lg:p-6 flex justify-center items-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-500"></div>
+          <div className="text-gray-400 text-sm">
+            Loading referral details...
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -239,33 +332,44 @@ const MemberReferView = () => {
               {[
                 {
                   icon: Users,
-                  label: "Member Name",
+                  label: "Given By Member",
+                  value: referralData.givenByMember?.name || "N/A",
+                },
+                {
+                  icon: Users,
+                  label: "Received By Member",
                   value: referralData.receivedMemberName,
+                },
+                {
+                  icon: Users,
+                  label: "Refer To",
+                  value: referralData.refer_name,
                 },
                 {
                   icon: Mail,
                   label: "Email",
-                  value: referralData.receivedEmail,
+                  value: referralData.receivedByMember?.email || "N/A",
                 },
                 {
                   icon: Phone,
-                  label: "Mobile",
+                  label: "Referred Mobile ",
                   value: referralData.receivedMobile,
                 },
                 {
-                  icon: Globe,
-                  label: "Website",
-                  value: referralData.receivedWebsite,
+                  icon: Folder,
+                  label: "Chapter",
+                  value: referralData.receivedByMember?.chapter_name || "N/A",
                 },
                 {
                   icon: Briefcase,
                   label: "Company",
-                  value: referralData.receivedCompany,
+                  value: referralData.receivedByMember?.company || "N/A",
                 },
                 {
                   icon: Folder,
                   label: "Business Category",
-                  value: referralData.receivedBusiness,
+                  value:
+                    referralData.receivedByMember?.business_category || "N/A",
                 },
               ].map((item, index) => (
                 <div key={index} className="space-y-2">
@@ -293,23 +397,82 @@ const MemberReferView = () => {
             {/* Verification Info */}
             <div>
               <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 bg-amber-500/20 rounded-lg">
-                  <CheckCircle className="w-5 h-5 text-amber-400" />
+                <div className={`p-2 rounded-lg ${
+                  referralData.verifyStatus === "verified"
+                    ? "bg-green-500/20"
+                    : referralData.verifyStatus === "rejected"
+                    ? "bg-red-500/20"
+                    : "bg-amber-500/20"
+                }`}>
+                  <svg
+                    className={`w-5 h-5 ${
+                      referralData.verifyStatus === "verified"
+                        ? "text-green-400"
+                        : referralData.verifyStatus === "rejected"
+                        ? "text-red-400"
+                        : "text-amber-400"
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
                 </div>
                 <h3 className="text-lg font-semibold text-white">
                   Verification Details
                 </h3>
               </div>
               <div className="p-4 bg-gray-700/50 rounded-xl">
-                <p className="text-white">
-                  {referralData.verifyStatus === "verified"
-                    ? `Verified on ${new Date(
-                        referralData.verifiedDate
-                      ).toLocaleDateString()}`
-                    : referralData.verifyStatus === "rejected"
-                    ? "Verification rejected"
-                    : "Pending verification"}
-                </p>
+                {referralData.verifyStatus === "verified" ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-green-400"></div>
+                      <p className="text-gray-300">
+                        Verified on{" "}
+                        <span className="text-green-400 font-medium">
+                          {new Date(referralData.verifiedDate).toLocaleDateString()}
+                        </span>
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 mt-2">
+                      <div className="px-3 py-1.5 bg-green-500/20 text-green-400 rounded-lg text-sm font-medium">
+                        ✓ Verification Approved
+                      </div>
+                    </div>
+                  </div>
+                ) : referralData.verifyStatus === "rejected" ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-red-400"></div>
+                      <p className="text-gray-300">
+                        Verification rejected
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 mt-2">
+                      <div className="px-3 py-1.5 bg-red-500/20 text-red-400 rounded-lg text-sm font-medium">
+                        ✕ Verification Rejected
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-amber-400"></div>
+                      <p className="text-gray-300">Awaiting verification</p>
+                    </div>
+                    <div className="flex items-center gap-2 mt-2">
+                      <div className="px-3 py-1.5 bg-amber-500/20 text-amber-400 rounded-lg text-sm font-medium">
+                        ⏳ Pending Verification
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
