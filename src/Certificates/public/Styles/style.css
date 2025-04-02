@@ -37,7 +37,7 @@ body{
 /* Business, Elevator, Visitor & Refferal Template Designs */
 .name{
     position: absolute;
-    top: 185px;
+    top: 115px;
     left: 125px;
     min-width: 417px;
     font-size: 28px;
@@ -109,6 +109,32 @@ body{
   button {
     display: none;
   }
+}
+
+/* Certificate Styles */
+.certificate-container {
+    background-color: white;
+    page-break-inside: avoid;
+}
+
+.certificate-container img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+}
+
+@media print {
+    .certificate-container {
+        width: 100% !important;
+        height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+    }
+
+    button {
+        display: none !important;
+    }
 }
 
 

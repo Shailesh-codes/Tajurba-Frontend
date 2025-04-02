@@ -2,6 +2,13 @@ import React, { useRef, useEffect } from "react";
 import { useReactToPrint } from "react-to-print";
 import "../public/Styles/style.css";
 
+// Import certificate images
+import businessImage from "../../../src/Certificates/public/assets/businessImage.jpg";
+import visitorImage from "../../../src/Certificates/public/assets/visitorImage.jpg";
+import elevatorImage from "../../../src/Certificates/public/assets/elevatorImage.jpg";
+import refImage from "../../../src/Certificates/public/assets/refImage.jpg";
+import mdpImage from "../../../src/Certificates/public/assets/mdpImage.jpg";
+
 const Certificate = ({ name, date, certificateType }) => {
   const certificateRef = useRef();
 
@@ -14,56 +21,60 @@ const Certificate = ({ name, date, certificateType }) => {
     content: () => certificateRef.current,
     documentTitle: `${name}_certificate`,
     onBeforeGetContent: () => {
-      console.log("Before printing - Certificate content:", certificateRef.current);
+      console.log(
+        "Before printing - Certificate content:",
+        certificateRef.current
+      );
     },
     onPrintError: (error) => {
       console.error("Print Error:", error);
-    }
+    },
   });
 
-  // Update image paths to match your project structure
   const certificateConfig = {
     highest_business: {
-      image: "../assets/businessImage.jpg", // Updated path
+      image: businessImage,
       nameStyle: {
         position: "absolute",
-        top: "42%",  // Adjusted for your template
+        top: "40%",
         left: "50%",
         transform: "translateX(-50%)",
         width: "60%",
-        fontSize: "28px",
+        fontSize: "32px",
         textAlign: "center",
         color: "#000",
-        fontFamily: "Greates-Draken, sans-serif",
+        fontFamily: "cursive",
+        fontWeight: "bold",
         zIndex: 2,
-        pointerEvents: "none",
-        userSelect: "none"
+        textTransform: "capitalize",
       },
       dateStyle: {
         position: "absolute",
-        top: "52%",  // Adjusted for your template
+        top: "52%",
         left: "50%",
         transform: "translateX(-50%)",
         width: "200px",
-        fontSize: "16px",
+        fontSize: "18px",
         textAlign: "center",
         color: "#000",
-        zIndex: 2
-      }
+        zIndex: 2,
+      },
     },
     highest_visitor: {
-      image: "../assets/visitorImage.jpg",
+      image: visitorImage,
       nameStyle: {
         position: "absolute",
-        top: "42%",
+        top: "40%",
         left: "50%",
         transform: "translateX(-50%)",
         width: "60%",
-        fontSize: "28px",
+        fontSize: "32px",
         textAlign: "center",
         color: "#000",
-        fontFamily: "Greates-Draken, sans-serif",
-        zIndex: 2
+        fontFamily: "cursive",
+        fontWeight: "bold",
+        zIndex: 2,
+        textTransform: "capitalize",
       },
       dateStyle: {
         position: "absolute",
@@ -71,26 +82,27 @@ const Certificate = ({ name, date, certificateType }) => {
         left: "50%",
         transform: "translateX(-50%)",
         width: "200px",
-        fontSize: "16px",
+        fontSize: "18px",
         textAlign: "center",
         color: "#000",
-        zIndex: 2
-      }
+        zIndex: 2,
+      },
     },
     best_elevator_pitch: {
-      image: "../assets/elevatorImage.jpg",
-      // Similar styling as highest_business
+      image: elevatorImage,
       nameStyle: {
         position: "absolute",
-        top: "42%",
+        top: "40%",
         left: "50%",
         transform: "translateX(-50%)",
         width: "60%",
-        fontSize: "28px",
+        fontSize: "32px",
         textAlign: "center",
         color: "#000",
-        fontFamily: "Greates-Draken, sans-serif",
-        zIndex: 2
+        fontFamily: "cursive",
+        fontWeight: "bold",
+        zIndex: 2,
+        textTransform: "capitalize",
       },
       dateStyle: {
         position: "absolute",
@@ -98,26 +110,27 @@ const Certificate = ({ name, date, certificateType }) => {
         left: "50%",
         transform: "translateX(-50%)",
         width: "200px",
-        fontSize: "16px",
+        fontSize: "18px",
         textAlign: "center",
         color: "#000",
-        zIndex: 2
-      }
+        zIndex: 2,
+      },
     },
     maximum_referrals: {
-      image: "../assets/refImage.jpg",
-      // Similar styling as highest_business
+      image: refImage,
       nameStyle: {
         position: "absolute",
-        top: "42%",
+        top: "40%",
         left: "50%",
         transform: "translateX(-50%)",
         width: "60%",
-        fontSize: "28px",
+        fontSize: "32px",
         textAlign: "center",
         color: "#000",
-        fontFamily: "Greates-Draken, sans-serif",
-        zIndex: 2
+        fontFamily: "cursive",
+        fontWeight: "bold",
+        zIndex: 2,
+        textTransform: "capitalize",
       },
       dateStyle: {
         position: "absolute",
@@ -125,25 +138,27 @@ const Certificate = ({ name, date, certificateType }) => {
         left: "50%",
         transform: "translateX(-50%)",
         width: "200px",
-        fontSize: "16px",
+        fontSize: "18px",
         textAlign: "center",
         color: "#000",
-        zIndex: 2
-      }
+        zIndex: 2,
+      },
     },
     mdp_attended: {
-      image: "../assets/mdpImage.jpg",
+      image: mdpImage,
       nameStyle: {
         position: "absolute",
         top: "45%",
         left: "50%",
         transform: "translateX(-50%)",
         width: "60%",
-        fontSize: "28px",
+        fontSize: "32px",
         textAlign: "center",
         color: "#000",
-        fontFamily: "Greates-Draken, sans-serif",
-        zIndex: 2
+        fontFamily: "cursive",
+        fontWeight: "bold",
+        zIndex: 2,
+        textTransform: "capitalize",
       },
       dateStyle: {
         position: "absolute",
@@ -151,14 +166,14 @@ const Certificate = ({ name, date, certificateType }) => {
         left: "50%",
         transform: "translateX(-50%)",
         width: "200px",
-        fontSize: "16px",
+        fontSize: "18px",
         textAlign: "center",
         color: "#595959",
-        backgroundColor: "#fff",
+        backgroundColor: "transparent",
         padding: "5px 10px",
-        zIndex: 2
-      }
-    }
+        zIndex: 2,
+      },
+    },
   };
 
   const formatDate = (dateString) => {
@@ -179,7 +194,9 @@ const Certificate = ({ name, date, certificateType }) => {
 
   // Check if config exists
   if (!config) {
-    console.error(`No configuration found for certificate type: ${certificateType}`);
+    console.error(
+      `No configuration found for certificate type: ${certificateType}`
+    );
     return <div>Invalid certificate type</div>;
   }
 
@@ -189,49 +206,60 @@ const Certificate = ({ name, date, certificateType }) => {
   };
 
   return (
-    <div>
+    <div className="flex flex-col items-center gap-4">
       <button
         onClick={handlePrint}
-        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white font-semibold shadow-lg hover:shadow-xl hover:shadow-amber-900/30 hover:-translate-y-0.5 transition-all duration-300"
       >
-        Print Certificate
+        Download Certificate
       </button>
 
-      <div 
-        ref={certificateRef} 
+      <div
+        ref={certificateRef}
+        className="certificate-container"
         style={{
-          width: "1024px", // Match your template size
-          height: "681px",  // Match your template size
+          width: "1024px",
+          height: "681px",
           position: "relative",
           margin: "20px auto",
           backgroundColor: "#fff",
-          overflow: "hidden"
+          overflow: "hidden",
+          boxShadow:
+            "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
         }}
       >
-        <div style={{
-          position: "relative",
-          width: "100%",
-          height: "100%",
-        }}>
+        <div
+          style={{
+            position: "relative",
+            width: "100%",
+            height: "100%",
+          }}
+        >
           <img
             src={config.image}
-            alt="Certificate"
-            onError={handleImageError}
+            alt="Certificate Template"
             style={{
               width: "100%",
               height: "100%",
-              objectFit: "cover",
+              objectFit: "contain",
               position: "absolute",
               top: 0,
               left: 0,
-              zIndex: 1
+              zIndex: 1,
+            }}
+            onLoad={() => console.log("Certificate image loaded successfully")}
+            onError={(e) => {
+              console.error("Error loading certificate image:", e);
+              console.log("Attempted image path:", config.image);
             }}
           />
-          <div style={config.nameStyle}>
-            {name}
-          </div>
+          <div style={config.nameStyle}>{name || "Name not provided"}</div>
           <div style={config.dateStyle}>
-            {isMDP ? `Date: ${formatDate(date)}` : formatDate(date)}
+            {date
+              ? isMDP
+                ? `Date: ${formatDate(date)}`
+                : formatDate(date)
+              : "Date not provided"}
           </div>
         </div>
       </div>

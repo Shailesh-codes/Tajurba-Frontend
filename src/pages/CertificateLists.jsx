@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import Swal from "sweetalert2";
+import { Eye, Trash2 } from "lucide-react";
 import certificatesIcon from "../assets/images/icons/certi.svg";
 import calendarIcon from "../assets/images/icons/calender-icon.svg";
-import download from "../assets/images/icons/download.svg";
-import Certificate from "../Certificates/components/Certificate";
+// Import certificate images
+import businessImage from "../Certificates/public/assets/businessImage.jpg";
+import visitorImage from "../Certificates/public/assets/visitorImage.jpg";
+import elevatorImage from "../Certificates/public/assets/elevatorImage.jpg";
+import refImage from "../Certificates/public/assets/refImage.jpg";
+import mdpImage from "../Certificates/public/assets/mdpImage.jpg";
 
 const CertificatesList = () => {
   const navigate = useNavigate();
@@ -79,86 +83,227 @@ const CertificatesList = () => {
     }, 1000); // Simulate 1 second loading time
   }, []);
 
-  const handleDownload = async (certificate) => {
-    try {
-      console.log("Handling download for certificate:", certificate);
-
-      const loadingAlert = Swal.fire({
-        title: 'Generating...',
-        text: 'Please wait while we generate your certificate',
-        allowOutsideClick: false,
-        showConfirmButton: false,
-        willOpen: () => {
-          Swal.showLoading();
-        },
-        background: '#111827',
-        color: '#fff',
-      });
-
-      // Create a modal to show the certificate
-      const result = await Swal.fire({
-        html: <Certificate 
-          name={certificate.member_name}
-          date={certificate.issued_date}
-          certificateType={certificate.certificate_type}
-        />,
-        width: '900px',
-        background: '#404040',
-        showConfirmButton: true,
-        confirmButtonText: 'Close',
-        customClass: {
-          confirmButton: 'bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded',
-          popup: 'certificate-modal', // Add custom class for styling
-        },
-        didOpen: (modal) => {
-          console.log("Modal opened with certificate:", certificate);
-        }
-      });
-
-      await loadingAlert.close();
-
-    } catch (error) {
-      console.error("Error generating certificate:", error);
-      showAlert("error", "Failed to generate certificate");
+  const getCertificateImage = (type) => {
+    switch (type) {
+      case "highest_business":
+        return businessImage;
+      case "highest_visitor":
+        return visitorImage;
+      case "best_elevator_pitch":
+        return elevatorImage;
+      case "maximum_referrals":
+        return refImage;
+      case "mdp_attended":
+        return mdpImage;
+      default:
+        return businessImage;
     }
   };
 
-  const handleDelete = async (certificateId) => {
-    const result = await Swal.fire({
-      background: "#111827",
-      color: "#fff",
-      icon: "warning",
-      title: "Confirm Deletion",
-      text: "Are you sure you want to delete this certificate? This action cannot be undone.",
-      showCancelButton: true,
-      confirmButtonText: "Delete",
-      cancelButtonText: "Cancel",
-      customClass: {
-        popup: "bg-gray-900 border-gray-700 rounded-2xl border",
-        title: "text-white",
-        htmlContainer: "text-gray-300",
-        confirmButton:
-          "bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg px-6 py-2",
-        cancelButton:
-          "bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-lg px-6 py-2",
-      },
-    });
+  const downloadAsPDF = async (container, certificateData) => {
+    try {
+      // Wait for images to load
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    if (result.isConfirmed) {
-      try {
-        const response = await axios.post("/api/certificates", {
-          action: "delete",
-          certificate_id: certificateId,
-        });
-
-        if (response.data.status === "success") {
-          showAlert("success", "Certificate deleted successfully");
-          loadCertificates();
+      const canvas = await html2canvas(
+        container.querySelector(".certificate-view"),
+        {
+          scale: 2, // Increase quality
+          useCORS: true,
+          allowTaint: true,
+          logging: true,
+          onclone: (document) => {
+            // Ensure fonts are loaded
+            const style = document.createElement("style");
+            style.innerHTML = `
+            @font-face {
+              font-family: 'Greates-Draken';
+              src: url('../Certificates/public/fonts/Greates-Draken.otf') format('opentype');
+            }
+          `;
+            document.head.appendChild(style);
+          },
         }
-      } catch (error) {
-        console.error("Error deleting certificate:", error);
-        showAlert("error", "Failed to delete certificate");
+      );
+
+      const imgData = canvas.toDataURL("image/jpeg", 1.0);
+      const pdf = new jsPDF({
+        orientation: "landscape",
+        unit: "px",
+        format: [canvas.width, canvas.height],
+      });
+
+      pdf.addImage(imgData, "JPEG", 0, 0, canvas.width, canvas.height);
+      pdf.save(`${certificateData.member_name}_certificate.pdf`);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      showAlert("error", "Failed to download PDF");
+    }
+  };
+
+  const handlePrint = (container) => {
+    const printWindow = window.open("", "_blank");
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Print Certificate</title>
+          <style>
+            @media print {
+              body { margin: 0; }
+              img { width: 100%; height: auto; }
+            }
+          </style>
+        </head>
+        <body>
+          ${container.innerHTML}
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+  };
+
+  const handleDownload = async (certificate) => {
+    try {
+      // Show the certificate view first
+      const modalResult = await Swal.fire({
+        html: `
+          <div class="certificate-container bg-white p-4 rounded-lg">
+            <div class="relative">
+              <img 
+                src="/src/Certificates/public/assets/${
+                  certificate.certificate_type === "highest_business"
+                    ? "businessImage.jpg"
+                    : certificate.certificate_type === "highest_visitor"
+                    ? "visitorImage.jpg"
+                    : certificate.certificate_type === "best_elevator_pitch"
+                    ? "elevatorImage.jpg"
+                    : certificate.certificate_type === "maximum_referrals"
+                    ? "refImage.jpg"
+                    : "mdpImage.jpg"
+                }"
+                alt="Certificate"
+                class="w-full h-auto"
+              />
+              <div class="absolute inset-0">
+                <div class="font-greates" style="
+                  position: absolute;
+                  ${
+                    certificate.certificate_type === "mdp_attended"
+                      ? "top: 48%; left: 50%; transform: translateX(-50%); width: 60%;"
+                      : "top: 28%; left: 39%; transform: translateX(-50%); width: 60%;"
+                  }
+                  text-align: center;
+                  font-size: 32px;
+                  color: black;
+                  font-family: 'Greates-Draken', cursive;
+                  text-transform: capitalize;
+                ">
+                  ${certificate.member_name}
+                </div>
+                <div style="
+                  position: absolute;
+                  ${
+                    certificate.certificate_type === "mdp_attended"
+                      ? "top: 64%; left: 50%; transform: translateX(-50%); width: 120px;"
+                      : "top: 46%; left: 23%; width: 200px;"
+                  }
+                  text-align: center;
+                  font-size: 16px;
+                  color: black;
+                ">
+                  ${new Date(certificate.issued_date).toLocaleDateString(
+                    "en-US",
+                    {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    }
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        `,
+        width: 800,
+        showConfirmButton: false,
+        showCancelButton: false,
+        confirmButtonText: "Print",
+        cancelButtonText: "Close",
+        customClass: {
+          popup: "swal2-popup-large",
+          confirmButton: false,
+          cancelButton:
+            "px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700",
+        },
+      });
+
+      if (modalResult.isConfirmed) {
+        // Handle print
+        const element = document.querySelector(".certificate-container");
+        if (element) {
+          const printWindow = window.open("", "_blank");
+          printWindow.document.write(`
+            <html>
+              <head>
+                <title>${certificate.member_name} - Certificate</title>
+                <style>
+                  @page {
+                    margin: 0;
+                    size: A4 portrait;
+                  }
+                  body {
+                    margin: 0;
+                    padding: 0;
+                  }
+                  .print-container {
+                    width: 100%;
+                    height: 100vh;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                  }
+                  img {
+                    max-width: 100%;
+                    height: auto;
+                  }
+                  @media print {
+                    body {
+                      -webkit-print-color-adjust: exact;
+                      print-color-adjust: exact;
+                    }
+                  }
+                </style>
+              </head>
+              <body>
+                <div class="print-container">
+                  ${element.outerHTML}
+                </div>
+                <script>
+                  window.onload = () => {
+                    setTimeout(() => {
+                      window.print();
+                      setTimeout(() => window.close(), 500);
+                    }, 300);
+                  };
+                </script>
+              </body>
+            </html>
+          `);
+          printWindow.document.close();
+        }
       }
+    } catch (error) {
+      console.error("Error handling certificate:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Failed to process certificate",
+        background: "#111827",
+        color: "#fff",
+      });
     }
   };
 
@@ -167,14 +312,6 @@ const CertificatesList = () => {
       .split("_")
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ");
-  };
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
   };
 
   const showAlert = (icon, text) => {
@@ -215,6 +352,40 @@ const CertificatesList = () => {
       mdp_attended: "from-red-600 to-red-900",
     };
     return styles[type] || "from-gray-600 to-gray-900";
+  };
+
+  // Add back the handleDelete function
+  const handleDelete = async (certificateId) => {
+    const result = await Swal.fire({
+      background: "#111827",
+      color: "#fff",
+      icon: "warning",
+      title: "Confirm Deletion",
+      text: "Are you sure you want to delete this certificate? This action cannot be undone.",
+      showCancelButton: true,
+      confirmButtonText: "Delete",
+      cancelButtonText: "Cancel",
+      customClass: {
+        popup: "bg-gray-900 border-gray-700 rounded-2xl border",
+        title: "text-white",
+        htmlContainer: "text-gray-300",
+        confirmButton:
+          "bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg px-6 py-2",
+        cancelButton:
+          "bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-lg px-6 py-2",
+      },
+    });
+
+    if (result.isConfirmed) {
+      try {
+        // For demo, just remove from the dummy data
+        setCertificates(prevCerts => prevCerts.filter(cert => cert.certificate_id !== certificateId));
+        showAlert("success", "Certificate deleted successfully");
+      } catch (error) {
+        console.error("Error deleting certificate:", error);
+        showAlert("error", "Failed to delete certificate");
+      }
+    }
   };
 
   return (
@@ -398,7 +569,11 @@ const CertificatesList = () => {
                         {cert.chapter_name}
                       </td>
                       <td className="p-4 text-gray-300 whitespace-nowrap">
-                        <span className={`inline-flex px-3 py-1 text-sm font-medium rounded-lg bg-gradient-to-r ${getCertificateTypeStyle(cert.certificate_type)}`}>
+                        <span
+                          className={`inline-flex px-3 py-1 text-sm font-medium rounded-lg bg-gradient-to-r ${getCertificateTypeStyle(
+                            cert.certificate_type
+                          )}`}
+                        >
                           {formatCertificateType(cert.certificate_type)}
                         </span>
                       </td>
@@ -421,41 +596,17 @@ const CertificatesList = () => {
                         <div className="inline-flex gap-2">
                           <button
                             onClick={() => handleDownload(cert)}
-                            className="group flex items-center justify-center w-8 h-8 bg-gradient-to-r from-blue-600 to-blue-900 hover:from-blue-700 hover:to-blue-950 text-white/90 hover:text-white rounded-xl transition-all duration-300 shadow hover:shadow-lg hover:shadow-blue-900/30 hover:-translate-y-0.5"
-                            title="Download Certificate"
+                            className="group flex items-center justify-center w-10 h-10 bg-gradient-to-r from-blue-600 to-blue-900 hover:from-blue-700 hover:to-blue-950 text-white/90 hover:text-white rounded-xl transition-all duration-300 shadow hover:shadow-lg hover:shadow-blue-900/30 hover:-translate-y-0.5"
+                            title="View Certificate"
                           >
-                            <svg
-                              className="w-5 h-5 opacity-70 group-hover:opacity-100"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                              <polyline points="7 10 12 15 17 10" />
-                              <line x1="12" y1="15" x2="12" y2="3" />
-                            </svg>
+                            <Eye className="w-5 h-5 opacity-70 group-hover:opacity-100" />
                           </button>
                           <button
                             onClick={() => handleDelete(cert.certificate_id)}
-                            className="group flex items-center justify-center w-8 h-8 bg-gradient-to-r from-red-600 to-red-900 hover:from-red-700 hover:to-red-950 text-white/90 hover:text-white rounded-xl transition-all duration-300 shadow hover:shadow-lg hover:shadow-red-900/30 hover:-translate-y-0.5"
+                            className="group flex items-center justify-center w-10 h-10 bg-gradient-to-r from-red-600 to-red-900 hover:from-red-700 hover:to-red-950 text-white/90 hover:text-white rounded-xl transition-all duration-300 shadow hover:shadow-lg hover:shadow-red-900/30 hover:-translate-y-0.5"
                             title="Delete Certificate"
                           >
-                            <svg
-                              className="w-5 h-5 opacity-70 group-hover:opacity-100"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                              />
-                            </svg>
+                            <Trash2 className="w-5 h-5 opacity-70 group-hover:opacity-100" />
                           </button>
                         </div>
                       </td>
