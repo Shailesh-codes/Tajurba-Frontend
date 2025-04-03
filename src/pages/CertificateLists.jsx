@@ -4,6 +4,8 @@ import Swal from "sweetalert2";
 import { Eye, Trash2 } from "lucide-react";
 import certificatesIcon from "../assets/images/icons/certi.svg";
 import calendarIcon from "../assets/images/icons/calender-icon.svg";
+import api from "../hooks/api";
+import axios from "axios";
 // Import certificate images
 import businessImage from "../Certificates/public/assets/businessImage.jpg";
 import visitorImage from "../Certificates/public/assets/visitorImage.jpg";
@@ -22,66 +24,33 @@ const CertificatesList = () => {
     certificateType: "",
   });
 
-  // Add dummy data
-  const dummyData = [
-    {
-      certificate_id: 1,
-      member_name: "John Doe",
-      chapter_name: "Mumbai Central",
-      certificate_type: "highest_business",
-      achievement: "₹500,000 Business Generated",
-      issued_date: "2024-03-15",
-    },
-    {
-      certificate_id: 2,
-      member_name: "Jane Smith",
-      chapter_name: "Delhi North",
-      certificate_type: "highest_visitor",
-      achievement: "15 Visitors Invited",
-      issued_date: "2024-03-14",
-    },
-    {
-      certificate_id: 3,
-      member_name: "Raj Kumar",
-      chapter_name: "Bangalore East",
-      certificate_type: "best_elevator_pitch",
-      achievement: "Outstanding Presentation",
-      issued_date: "2024-03-13",
-    },
-    {
-      certificate_id: 4,
-      member_name: "Priya Patel",
-      chapter_name: "Chennai Central",
-      certificate_type: "maximum_referrals",
-      achievement: "25 Quality Referrals",
-      issued_date: "2024-03-12",
-    },
-    {
-      certificate_id: 5,
-      member_name: "Alex Wilson",
-      chapter_name: "Pune West",
-      certificate_type: "mdp_attended",
-      achievement: "Leadership Development Program",
-      issued_date: "2024-03-11",
-    },
-  ];
-
-  // Modify useEffect to use dummy data
   useEffect(() => {
-    // Simulate API loading
-    setLoading(true);
-    setTimeout(() => {
-      setCertificates(dummyData);
-      setChapters([
-        { chapter_id: 1, chapter_name: "Mumbai Central" },
-        { chapter_id: 2, chapter_name: "Delhi North" },
-        { chapter_id: 3, chapter_name: "Bangalore East" },
-        { chapter_id: 4, chapter_name: "Chennai Central" },
-        { chapter_id: 5, chapter_name: "Pune West" },
-      ]);
-      setLoading(false);
-    }, 1000); // Simulate 1 second loading time
+    fetchData();
   }, []);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      // Fetch certificates and chapters in parallel
+      const [certificatesResponse, chaptersResponse] = await Promise.all([
+        axios.get(`${api}/certificates`),
+        axios.get(`${api}/chapters`),
+      ]);
+
+      if (certificatesResponse.data.status === "success") {
+        setCertificates(certificatesResponse.data.data);
+      }
+
+      if (chaptersResponse.data.status === "success") {
+        setChapters(chaptersResponse.data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      showAlert("error", "Failed to fetch data");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getCertificateImage = (type) => {
     switch (type) {
@@ -338,7 +307,7 @@ const CertificatesList = () => {
       .toLowerCase()
       .includes(filters.search.toLowerCase());
     const matchesChapter =
-      !filters.chapter || cert.chapter_name === filters.chapter;
+      !filters.chapter || cert.chapter_id === parseInt(filters.chapter);
     const matchesType =
       !filters.certificateType ||
       cert.certificate_type === filters.certificateType;
@@ -359,37 +328,84 @@ const CertificatesList = () => {
 
   // Add back the handleDelete function
   const handleDelete = async (certificateId) => {
-    const result = await Swal.fire({
-      background: "#111827",
-      color: "#fff",
-      icon: "warning",
-      title: "Confirm Deletion",
-      text: "Are you sure you want to delete this certificate? This action cannot be undone.",
-      showCancelButton: true,
-      confirmButtonText: "Delete",
-      cancelButtonText: "Cancel",
-      customClass: {
-        popup: "bg-gray-900 border-gray-700 rounded-2xl border",
-        title: "text-white",
-        htmlContainer: "text-gray-300",
-        confirmButton:
-          "bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg px-6 py-2",
-        cancelButton:
-          "bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-lg px-6 py-2",
-      },
-    });
+    try {
+      const result = await Swal.fire({
+        title: "Are you sure?",
+        text: "This certificate will be permanently deleted. This action cannot be undone.",
+        icon: "warning",
+        background: "#111827",
+        color: "#fff",
+        showCancelButton: true,
+        confirmButtonText: "Yes, delete it",
+        cancelButtonText: "Cancel",
+        customClass: {
+          popup: "bg-gray-900 border-gray-700 rounded-2xl border",
+          title: "text-white",
+          htmlContainer: "text-gray-300",
+          confirmButton:
+            "bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg px-6 py-2",
+          cancelButton:
+            "bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-lg px-6 py-2",
+        },
+      });
 
-    if (result.isConfirmed) {
-      try {
-        // For demo, just remove from the dummy data
-        setCertificates((prevCerts) =>
-          prevCerts.filter((cert) => cert.certificate_id !== certificateId)
+      if (result.isConfirmed) {
+        // Show loading state
+        Swal.fire({
+          title: "Deleting...",
+          background: "#111827",
+          color: "#fff",
+          didOpen: () => {
+            Swal.showLoading();
+          },
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          allowEnterKey: false,
+        });
+
+        // Make the delete request
+        const response = await axios.delete(
+          `${api}/certificates/${certificateId}`
         );
-        showAlert("success", "Certificate deleted successfully");
-      } catch (error) {
-        console.error("Error deleting certificate:", error);
-        showAlert("error", "Failed to delete certificate");
+
+        if (response.data.status === "success") {
+          setCertificates((prevCerts) =>
+            prevCerts.filter((cert) => cert.certificate_id !== certificateId)
+          );
+
+          // Show success message
+          Swal.fire({
+            icon: "success",
+            title: "Deleted!",
+            text: "Certificate has been deleted successfully.",
+            background: "#111827",
+            color: "#fff",
+            customClass: {
+              popup: "bg-gray-900 border-gray-700 rounded-2xl border",
+              title: "text-white",
+              htmlContainer: "text-gray-300",
+            },
+          });
+        }
       }
+    } catch (error) {
+      console.error("Error deleting certificate:", error);
+
+      // Show error message
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text:
+          error.response?.data?.message ||
+          "Failed to delete certificate. Please try again.",
+        background: "#111827",
+        color: "#fff",
+        customClass: {
+          popup: "bg-gray-900 border-gray-700 rounded-2xl border",
+          title: "text-white",
+          htmlContainer: "text-gray-300",
+        },
+      });
     }
   };
 
@@ -485,7 +501,7 @@ const CertificatesList = () => {
             >
               <option value="">All Chapters</option>
               {chapters.map((chapter) => (
-                <option key={chapter.chapter_id} value={chapter.chapter_name}>
+                <option key={chapter.chapter_id} value={chapter.chapter_id}>
                   {chapter.chapter_name}
                 </option>
               ))}
@@ -512,8 +528,8 @@ const CertificatesList = () => {
 
         {/* Table Section */}
         {loading ? (
-          <div className="py-8 text-center text-gray-400">
-            Loading certificates...
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500"></div>
           </div>
         ) : filteredCertificates.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 px-4 bg-gray-900 rounded-xl border border-gray-700">
@@ -571,7 +587,9 @@ const CertificatesList = () => {
                         {cert.member_name}
                       </td>
                       <td className="p-4 text-gray-300 whitespace-nowrap">
-                        {cert.chapter_name}
+                        {chapters.find(
+                          (ch) => ch.chapter_id === cert.chapter_id
+                        )?.chapter_name || "Unknown Chapter"}
                       </td>
                       <td className="p-4 text-gray-300 whitespace-nowrap">
                         <span
@@ -586,7 +604,7 @@ const CertificatesList = () => {
                         <div className="relative">
                           <input
                             type="date"
-                            value={cert.issued_date}
+                            value={cert.issued_date?.split("T")[0]}
                             readOnly
                             className="w-full p-3 bg-gray-700 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-0 text-white [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full"
                           />
