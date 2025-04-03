@@ -1,21 +1,126 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { BsClipboardData } from "react-icons/bs";
-import { FiUsers, FiHome, FiCalendar } from "react-icons/fi";
+import { FiUsers, FiHome } from "react-icons/fi";
 import { useNavigate, useParams } from "react-router-dom";
-import calendarIcon from "../assets/images/icons/calender-icon.svg";
+import axios from "axios";
+import api from "../hooks/api";
+
 import buss from "../assets/images/icons/buss.svg";
 
 const AddEditBusinessReceived = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const [loading, setLoading] = useState(false);
+  const [members, setMembers] = useState([]);
   const [formData, setFormData] = useState({
     chapter: "",
     member: "",
     amount: "",
-    businessDate: "",
+    businessDate: new Date().toISOString().split("T")[0],
     description: "",
   });
+
+  // Fetch members from the backend
+  const fetchMembers = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${api}/members/members`);
+
+      if (response.data && response.data.data) {
+        setMembers(response.data.data);
+      } else if (Array.isArray(response.data)) {
+        setMembers(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching members:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle member selection
+  const handleMemberSelect = (e) => {
+    const selectedMemberId = e.target.value;
+    const selectedMember = members.find(
+      (member) => member.id === parseInt(selectedMemberId)
+    );
+
+    if (selectedMember) {
+      setFormData({
+        ...formData,
+        member: selectedMemberId,
+        chapter: selectedMember.chapter_name || selectedMember.chapter,
+      });
+    }
+  };
+
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // Validate required fields
+    if (!formData.member || !formData.amount || !formData.businessDate) {
+      alert("Please fill in all required fields");
+      return;
+    }
+
+    const businessData = {
+      given_by_memberId: parseInt(formData.member),
+      receiver_memberId: 1,
+      memberName:
+        members.find((m) => m.id === parseInt(formData.member))?.name || "",
+      chapter: formData.chapter,
+      amount: parseFloat(formData.amount),
+      businessDate: formData.businessDate,
+      description: formData.description || "",
+    };
+
+    try {
+      setLoading(true);
+      if (id) {
+        await axios.put(`${api}/business-received/${id}`, businessData);
+      } else {
+        await axios.post(`${api}/business-received`, businessData);
+      }
+      navigate("/business-received");
+    } catch (error) {
+      console.error("Error saving business:", error.response?.data || error);
+      alert("Error saving business. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch initial data
+  useEffect(() => {
+    fetchMembers();
+
+    // If editing, fetch existing business data
+    if (id) {
+      const fetchBusiness = async () => {
+        try {
+          setLoading(true);
+          const response = await axios.get(`${api}/business-received/${id}`);
+          if (response.data) {
+            const businessData = response.data;
+            setFormData({
+              chapter: businessData.chapter,
+              member: businessData.given_by_memberId.toString(),
+              amount: businessData.amount,
+              businessDate: businessData.businessDate.split("T")[0],
+              description: businessData.description || "",
+            });
+          }
+        } catch (error) {
+          console.error("Error fetching business:", error);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchBusiness();
+    }
+  }, [id]);
 
   return (
     <motion.div
@@ -74,48 +179,48 @@ const AddEditBusinessReceived = () => {
         transition={{ delay: 0.2 }}
         className="bg-gradient-to-b from-gray-800/40 to-gray-900/40 backdrop-blur-xl rounded-xl border border-gray-700 shadow-xl p-6"
       >
-        <form className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
           {/* Grid Layout for Form Fields */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Member Selection */}
+            <div className="relative group">
+              <label className="text-sm font-medium text-gray-300 mb-2 block">
+                Business Given Member <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <select
+                  required
+                  value={formData.member}
+                  onChange={handleMemberSelect}
+                  disabled={loading}
+                  className="w-full p-3 bg-gray-700/50 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 text-white transition-all duration-300"
+                >
+                  <option value="">Select Member</option>
+                  {Array.isArray(members) &&
+                    members.map((member) => (
+                      <option key={member.id} value={member.id}>
+                        {member.name}
+                      </option>
+                    ))}
+                </select>
+                <FiUsers className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-amber-500 transition-colors duration-300" />
+              </div>
+            </div>
+
             {/* Chapter Selection */}
             <div className="relative group">
               <label className="text-sm font-medium text-gray-300 mb-2 block">
                 Chapter <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <select
+                <input
+                  type="text"
                   required
                   value={formData.chapter}
-                  onChange={(e) =>
-                    setFormData({ ...formData, chapter: e.target.value })
-                  }
+                  readOnly
                   className="w-full p-3 bg-gray-700/50 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 text-white transition-all duration-300"
-                >
-                  <option value="">Select Chapter</option>
-                  {/* Add chapter options here */}
-                </select>
+                />
                 <FiHome className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-amber-500 transition-colors duration-300" />
-              </div>
-            </div>
-
-            {/* Member Selection */}
-            <div className="relative group">
-              <label className="text-sm font-medium text-gray-300 mb-2 block">
-                Member <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <select
-                  required
-                  value={formData.member}
-                  onChange={(e) =>
-                    setFormData({ ...formData, member: e.target.value })
-                  }
-                  className="w-full p-3 bg-gray-700/50 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 text-white transition-all duration-300"
-                >
-                  <option value="">Select Member</option>
-                  {/* Add member options here */}
-                </select>
-                <FiUsers className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-amber-500 transition-colors duration-300" />
               </div>
             </div>
 
@@ -137,7 +242,7 @@ const AddEditBusinessReceived = () => {
                   className="w-full p-3 bg-gray-700/50 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 text-white transition-all duration-300"
                   placeholder="Enter amount"
                 />
-                <span className="absolute right-8 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-amber-500 transition-colors duration-300">
+                <span className="absolute right-8 top-1/2 -translate-y-1/2 text-gray-400">
                   ₹
                 </span>
               </div>
@@ -156,12 +261,7 @@ const AddEditBusinessReceived = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, businessDate: e.target.value })
                   }
-                  className="w-full p-3 bg-gray-700/50 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 text-white transition-all duration-300 [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full"
-                />
-                <img
-                  src={calendarIcon}
-                  alt="calendar"
-                  className="absolute right-4 top-[50%] -translate-y-[50%] w-6 h-6 pointer-events-none"
+                  className="w-full p-3 bg-gray-700/50 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 text-white transition-all duration-300 "
                 />
               </div>
             </div>
@@ -192,21 +292,27 @@ const AddEditBusinessReceived = () => {
                   chapter: "",
                   member: "",
                   amount: "",
-                  businessDate: "",
+                  businessDate: new Date().toISOString().split("T")[0],
                   description: "",
                 })
               }
+              disabled={loading}
               className="px-6 py-2.5 rounded-xl border border-gray-700 text-gray-300 hover:bg-gray-700/50 transition-all duration-300"
             >
               Reset
             </button>
             <button
               type="submit"
+              disabled={loading}
               className="relative group px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white font-semibold shadow-lg hover:shadow-xl hover:shadow-amber-900/30 hover:-translate-y-0.5 transition-all duration-300"
             >
               <div className="absolute inset-0 rounded-xl bg-amber-600 opacity-0 group-hover:opacity-20 blur-xl transition-opacity" />
               <span className="relative z-10">
-                {id ? "Update Business" : "Save Business"}
+                {loading
+                  ? "Saving..."
+                  : id
+                  ? "Update Business"
+                  : "Save Business"}
               </span>
             </button>
           </div>

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Swal from "sweetalert2";
 import attendanceIcon from "../assets/images/icons/attendance-icon.svg";
+import api from "../hooks/api";
 
 const MarkAttendance = () => {
   const navigate = useNavigate();
@@ -19,32 +20,49 @@ const MarkAttendance = () => {
   });
   const [meetings, setMeetings] = useState([]);
 
-  // Add dummy data for meetings
-  const dummyMeetings = {
-    meetings: [
-      { id: 1, display_title: "Weekly Meeting - January 2024" },
-      { id: 2, display_title: "Monthly Review Meeting - February 2024" },
-      { id: 3, display_title: "Business Meeting - March 2024" },
-    ],
-    mdp: [
-      { id: 4, display_title: "MDP Session 1 - Leadership Skills" },
-      { id: 5, display_title: "MDP Session 2 - Business Growth" },
-    ],
-    social: [
-      { id: 6, display_title: "Annual Social Gathering 2024" },
-      { id: 7, display_title: "Training Workshop - Communication" },
-    ],
-  };
-
-  // Modify loadMeetingsByType to use dummy data
+  // Update loadMeetingsByType to fetch from backend
   const loadMeetingsByType = async (type) => {
     if (!type) {
       setMeetings([]);
       return;
     }
 
-    // Use dummy data instead of API call
-    setMeetings(dummyMeetings[type] || []);
+    try {
+      // Convert frontend type to backend type format
+      const backendType = type === "social" ? "social_training" : type;
+      const response = await axios.get(`${api}/schedules?type=${backendType}`);
+      
+      if (response.data.success) {
+        let meetingsData = response.data.data;
+        
+        // Handle different response structures based on type
+        if (type === "meetings") {
+          meetingsData = response.data.data.meetings || [];
+        } else if (type === "events") {
+          meetingsData = response.data.data.events || [];
+        }
+
+        // Transform the data to match the expected format
+        const transformedMeetings = meetingsData.map(meeting => {
+          const id = meeting.meeting_id || meeting.event_id || meeting.mdp_id || meeting.social_training_id;
+          return {
+            id: id,
+            display_title: `${meeting.title} - ${new Date(meeting.date).toLocaleDateString()} ${meeting.time}`,
+            venue: meeting.venue,
+            date: meeting.date,
+            time: meeting.time
+          };
+        });
+        
+        setMeetings(transformedMeetings);
+      } else {
+        showAlert("error", "Failed to load meetings");
+      }
+    } catch (error) {
+      console.error("Error loading meetings:", error);
+      showAlert("error", "Failed to load meetings");
+      setMeetings([]);
+    }
   };
 
   // Modify handleContinue to navigate to the correct page
@@ -295,12 +313,13 @@ const MarkAttendance = () => {
                         ? "MDP"
                         : formData.attendanceType === "social"
                         ? "Social & Training"
-                        : "Meeting"
+                        : formData.attendanceType.charAt(0).toUpperCase() +
+                          formData.attendanceType.slice(1)
                     }`}
               </option>
               {meetings.map((meeting) => (
                 <option key={meeting.id} value={meeting.id}>
-                  {meeting.display_title}
+                  {meeting.display_title} - {meeting.venue}
                 </option>
               ))}
             </select>
