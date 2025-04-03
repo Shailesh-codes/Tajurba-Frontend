@@ -47,7 +47,12 @@ const AttendanceVenueFee = () => {
 
     // Simulate API response with dummy data
     setMeetingDetails({
-      type: type === 'meetings' ? 'Weekly Meeting' : type === 'mdp' ? 'MDP Session' : 'Social Event',
+      type:
+        type === "meetings"
+          ? "Weekly Meeting"
+          : type === "mdp"
+          ? "MDP Session"
+          : "Social Event",
       title: "Business Network Meeting",
       date: "2024-03-15",
       time: "10:00 AM",
@@ -165,52 +170,58 @@ const AttendanceVenueFee = () => {
   };
 
   const handleAttendanceChange = (memberId, status) => {
-    setMembers(members.map(member => {
-      if (member.id === memberId) {
-        return {
-          ...member,
-          status,
-          late_minutes: status === 'late' ? 'less_than_10' : null
-        };
-      }
-      return member;
-    }));
+    setMembers(
+      members.map((member) => {
+        if (member.id === memberId) {
+          return {
+            ...member,
+            status,
+            late_minutes: status === "late" ? "less_than_10" : null,
+          };
+        }
+        return member;
+      })
+    );
   };
 
   const handleSubstituteChange = (memberId, checked) => {
-    setMembers(members.map(member => {
-      if (member.id === memberId) {
-        return {
-          ...member,
-          is_substitute: checked ? 1 : 0
-        };
-      }
-      return member;
-    }));
+    setMembers(
+      members.map((member) => {
+        if (member.id === memberId) {
+          return {
+            ...member,
+            is_substitute: checked ? 1 : 0,
+          };
+        }
+        return member;
+      })
+    );
   };
 
   const handleLateMinutesChange = (memberId, minutes) => {
-    setMembers(members.map(member => {
-      if (member.id === memberId) {
-        return {
-          ...member,
-          late_minutes: minutes
-        };
-      }
-      return member;
-    }));
+    setMembers(
+      members.map((member) => {
+        if (member.id === memberId) {
+          return {
+            ...member,
+            late_minutes: minutes,
+          };
+        }
+        return member;
+      })
+    );
   };
 
   const saveData = async () => {
-    const data = members.map(member => {
-      if (markingType === 'attendance') {
+    const data = members.map((member) => {
+      if (markingType === "attendance") {
         const memberData = {
           member_id: member.id,
           status: member.status,
-          late_minutes: member.status === 'late' ? member.late_minutes : null
+          late_minutes: member.status === "late" ? member.late_minutes : null,
         };
 
-        if (type === 'meetings') {
+        if (type === "meetings") {
           memberData.is_substitute = member.is_substitute;
         }
 
@@ -219,7 +230,7 @@ const AttendanceVenueFee = () => {
         return {
           member_id: member.id,
           venue_fee_status: member.venue_fee_status,
-          payment_date: member.payment_date
+          payment_date: member.payment_date,
         };
       }
     });
@@ -274,7 +285,7 @@ const AttendanceVenueFee = () => {
   };
 
   const filteredMembers = members.filter(
-    member =>
+    (member) =>
       member.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       member.chapter_name.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -289,10 +300,14 @@ const AttendanceVenueFee = () => {
           </div>
           <div>
             <h2 className="text-2xl font-bold text-white">
-              {markingType === 'attendance' ? 'Mark Attendance' : 'Update Venue Fees'}
+              {markingType === "attendance"
+                ? "Mark Attendance"
+                : "Update Venue Fees"}
             </h2>
             <p className="text-sm text-gray-400">
-              Record {markingType === 'attendance' ? 'attendance' : 'venue fees'} for meetings
+              Record{" "}
+              {markingType === "attendance" ? "attendance" : "venue fees"} for
+              meetings
             </p>
           </div>
         </div>
@@ -325,16 +340,21 @@ const AttendanceVenueFee = () => {
         <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
           <div className="space-y-1">
             <p className="text-gray-400 text-sm">Meeting Type</p>
-            <h3 className="text-xl font-semibold text-white">{meetingDetails.type}</h3>
+            <h3 className="text-xl font-semibold text-white">
+              {meetingDetails.type}
+            </h3>
           </div>
           <div className="space-y-1">
             <p className="text-gray-400 text-sm">Meeting Name</p>
-            <h3 className="text-xl font-semibold text-white">{meetingDetails.title}</h3>
+            <h3 className="text-xl font-semibold text-white">
+              {meetingDetails.title}
+            </h3>
           </div>
           <div className="space-y-1">
             <p className="text-gray-400 text-sm">Meeting Date</p>
             <h3 className="text-xl font-semibold text-white">
-              {new Date(meetingDetails.date).toLocaleDateString("en-GB")} {meetingDetails.time}
+              {new Date(meetingDetails.date).toLocaleDateString("en-GB")}{" "}
+              {meetingDetails.time}
             </h3>
           </div>
         </div>
@@ -365,7 +385,7 @@ const AttendanceVenueFee = () => {
           </div>
         </div>
 
-        {markingType === 'attendance' ? (
+        {markingType === "attendance" ? (
           // Attendance Stats Card
           <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700 hover:bg-gray-800 transition-all duration-300">
             <div className="flex items-center justify-between">
@@ -395,7 +415,9 @@ const AttendanceVenueFee = () => {
               </div>
               <div className="px-2.5 py-1 bg-orange-500/10 rounded-lg">
                 <span className="text-sm text-orange-500">
-                  {parseInt(stats.attendance.late_less) + parseInt(stats.attendance.late_more)} Late
+                  {parseInt(stats.attendance.late_less) +
+                    parseInt(stats.attendance.late_more)}{" "}
+                  Late
                 </span>
               </div>
               <div className="px-2.5 py-1 bg-red-500/10 rounded-lg">
@@ -412,7 +434,8 @@ const AttendanceVenueFee = () => {
               <div>
                 <p className="text-gray-400">Venue Fee Collection</p>
                 <h3 className="text-2xl font-bold text-white mt-1">
-                  ₹{stats.venue_fee.collected} / ₹{stats.venue_fee.total_expected}
+                  ₹{stats.venue_fee.collected} / ₹
+                  {stats.venue_fee.total_expected}
                 </h3>
               </div>
               <div className="p-3 bg-purple-500/10 rounded-xl">
@@ -456,7 +479,9 @@ const AttendanceVenueFee = () => {
         </div>
 
         {loading ? (
-          <div className="py-8 text-center text-gray-400">Loading members...</div>
+          <div className="py-8 text-center text-gray-400">
+            Loading members...
+          </div>
         ) : filteredMembers.length === 0 ? (
           <div className="py-8 text-center text-gray-400">No members found</div>
         ) : (
@@ -464,25 +489,43 @@ const AttendanceVenueFee = () => {
             <table className="w-full text-left border-separate border-spacing-0">
               <thead>
                 <tr className="bg-gray-800">
-                  <th className="sticky top-0 p-4 font-semibold text-gray-300 whitespace-nowrap">#</th>
-                  <th className="sticky top-0 p-4 font-semibold text-gray-300 whitespace-nowrap">Member</th>
-                  {markingType === 'attendance' ? (
+                  <th className="sticky top-0 p-4 font-semibold text-gray-300 whitespace-nowrap">
+                    #
+                  </th>
+                  <th className="sticky top-0 p-4 font-semibold text-gray-300 whitespace-nowrap">
+                    Member
+                  </th>
+                  {markingType === "attendance" ? (
                     <>
-                      {type === 'meetings' && (
+                      {type === "meetings" && (
                         <th className="sticky top-0 p-4 text-center font-semibold text-gray-300 whitespace-nowrap">
                           Substitute
                         </th>
                       )}
-                      <th className="sticky top-0 p-4 text-center font-semibold text-gray-300 whitespace-nowrap">Present</th>
-                      <th className="sticky top-0 p-4 text-center font-semibold text-gray-300 whitespace-nowrap">Absent</th>
-                      <th className="sticky top-0 p-4 text-center font-semibold text-gray-300 whitespace-nowrap">Late</th>
-                      <th className="sticky top-0 p-4 text-center font-semibold text-gray-300 whitespace-nowrap">Minutes Late</th>
+                      <th className="sticky top-0 p-4 text-center font-semibold text-gray-300 whitespace-nowrap">
+                        Present
+                      </th>
+                      <th className="sticky top-0 p-4 text-center font-semibold text-gray-300 whitespace-nowrap">
+                        Absent
+                      </th>
+                      <th className="sticky top-0 p-4 text-center font-semibold text-gray-300 whitespace-nowrap">
+                        Late
+                      </th>
+                      <th className="sticky top-0 p-4 text-center font-semibold text-gray-300 whitespace-nowrap">
+                        Minutes Late
+                      </th>
                     </>
                   ) : (
                     <>
-                      <th className="sticky top-0 p-4 text-center font-semibold text-gray-300 whitespace-nowrap">Paid</th>
-                      <th className="sticky top-0 p-4 text-center font-semibold text-gray-300 whitespace-nowrap">Unpaid</th>
-                      <th className="sticky top-0 p-4 text-center font-semibold text-gray-300 whitespace-nowrap">Payment Date</th>
+                      <th className="sticky top-0 p-4 text-center font-semibold text-gray-300 whitespace-nowrap">
+                        Paid
+                      </th>
+                      <th className="sticky top-0 p-4 text-center font-semibold text-gray-300 whitespace-nowrap">
+                        Unpaid
+                      </th>
+                      <th className="sticky top-0 p-4 text-center font-semibold text-gray-300 whitespace-nowrap">
+                        Payment Date
+                      </th>
                     </>
                   )}
                 </tr>
@@ -494,36 +537,49 @@ const AttendanceVenueFee = () => {
                     <td className="p-4">
                       <div className="flex items-center gap-2">
                         <div className="flex flex-col gap-1">
-                          <span className={`px-2 py-1 text-xs font-medium ${
-                            parseInt(member.is_active) === 1
-                              ? "bg-amber-500/20 text-amber-500"
-                              : "bg-red-500/20 text-red-500"
-                          } rounded-full`}>
-                            {parseInt(member.is_active) === 1 ? "Active" : "Inactive"}
+                          <span
+                            className={`px-2 py-1 text-xs font-medium ${
+                              parseInt(member.is_active) === 1
+                                ? "bg-amber-500/20 text-amber-500"
+                                : "bg-red-500/20 text-red-500"
+                            } rounded-full`}
+                          >
+                            {parseInt(member.is_active) === 1
+                              ? "Active"
+                              : "Inactive"}
                           </span>
                           <span className="px-2 py-1 text-xs font-medium bg-yellow-500/20 text-yellow-500 rounded-full">
                             {member.total_absences} A
                           </span>
-                          {type === 'meetings' && (
+                          {type === "meetings" && (
                             <span className="px-2 py-1 text-xs font-medium bg-blue-500/20 text-blue-500 rounded-full">
                               {member.total_substitutes} S
                             </span>
                           )}
                         </div>
-    <div>
-                          <p className="font-medium text-white">{member.full_name}</p>
-                          <p className="text-sm text-gray-400">{member.chapter_name}</p>
+                        <div>
+                          <p className="font-medium text-white">
+                            {member.full_name}
+                          </p>
+                          <p className="text-sm text-gray-400">
+                            {member.chapter_name}
+                          </p>
                         </div>
                       </div>
                     </td>
-                    {markingType === 'attendance' ? (
+                    {markingType === "attendance" ? (
                       <>
-                        {type === 'meetings' && (
+                        {type === "meetings" && (
                           <td className="p-4 text-center">
                             <input
                               type="checkbox"
                               checked={member.is_substitute === 1}
-                              onChange={(e) => handleSubstituteChange(member.id, e.target.checked)}
+                              onChange={(e) =>
+                                handleSubstituteChange(
+                                  member.id,
+                                  e.target.checked
+                                )
+                              }
                               className="substitute-checkbox"
                             />
                           </td>
@@ -534,7 +590,9 @@ const AttendanceVenueFee = () => {
                             name={`attendance_${member.id}`}
                             value="present"
                             checked={member.status === "present"}
-                            onChange={() => handleAttendanceChange(member.id, "present")}
+                            onChange={() =>
+                              handleAttendanceChange(member.id, "present")
+                            }
                             className="attendance-radio"
                           />
                         </td>
@@ -544,7 +602,9 @@ const AttendanceVenueFee = () => {
                             name={`attendance_${member.id}`}
                             value="absent"
                             checked={member.status === "absent"}
-                            onChange={() => handleAttendanceChange(member.id, "absent")}
+                            onChange={() =>
+                              handleAttendanceChange(member.id, "absent")
+                            }
                             className="attendance-radio"
                           />
                         </td>
@@ -554,14 +614,18 @@ const AttendanceVenueFee = () => {
                             name={`attendance_${member.id}`}
                             value="late"
                             checked={member.status === "late"}
-                            onChange={() => handleAttendanceChange(member.id, "late")}
+                            onChange={() =>
+                              handleAttendanceChange(member.id, "late")
+                            }
                             className="attendance-radio"
                           />
                         </td>
                         <td className="p-4 text-center">
                           <select
                             value={member.late_minutes || "less_than_10"}
-                            onChange={(e) => handleLateMinutesChange(member.id, e.target.value)}
+                            onChange={(e) =>
+                              handleLateMinutesChange(member.id, e.target.value)
+                            }
                             disabled={member.status !== "late"}
                             className="bg-gray-700 text-white p-2 rounded-lg border border-gray-600 focus:border-amber-500 focus:ring-0"
                           >
@@ -578,7 +642,9 @@ const AttendanceVenueFee = () => {
                             name={`venue_fee_${member.id}`}
                             value="paid"
                             checked={member.venue_fee_status === "paid"}
-                            onChange={() => handleVenueFeeChange(member.id, "paid")}
+                            onChange={() =>
+                              handleVenueFeeChange(member.id, "paid")
+                            }
                             className="venue-fee-radio"
                           />
                         </td>
@@ -588,7 +654,9 @@ const AttendanceVenueFee = () => {
                             name={`venue_fee_${member.id}`}
                             value="unpaid"
                             checked={member.venue_fee_status === "unpaid"}
-                            onChange={() => handleVenueFeeChange(member.id, "unpaid")}
+                            onChange={() =>
+                              handleVenueFeeChange(member.id, "unpaid")
+                            }
                             className="venue-fee-radio"
                           />
                         </td>
@@ -597,7 +665,12 @@ const AttendanceVenueFee = () => {
                             <input
                               type="date"
                               value={member.payment_date || ""}
-                              onChange={(e) => handlePaymentDateChange(member.id, e.target.value)}
+                              onChange={(e) =>
+                                handlePaymentDateChange(
+                                  member.id,
+                                  e.target.value
+                                )
+                              }
                               disabled={member.venue_fee_status !== "paid"}
                               className="w-full bg-gray-700 text-white p-2 rounded-lg border border-gray-600 [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full"
                             />
@@ -619,7 +692,7 @@ const AttendanceVenueFee = () => {
       </div>
 
       {/* Save Button */}
-      <div className="sticky bottom-0 bg-gray-900 p-4 mt-4">
+      <div className="bg-gray-900 p-4 mt-4">
         <button
           onClick={saveData}
           className="ml-auto flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-600 to-amber-900 hover:from-amber-700 hover:to-amber-950 text-white rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-amber-900/30 hover:-translate-y-0.5"
@@ -632,7 +705,7 @@ const AttendanceVenueFee = () => {
               strokeLinecap="round"
             />
           </svg>
-          {markingType === 'attendance' ? 'Save Attendance' : 'Save Venue Fee'}
+          {markingType === "attendance" ? "Save Attendance" : "Save Venue Fee"}
         </button>
       </div>
     </div>

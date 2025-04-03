@@ -6,6 +6,7 @@ import certificatesIcon from "../assets/images/icons/certi.svg";
 import calendarIcon from "../assets/images/icons/calender-icon.svg";
 import api from "../hooks/api";
 import axios from "axios";
+import DeleteModal from "../layout/DeleteModal";
 // Import certificate images
 import businessImage from "../Certificates/public/assets/businessImage.jpg";
 import visitorImage from "../Certificates/public/assets/visitorImage.jpg";
@@ -18,6 +19,8 @@ const CertificatesList = () => {
   const [certificates, setCertificates] = useState([]);
   const [chapters, setChapters] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [certificateToDelete, setCertificateToDelete] = useState(null);
   const [filters, setFilters] = useState({
     search: "",
     chapter: "",
@@ -326,71 +329,51 @@ const CertificatesList = () => {
     return styles[type] || "from-gray-600 to-gray-900";
   };
 
-  // Add back the handleDelete function
-  const handleDelete = async (certificateId) => {
+  const handleDelete = async () => {
     try {
-      const result = await Swal.fire({
-        title: "Are you sure?",
-        text: "This certificate will be permanently deleted. This action cannot be undone.",
-        icon: "warning",
+      // Show loading state
+      Swal.fire({
+        title: "Deleting...",
         background: "#111827",
         color: "#fff",
-        showCancelButton: true,
-        confirmButtonText: "Yes, delete it",
-        cancelButtonText: "Cancel",
-        customClass: {
-          popup: "bg-gray-900 border-gray-700 rounded-2xl border",
-          title: "text-white",
-          htmlContainer: "text-gray-300",
-          confirmButton:
-            "bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg px-6 py-2",
-          cancelButton:
-            "bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-lg px-6 py-2",
+        didOpen: () => {
+          Swal.showLoading();
         },
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        allowEnterKey: false,
       });
 
-      if (result.isConfirmed) {
-        // Show loading state
-        Swal.fire({
-          title: "Deleting...",
-          background: "#111827",
-          color: "#fff",
-          didOpen: () => {
-            Swal.showLoading();
-          },
-          allowOutsideClick: false,
-          allowEscapeKey: false,
-          allowEnterKey: false,
-        });
+      // Make the delete request
+      const response = await axios.delete(
+        `${api}/certificates/${certificateToDelete.certificate_id}`
+      );
 
-        // Make the delete request
-        const response = await axios.delete(
-          `${api}/certificates/${certificateId}`
+      if (response.data.status === "success") {
+        // Update the local state by removing the deleted certificate
+        setCertificates((prevCerts) =>
+          prevCerts.filter(
+            (cert) => cert.certificate_id !== certificateToDelete.certificate_id
+          )
         );
 
-        if (response.data.status === "success") {
-          setCertificates((prevCerts) =>
-            prevCerts.filter((cert) => cert.certificate_id !== certificateId)
-          );
-
-          // Show success message
-          Swal.fire({
-            icon: "success",
-            title: "Deleted!",
-            text: "Certificate has been deleted successfully.",
-            background: "#111827",
-            color: "#fff",
-            customClass: {
-              popup: "bg-gray-900 border-gray-700 rounded-2xl border",
-              title: "text-white",
-              htmlContainer: "text-gray-300",
-            },
-          });
-        }
+        // Show success message
+        Swal.fire({
+          icon: "success",
+          title: "Deleted!",
+          text: "Certificate has been deleted successfully.",
+          background: "#111827",
+          color: "#fff",
+          customClass: {
+            popup: "bg-gray-900 border-gray-700 rounded-2xl border",
+            title: "text-white",
+            htmlContainer: "text-gray-300",
+          },
+        });
       }
     } catch (error) {
       console.error("Error deleting certificate:", error);
-
+      
       // Show error message
       Swal.fire({
         icon: "error",
@@ -406,6 +389,9 @@ const CertificatesList = () => {
           htmlContainer: "text-gray-300",
         },
       });
+    } finally {
+      setShowDeleteModal(false);
+      setCertificateToDelete(null);
     }
   };
 
@@ -625,7 +611,10 @@ const CertificatesList = () => {
                             <Eye className="w-5 h-5 opacity-70 group-hover:opacity-100" />
                           </button>
                           <button
-                            onClick={() => handleDelete(cert.certificate_id)}
+                            onClick={() => {
+                              setCertificateToDelete(cert);
+                              setShowDeleteModal(true);
+                            }}
                             className="group flex items-center justify-center w-10 h-10 bg-gradient-to-r from-red-600 to-red-900 hover:from-red-700 hover:to-red-950 text-white/90 hover:text-white rounded-xl transition-all duration-300 shadow hover:shadow-lg hover:shadow-red-900/30 hover:-translate-y-0.5"
                             title="Delete Certificate"
                           >
@@ -641,6 +630,17 @@ const CertificatesList = () => {
           </div>
         )}
       </div>
+
+      {/* Add DeleteModal at the end of the component */}
+      <DeleteModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setCertificateToDelete(null);
+        }}
+        onDelete={handleDelete}
+        itemName={`Certificate for ${certificateToDelete?.member_name || ""}`}
+      />
     </div>
   );
 };
