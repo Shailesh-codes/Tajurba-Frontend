@@ -118,7 +118,10 @@ const CertificatesList = () => {
             style.innerHTML = `
             @font-face {
               font-family: 'Greates-Draken';
-              src: url('../Certificates/public/fonts/Greates-Draken.otf') format('opentype');
+              src: url('/src/Certificates/public/fonts/Greates-Draken.otf') format('opentype');
+              font-weight: normal;
+              font-style: normal;
+              font-display: swap;
             }
           `;
             document.head.appendChild(style);
@@ -379,7 +382,9 @@ const CertificatesList = () => {
     if (result.isConfirmed) {
       try {
         // For demo, just remove from the dummy data
-        setCertificates(prevCerts => prevCerts.filter(cert => cert.certificate_id !== certificateId));
+        setCertificates((prevCerts) =>
+          prevCerts.filter((cert) => cert.certificate_id !== certificateId)
+        );
         showAlert("success", "Certificate deleted successfully");
       } catch (error) {
         console.error("Error deleting certificate:", error);

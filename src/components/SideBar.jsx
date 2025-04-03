@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { NavLink } from "react-router-dom";
 import { IoSettingsOutline, IoCalendarOutline } from "react-icons/io5";
 import { FiLogOut } from "react-icons/fi";
@@ -45,17 +45,17 @@ const SideBar = ({ isOpen, setIsOpen, setIsLogoutModalOpen }) => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed lg:sticky top-0 left-0 h-screen w-80 bg-gradient-to-b from-[#0c1424] to-[#0F172A] z-50
+        className={`fixed lg:sticky top-0 left-0 h-screen w-80 bg-[#0F172A] z-50
         transition-transform duration-300 ease-in-out shadow-2xl flex flex-col
         ${isOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}
       >
         {/* Logo Section */}
-        <div className="h-28 flex items-center justify-center px-6 py-8 border-b border-gray-700/30 bg-[#0c1424]/50">
+        <div className="h-28 flex items-center justify-center px-6 py-8 border-b border-gray-700/30 bg-[#0c1424]">
           <img src={Logo} alt="Tajurba" className="h-20" />
         </div>
 
         {/* Scrollable Navigation Section */}
-        <div className="flex-1 overflow-y-auto scrollbar-hide">
+        <div className="flex-1 overflow-y-auto scrollbar-hide bg-[#0F172A]">
           <nav className="px-4 py-6 space-y-2">
             {/* Main Menu Items */}
             <span className="text-[#cdb065] text-sm font-bold uppercase tracking-wider px-4 mb-4 block">

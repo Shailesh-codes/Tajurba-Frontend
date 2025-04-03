@@ -4,6 +4,7 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import certi from "../assets/images/icons/certi.svg";
 import calendarIcon from "../assets/images/icons/calender-icon.svg";
+import api from "../hooks/api";
 
 const AssignCertificate = () => {
   const navigate = useNavigate();
@@ -17,45 +18,43 @@ const AssignCertificate = () => {
     issue_date: "",
   });
 
-  // Load chapters on component mount
-  useEffect(() => {
-    loadChapters();
-  }, []);
-
-  // Load members when chapter changes
-  useEffect(() => {
-    if (selectedChapter) {
-      loadMembers(selectedChapter);
-    }
-  }, [selectedChapter]);
-
-  const loadChapters = async () => {
-    try {
-      const response = await axios.get("/api/chapters?public=true");
-      if (response.data.status === "success") {
-        setChapters(response.data.data);
-      }
-    } catch (error) {
-      console.error("Error loading chapters:", error);
-    }
-  };
-
   const loadMembers = async (chapterId) => {
     try {
-      const response = await axios.get(
-        `/api/admin-members?chapter=${chapterId}`
-      );
-      if (response.data.status === "success") {
-        setMembers(
-          response.data.data.sort((a, b) =>
-            a.full_name.localeCompare(b.full_name)
-          )
+      const response = await axios.get(`${api}/members/members`);
+      if (response.data.success) {
+        const chapterMembers = response.data.data.filter(
+          (member) =>
+            member.chapter === parseInt(chapterId) && member.status === "active"
         );
+        setMembers(chapterMembers.sort((a, b) => a.name.localeCompare(b.name)));
       }
     } catch (error) {
       console.error("Error loading members:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Failed to load members for this chapter",
+        background: "#111827",
+        color: "#fff",
+        confirmButtonColor: "#F59E0B",
+      });
+      setMembers([]);
     }
   };
+
+  useEffect(() => {
+    const fetchChapters = async () => {
+      try {
+        const response = await axios.get(`${api}/chapters`);
+        if (response.data.status === "success") {
+          setChapters(response.data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching chapters:", error);
+      }
+    };
+    fetchChapters();
+  }, []);
 
   const handleMemberSelection = (memberId, name) => {
     setSelectedMembers((prev) => {
@@ -101,7 +100,7 @@ const AssignCertificate = () => {
         ...formData,
       };
 
-      const response = await axios.post("/api/certificates", submitData);
+      const response = await axios.post(`${api}/certificates`, submitData);
 
       if (response.data.status === "success") {
         Swal.fire({
@@ -146,7 +145,7 @@ const AssignCertificate = () => {
   };
 
   const filteredMembers = members.filter((member) =>
-    member.full_name.toLowerCase().includes(searchTerm.toLowerCase())
+    member.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -214,7 +213,14 @@ const AssignCertificate = () => {
               <select
                 required
                 value={selectedChapter}
-                onChange={(e) => setSelectedChapter(e.target.value)}
+                onChange={(e) => {
+                  setSelectedChapter(e.target.value);
+                  if (e.target.value) {
+                    loadMembers(e.target.value);
+                  } else {
+                    setMembers([]);
+                  }
+                }}
                 className="w-full p-3 bg-gray-700 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-0 text-white"
               >
                 <option value="">Select Chapter</option>
@@ -289,25 +295,20 @@ const AssignCertificate = () => {
             <div className="max-h-[400px] overflow-y-auto divide-y divide-gray-700">
               {filteredMembers.map((member) => (
                 <div
-                  key={member.member_id}
+                  key={member.id}
                   className="p-4 hover:bg-gray-700 transition-colors duration-200"
                 >
                   <label className="flex items-center space-x-3 w-full cursor-pointer">
                     <input
                       type="checkbox"
-                      checked={selectedMembers.some(
-                        (m) => m.id === member.member_id
-                      )}
+                      checked={selectedMembers.some((m) => m.id === member.id)}
                       onChange={() =>
-                        handleMemberSelection(
-                          member.member_id,
-                          member.full_name
-                        )
+                        handleMemberSelection(member.id, member.name)
                       }
                       className="form-checkbox h-5 w-5 text-amber-500 rounded border-gray-600 bg-gray-700 focus:ring-0 focus:ring-offset-0"
                     />
                     <span className="text-white font-medium">
-                      {member.full_name}
+                      {member.name}
                     </span>
                   </label>
                 </div>

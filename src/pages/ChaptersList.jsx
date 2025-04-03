@@ -40,7 +40,8 @@ const ChaptersList = () => {
       console.error("Error deleting chapter:", error.response?.data || error);
       showAlert(
         "error",
-        error.response?.data?.message || "Failed to delete chapter. Please try again.",
+        error.response?.data?.message ||
+          "Failed to delete chapter. Please try again.",
         5000
       );
     } finally {
@@ -60,7 +61,6 @@ const ChaptersList = () => {
       }
     } catch (error) {
       console.error("Error loading chapters:", error);
-      showAlert("error", "Failed to load chapters");
     }
   };
 
