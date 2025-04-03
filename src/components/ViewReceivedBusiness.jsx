@@ -10,50 +10,119 @@ import {
   FiFolder,
 } from "react-icons/fi";
 import { useNavigate, useParams } from "react-router-dom";
+import axios from "axios";
+import api from "../hooks/api";
 
 const ViewReceivedBusiness = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const [businessData, setBusinessData] = useState({
-    givenByName: "Shailesh Bhosale",
-    givenByChapter: "Chapter A",
-    amount: "50000",
-    businessDate: "2024-03-15",
-    givenByEmail: "shailesh@example.com",
-    givenByMobile: "+91 9876543210",
-    givenByWebsite: "www.shailesh.com",
-    givenByCompany: "Tech Solutions Ltd",
-    givenByBusiness: "IT Services",
-    description:
-      "Provided IT consulting services for web application development and cloud infrastructure setup. The project included full-stack development, database design, and deployment strategies.",
-    profileImage: "https://avatar.iran.liara.run/public",
-    socialMedia: {
-      facebook: "https://facebook.com/shailesh",
-      twitter: "https://twitter.com/shailesh",
-      linkedin: "https://linkedin.com/in/shailesh",
-      instagram: "https://instagram.com/shailesh",
-      whatsapp: "https://wa.me/919876543210",
-    },
-  });
+  const [loading, setLoading] = useState(true);
+  const [businessData, setBusinessData] = useState(null);
+  const [error, setError] = useState(null);
 
+  // Fetch business data from backend
   useEffect(() => {
-    // Comment out the actual API call for now since we're using dummy data
-    // const fetchBusinessData = async () => {
-    //   try {
-    //     const response = await fetch(`/api/received-business/${id}`);
-    //     if (!response.ok) {
-    //       throw new Error("Failed to fetch business data");
-    //     }
-    //     const data = await response.json();
-    //     setBusinessData({...});
-    //   } catch (err) {
-    //     console.error("Error fetching business data:", err);
-    //   }
-    // };
-    // if (id) {
-    //   fetchBusinessData();
-    // }
+    const fetchBusinessData = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(`${api}/business-received/${id}`);
+
+        const memberResponse = await axios.get(
+          `${api}/members/members/${response.data.given_by_memberId}`
+        );
+
+        // Combine business and member data
+        const combinedData = {
+          ...response.data,
+          givenByName: memberResponse.data.data.name,
+          givenByChapter:
+            memberResponse.data.data.chapter_name ||
+            memberResponse.data.data.chapter,
+          givenByEmail: memberResponse.data.data.email,
+          givenByMobile: memberResponse.data.data.mobile,
+          givenByCompany: memberResponse.data.data.company,
+          givenByBusiness: memberResponse.data.data.business_category,
+          givenByWebsite: memberResponse.data.data.website || "Not provided",
+          profileImage:
+            memberResponse.data.data.profile_image ||
+            "https://avatar.iran.liara.run/public",
+
+          socialMedia: {
+            facebook: memberResponse.data.data.facebook_url,
+            twitter: memberResponse.data.data.twitter_url,
+            linkedin: memberResponse.data.data.linkedin_url,
+            instagram: memberResponse.data.data.instagram_url,
+            whatsapp: memberResponse.data.data.whatsapp_url,
+          },
+        };
+
+        setBusinessData(combinedData);
+      } catch (error) {
+        console.error("Error fetching business data:", error);
+        setError("Failed to load business details");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchBusinessData();
+    }
   }, [id]);
+
+  if (loading) {
+    return (
+      <div className="mt-32 flex justify-center items-center">
+        <div className="flex flex-col items-center gap-3">
+          <svg
+            className="w-12 h-12 text-amber-500 animate-spin"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+            />
+          </svg>
+          <p className="text-gray-400">Loading business details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !businessData) {
+    return (
+      <div className="mt-32 flex justify-center items-center">
+        <div className="flex flex-col items-center gap-3">
+          <svg
+            className="w-12 h-12 text-red-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          <p className="text-gray-400">
+            {error || "Failed to load business details"}
+          </p>
+          <button
+            onClick={() => navigate(-1)}
+            className="mt-4 px-4 py-2 bg-gray-800 text-gray-300 rounded-lg hover:text-amber-500"
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -145,60 +214,62 @@ const ViewReceivedBusiness = () => {
               </div>
             </div>
 
-            <div className="flex gap-3 mb-4">
-              {Object.entries(businessData.socialMedia).map(
-                ([platform, url]) => {
-                  if (!url) return null;
+            {/* Social Media Links - Only show if links exist */}
+            {Object.values(businessData.socialMedia).some((url) => url) && (
+              <div className="flex gap-3 mb-4">
+                {Object.entries(businessData.socialMedia).map(
+                  ([platform, url]) => {
+                    if (!url) return null;
 
-                  // Platform-specific color configurations
-                  const socialColors = {
-                    facebook: {
-                      bg: "bg-[#1877F2]/20",
-                      hover: "hover:bg-[#1877F2]/30",
-                      text: "hover:text-[#1877F2]",
-                    },
-                    twitter: {
-                      bg: "bg-[#1DA1F2]/20",
-                      hover: "hover:bg-[#1DA1F2]/30",
-                      text: "hover:text-[#1DA1F2]",
-                    },
-                    linkedin: {
-                      bg: "bg-[#0A66C2]/20",
-                      hover: "hover:bg-[#0A66C2]/30",
-                      text: "hover:text-[#0A66C2]",
-                    },
-                    instagram: {
-                      bg: "bg-[#E4405F]/20",
-                      hover: "hover:bg-[#E4405F]/30",
-                      text: "hover:text-[#E4405F]",
-                    },
-                    whatsapp: {
-                      bg: "bg-[#25D366]/20",
-                      hover: "hover:bg-[#25D366]/30",
-                      text: "hover:text-[#25D366]",
-                    },
-                  };
+                    const socialColors = {
+                      facebook: {
+                        bg: "bg-[#1877F2]/20",
+                        hover: "hover:bg-[#1877F2]/30",
+                        text: "hover:text-[#1877F2]",
+                      },
+                      twitter: {
+                        bg: "bg-[#1DA1F2]/20",
+                        hover: "hover:bg-[#1DA1F2]/30",
+                        text: "hover:text-[#1DA1F2]",
+                      },
+                      linkedin: {
+                        bg: "bg-[#0A66C2]/20",
+                        hover: "hover:bg-[#0A66C2]/30",
+                        text: "hover:text-[#0A66C2]",
+                      },
+                      instagram: {
+                        bg: "bg-[#E4405F]/20",
+                        hover: "hover:bg-[#E4405F]/30",
+                        text: "hover:text-[#E4405F]",
+                      },
+                      whatsapp: {
+                        bg: "bg-[#25D366]/20",
+                        hover: "hover:bg-[#25D366]/30",
+                        text: "hover:text-[#25D366]",
+                      },
+                    };
 
-                  const colors = socialColors[platform];
+                    const colors = socialColors[platform];
 
-                  return (
-                    <a
-                      key={platform}
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`p-2 rounded-lg transition-all duration-300 ${colors.bg} ${colors.hover} ${colors.text}`}
-                    >
-                      <img
-                        src={`/src/assets/images/socials-media-logos/${platform}.svg`}
-                        alt={platform}
-                        className="w-5 h-5"
-                      />
-                    </a>
-                  );
-                }
-              )}
-            </div>
+                    return (
+                      <a
+                        key={platform}
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`p-2 rounded-lg transition-all duration-300 ${colors.bg} ${colors.hover} ${colors.text}`}
+                      >
+                        <img
+                          src={`/src/assets/images/socials-media-logos/${platform}.svg`}
+                          alt={platform}
+                          className="w-5 h-5"
+                        />
+                      </a>
+                    );
+                  }
+                )}
+              </div>
+            )}
 
             <h3 className="text-2xl font-bold text-white mb-2">
               {businessData.givenByName}
@@ -282,7 +353,9 @@ const ViewReceivedBusiness = () => {
                   </label>
                   <div className="flex items-center gap-3 p-3 bg-gray-700/50 rounded-xl">
                     <item.icon className="w-5 h-5 text-amber-500" />
-                    <p className="font-medium text-white">{item.value}</p>
+                    <p className="font-medium text-white">
+                      {item.value || "Not provided"}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -307,7 +380,7 @@ const ViewReceivedBusiness = () => {
           </div>
           <div className="p-4 bg-gray-700/50 rounded-xl">
             <p className="text-gray-300 whitespace-pre-wrap">
-              {businessData.description}
+              {businessData.description || "No description provided"}
             </p>
           </div>
         </motion.div>

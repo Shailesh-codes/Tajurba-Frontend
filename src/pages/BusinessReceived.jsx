@@ -9,29 +9,9 @@ import {
 import { BsClipboardData } from "react-icons/bs";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
+import api from "../hooks/api";
 import DeleteModal from "../layout/DeleteModal";
-
-// Dummy data for testing
-const dummyBusinessData = [
-  {
-    id: 1,
-    memberName: "Shailesh Bhosale",
-    chapter: "Chapter A",
-    amount: 50000,
-    status: "verified",
-    businessDate: "2024-03-15",
-    createdDate: "2024-03-10",
-  },
-  {
-    id: 1,
-    memberName: "Steve Smith",
-    chapter: "Chapter A",
-    amount: 50000,
-    status: "verified",
-    businessDate: "2024-03-15",
-    createdDate: "2024-03-10",
-  },
-];
 
 // Table headers
 const tableHeaders = [
@@ -46,21 +26,40 @@ const tableHeaders = [
 const BusinessReceived = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [businessData, setBusinessData] = useState(dummyBusinessData);
+  const [businessData, setBusinessData] = useState([]);
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [resultsPerPage, setResultsPerPage] = useState(10);
+  const [resultsPerPage] = useState(10);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [businessToDelete, setBusinessToDelete] = useState(null);
+
+  // Fetch business received data
+  const fetchBusinessData = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${api}/business-received`);
+      if (response.data) {
+        setBusinessData(response.data);
+        setTotalPages(Math.ceil(response.data.length / resultsPerPage));
+      }
+    } catch (error) {
+      console.error("Error fetching business data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBusinessData();
+  }, []);
 
   const handleView = (id) => {
     navigate(`/view-res-business/${id}`);
   };
 
   const handleEdit = (id) => {
-    const businessToEdit = businessData.find((business) => business.id === id);
-    navigate(`/add-res-business/${id}`, { state: { businessToEdit } });
+    navigate(`/add-res-business/${id}`);
   };
 
   const handleDelete = (id) => {
@@ -73,13 +72,10 @@ const BusinessReceived = () => {
 
     try {
       setLoading(true);
-      const updatedBusinessData = businessData.filter(
-        (business) => business.id !== businessToDelete
-      );
-      setBusinessData(updatedBusinessData);
+      await axios.delete(`${api}/business-received/${businessToDelete}`);
+      await fetchBusinessData(); // Refresh the data
       setIsDeleteModalOpen(false);
       setBusinessToDelete(null);
-      alert("Business entry deleted successfully");
     } catch (error) {
       console.error("Error deleting business:", error);
       alert("Failed to delete business entry");
@@ -88,10 +84,29 @@ const BusinessReceived = () => {
     }
   };
 
+  // Filter data based on search
+  const filteredData = businessData.filter((business) => {
+    const searchLower = search.toLowerCase();
+    return (
+      business.memberName?.toLowerCase().includes(searchLower) ||
+      business.chapter?.toLowerCase().includes(searchLower)
+    );
+  });
+
+  // Get paginated data
   const getPaginatedData = () => {
     const startIndex = (currentPage - 1) * resultsPerPage;
     const endIndex = startIndex + resultsPerPage;
-    return businessData.slice(startIndex, endIndex);
+    return filteredData.slice(startIndex, endIndex);
+  };
+
+  // Format date for display
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
   };
 
   return (
@@ -112,10 +127,9 @@ const BusinessReceived = () => {
           </div>
         </div>
         <button
-          onClick={() => history.back()}
+          onClick={() => navigate(-1)}
           className="w-full sm:w-auto group flex items-center justify-center sm:justify-start gap-2.5 px-5 py-2.5 bg-gray-800 text-gray-300 hover:text-green-500 rounded-xl transition-all duration-300 border border-gray-700"
         >
-          {/* ... back button SVG ... */}
           <span className="font-semibold tracking-wide text-sm">Back</span>
         </button>
       </div>
@@ -131,7 +145,6 @@ const BusinessReceived = () => {
               onChange={(e) => setSearch(e.target.value)}
               className="w-full sm:w-[400px] lg:w-[500px] h-full bg-gray-800 text-gray-300 pl-12 rounded-lg border-none focus:outline-none focus:ring-0 text-sm placeholder:text-gray-400"
             />
-            {/* ... search icon ... */}
           </div>
         </div>
 
@@ -167,13 +180,10 @@ const BusinessReceived = () => {
         className="relative bg-gradient-to-b from-gray-800/40 to-gray-900/40 backdrop-blur-xl rounded-xl border border-gray-700 shadow-xl"
       >
         <div className="relative min-h-[300px] max-h-[calc(100vh-500px)]">
-          {/* Subtle gradient overlay - Updated to amber */}
           <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-transparent to-amber-500/5" />
 
-          {/* Table container with custom scrollbar - Updated to amber */}
           <div className="absolute inset-0 overflow-auto scrollbar-thin scrollbar-track-gray-800/40 scrollbar-thumb-amber-600/50 hover:scrollbar-thumb-amber-500/80">
             <table className="w-full">
-              {/* Enhanced Header */}
               <thead className="sticky top-0 z-10">
                 <tr className="bg-gradient-to-r from-gray-800/95 via-gray-800/98 to-gray-800/95 backdrop-blur-xl">
                   {tableHeaders.map((header, index) => (
@@ -191,7 +201,6 @@ const BusinessReceived = () => {
                 </tr>
               </thead>
 
-              {/* Enhanced Table Body */}
               <tbody className="divide-y divide-gray-700/50">
                 {loading ? (
                   <tr>
@@ -247,17 +256,17 @@ const BusinessReceived = () => {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      key={business.id}
+                      key={business.business_id}
                       className="group hover:bg-gradient-to-r hover:from-gray-700/30 hover:via-gray-700/40 hover:to-gray-700/30 transition-all duration-300"
                     >
                       <td className="px-6 py-4">
                         <span className="flex items-center justify-center w-6 h-6 rounded-full bg-gray-700/50 text-amber-500 font-medium">
-                          {index + 1}
+                          {(currentPage - 1) * resultsPerPage + index + 1}
                         </span>
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
-                          {business.memberName}
+                          {business.GivenByMember?.name || business.memberName}
                         </span>
                       </td>
                       <td className="px-6 py-4">
@@ -267,32 +276,32 @@ const BusinessReceived = () => {
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-sm text-gray-300">
-                          ₹{business.amount.toLocaleString()}
+                          ₹{parseFloat(business.amount).toLocaleString()}
                         </span>
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-sm text-gray-400">
-                          {business.businessDate}
+                          {formatDate(business.businessDate)}
                         </span>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-center gap-2">
                           <button
-                            onClick={() => handleView(business.id)}
+                            onClick={() => handleView(business.business_id)}
                             className="relative group/btn flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-r from-amber-600/90 to-amber-800/90 hover:from-amber-600 hover:to-amber-800 transition-all duration-300 shadow-lg hover:shadow-amber-900/30"
                           >
                             <div className="absolute inset-0 rounded-xl bg-amber-600 opacity-0 group-hover/btn:opacity-20 blur-lg transition-opacity" />
                             <FiEye className="w-5 h-5 text-white/90 group-hover/btn:text-white transition-colors relative z-10" />
                           </button>
                           <button
-                            onClick={() => handleEdit(business.id)}
+                            onClick={() => handleEdit(business.business_id)}
                             className="relative group/btn flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-r from-green-600/90 to-green-800/90 hover:from-green-600 hover:to-green-800 transition-all duration-300 shadow-lg hover:shadow-green-900/30"
                           >
                             <div className="absolute inset-0 rounded-xl bg-green-600 opacity-0 group-hover/btn:opacity-20 blur-lg transition-opacity" />
                             <FiEdit className="w-5 h-5 text-white/90 group-hover/btn:text-white transition-colors relative z-10" />
                           </button>
                           <button
-                            onClick={() => handleDelete(business.id)}
+                            onClick={() => handleDelete(business.business_id)}
                             className="relative group/btn flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-r from-red-600/90 to-red-800/90 hover:from-red-600 hover:to-red-800 transition-all duration-300 shadow-lg hover:shadow-red-900/30"
                           >
                             <div className="absolute inset-0 rounded-xl bg-red-600 opacity-0 group-hover/btn:opacity-20 blur-lg transition-opacity" />
@@ -310,7 +319,27 @@ const BusinessReceived = () => {
       </motion.div>
 
       {/* Pagination Section */}
-      {/* ... pagination controls ... */}
+      {totalPages > 1 && (
+        <div className="flex justify-center gap-2">
+          <button
+            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            className="p-2 rounded-lg bg-gray-800 text-gray-400 hover:text-amber-500 disabled:opacity-50 disabled:hover:text-gray-400"
+          >
+            <FiChevronLeft className="w-5 h-5" />
+          </button>
+          <span className="flex items-center px-4 py-2 rounded-lg bg-gray-800 text-gray-300">
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+            disabled={currentPage === totalPages}
+            className="p-2 rounded-lg bg-gray-800 text-gray-400 hover:text-amber-500 disabled:opacity-50 disabled:hover:text-gray-400"
+          >
+            <FiChevronRight className="w-5 h-5" />
+          </button>
+        </div>
+      )}
 
       <DeleteModal
         isOpen={isDeleteModalOpen}
