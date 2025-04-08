@@ -52,11 +52,12 @@ const MarkvenueFee = () => {
 
     setLoading(true);
     try {
+      // For fetching, use socialTraining
       const scheduleType =
         type === "meetings"
           ? "meeting"
           : type === "social"
-          ? "socialTraining" 
+          ? "socialTraining"
           : type;
 
       // Get attendance/venue fee data
@@ -98,26 +99,44 @@ const MarkvenueFee = () => {
             );
 
             if (chapterMembers.length > 0) {
+              const membersWithData = chapterMembers
+                .map((member) => {
+                  // Find existing attendance data
+                  const existingData = attendanceResponse.data.data.find(
+                    (m) => m.id === member.id
+                  );
+
+                  // Format the payment date properly
+                  let formattedPaymentDate = null;
+                  if (existingData?.payment_date) {
+                    try {
+                      // Convert to YYYY-MM-DD format for the date input
+                      formattedPaymentDate = formatDate(
+                        existingData.payment_date
+                      );
+                    } catch (err) {
+                      console.error(
+                        `Error formatting payment date for member ${member.id}:`,
+                        err
+                      );
+                    }
+                  }
+
+                  return {
+                    id: member.id,
+                    full_name: member.name,
+                    chapter: member.chapter,
+                    chapter_name: chapter.chapter_name,
+                    is_active: member.status === "active",
+                    venue_fee_status: existingData?.venue_fee_status || null,
+                    payment_date: formattedPaymentDate, // Use the formatted date
+                  };
+                })
+                .sort((a, b) => a.full_name.localeCompare(b.full_name));
+
               groupedByChapter[chapter.chapter_name] = {
                 chapter_id: chapter.chapter_id,
-                members: chapterMembers
-                  .map((member) => {
-                    // Find existing attendance data
-                    const existingData = attendanceResponse.data.data.find(
-                      (m) => m.id === member.id
-                    );
-
-                    return {
-                      id: member.id,
-                      full_name: member.name,
-                      chapter: member.chapter,
-                      chapter_name: chapter.chapter_name,
-                      is_active: member.status === "active",
-                      venue_fee_status: existingData?.venue_fee_status || null,
-                      payment_date: existingData?.payment_date || null,
-                    };
-                  })
-                  .sort((a, b) => a.full_name.localeCompare(b.full_name)),
+                members: membersWithData,
               };
 
               // Initialize chapter stats
@@ -128,14 +147,12 @@ const MarkvenueFee = () => {
               };
 
               // Calculate chapter stats
-              groupedByChapter[chapter.chapter_name].members.forEach(
-                (member) => {
-                  if (member.venue_fee_status === "paid")
-                    groupedByChapter[chapter.chapter_name].stats.paid++;
-                  if (member.venue_fee_status === "unpaid")
-                    groupedByChapter[chapter.chapter_name].stats.unpaid++;
-                }
-              );
+              membersWithData.forEach((member) => {
+                if (member.venue_fee_status === "paid")
+                  groupedByChapter[chapter.chapter_name].stats.paid++;
+                if (member.venue_fee_status === "unpaid")
+                  groupedByChapter[chapter.chapter_name].stats.unpaid++;
+              });
             }
           });
 
@@ -184,46 +201,173 @@ const MarkvenueFee = () => {
     }
   };
 
+  const formatDate = (date) => {
+    if (!date) return null;
+
+    try {
+      // If it's already in YYYY-MM-DD format, return it
+      if (typeof date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        return date;
+      }
+
+      // If it's a date string with time information
+      if (typeof date === "string") {
+        // Try to extract just the date part
+        const datePart = date.split("T")[0];
+        if (/^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
+          return datePart;
+        }
+      }
+
+      // Create a new date object
+      const d = new Date(date);
+      if (isNaN(d.getTime())) {
+        console.error("Invalid date:", date);
+        return null;
+      }
+
+      // Format as YYYY-MM-DD
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return null;
+    }
+  };
+
   const handleVenueFeeChange = (memberId, status) => {
-    setMembers(
-      members.map((member) => {
+    // Only set a date when the status is "paid"
+    const currentDate = status === "paid" ? formatDate(new Date()) : null;
+
+    console.log(
+      `Setting member ${memberId} to ${status} with date ${currentDate}`
+    );
+
+    // Update members state
+    setMembers((prevMembers) =>
+      prevMembers.map((member) => {
         if (member.id === memberId) {
           return {
             ...member,
             venue_fee_status: status,
-            payment_date:
-              status === "paid" ? new Date().toISOString().split("T")[0] : null,
+            payment_date: currentDate,
           };
         }
         return member;
       })
     );
+
+    // Update chapterMembers state
+    setChapterMembers((prevChapterMembers) => {
+      const newChapterMembers = { ...prevChapterMembers };
+      Object.keys(newChapterMembers).forEach((chapterName) => {
+        newChapterMembers[chapterName].members = newChapterMembers[
+          chapterName
+        ].members.map((member) => {
+          if (member.id === memberId) {
+            return {
+              ...member,
+              venue_fee_status: status,
+              payment_date: currentDate,
+            };
+          }
+          return member;
+        });
+
+        // Recalculate chapter stats
+        const chapterStats = newChapterMembers[chapterName].stats;
+        chapterStats.paid = newChapterMembers[chapterName].members.filter(
+          (m) => m.venue_fee_status === "paid"
+        ).length;
+        chapterStats.unpaid = newChapterMembers[chapterName].members.filter(
+          (m) => m.venue_fee_status === "unpaid"
+        ).length;
+      });
+      return newChapterMembers;
+    });
   };
 
   const handlePaymentDateChange = (memberId, date) => {
-    setMembers(
-      members.map((member) => {
+    const formattedDate = formatDate(date);
+
+    // Update members state
+    setMembers((prevMembers) =>
+      prevMembers.map((member) => {
         if (member.id === memberId) {
           return {
             ...member,
-            payment_date: date,
-            venue_fee_status: date ? "paid" : "unpaid",
+            payment_date: formattedDate,
+            venue_fee_status: formattedDate ? "paid" : "unpaid",
           };
         }
         return member;
       })
     );
+
+    // Update chapterMembers state
+    setChapterMembers((prevChapterMembers) => {
+      const newChapterMembers = { ...prevChapterMembers };
+      Object.keys(newChapterMembers).forEach((chapterName) => {
+        newChapterMembers[chapterName].members = newChapterMembers[
+          chapterName
+        ].members.map((member) => {
+          if (member.id === memberId) {
+            return {
+              ...member,
+              payment_date: formattedDate,
+              venue_fee_status: formattedDate ? "paid" : "unpaid",
+            };
+          }
+          return member;
+        });
+
+        // Recalculate chapter stats
+        const chapterStats = newChapterMembers[chapterName].stats;
+        chapterStats.paid = newChapterMembers[chapterName].members.filter(
+          (m) => m.venue_fee_status === "paid"
+        ).length;
+        chapterStats.unpaid = newChapterMembers[chapterName].members.filter(
+          (m) => m.venue_fee_status === "unpaid"
+        ).length;
+      });
+      return newChapterMembers;
+    });
   };
 
   const saveData = async () => {
-    const data = members.map((member) => ({
-      member_id: member.id,
-      venue_fee_status: member.venue_fee_status,
-      payment_date: member.payment_date,
-    }));
-
     try {
-      await Swal.fire({
+      // Filter out members without venue fee status
+      const data = members
+        .filter((member) => member.venue_fee_status)
+        .map((member) => {
+          let formattedDate = null;
+          if (member.venue_fee_status === "paid") {
+            // If no payment date is set but status is "paid", use today's date
+            formattedDate = formatDate(member.payment_date || new Date());
+          }
+
+          return {
+            member_id: member.id,
+            venue_fee_status: member.venue_fee_status,
+            payment_date: formattedDate, // Use the formatted date
+          };
+        });
+
+      if (data.length === 0) {
+        await Swal.fire({
+          icon: "warning",
+          title: "No Data to Save",
+          text: "Please mark venue fee status for at least one member",
+          background: "#111827",
+          color: "#fff",
+        });
+        return;
+      }
+
+      // Show loading state
+      Swal.fire({
         title: "Saving...",
         text: "Please wait while we save the data",
         allowOutsideClick: false,
@@ -235,28 +379,59 @@ const MarkvenueFee = () => {
         },
       });
 
+      // Prepare request data
+      const requestData = {
+        meeting_id: parseInt(meetingId),
+        type:
+          type === "meetings"
+            ? "meeting"
+            : type === "social"
+            ? "socialTraining"
+            : type,
+        venue_fee_data: data,
+      };
+
+      console.log("Sending request data:", requestData);
+
+      // Make the API call
       const response = await axios.post(
-        `/api/attendance-venue-fee/save_venue_fee`,
-        {
-          event_id: meetingId,
-          type: type,
-          venue_fee_data: data,
-        }
+        `${api}/attendance-venue-fee/save-venue-fee`,
+        requestData
       );
 
-      if (response.data.status === "success") {
+      // Close loading alert
+      Swal.close();
+
+      if (response.data.success) {
         await Swal.fire({
           icon: "success",
           title: "Success!",
-          text: response.data.message,
+          text: "Venue fees saved successfully",
           background: "#111827",
           color: "#fff",
         });
-        fetchMeetingData();
+
+        // Refresh the data
+        await fetchMeetingData();
+      } else {
+        throw new Error(response.data.message || "Failed to save venue fees");
       }
     } catch (error) {
-      console.error("Error:", error);
-      showError("Failed to save data");
+      console.error("Error saving venue fees:", error);
+
+      // Close loading state if it's still open
+      Swal.close();
+
+      // Show error message
+      await Swal.fire({
+        icon: "error",
+        title: "Error!",
+        text:
+          error.response?.data?.message ||
+          "Failed to save venue fees. Please try again.",
+        background: "#111827",
+        color: "#fff",
+      });
     }
   };
 
@@ -504,6 +679,7 @@ const MarkvenueFee = () => {
                             handlePaymentDateChange(member.id, e.target.value)
                           }
                           disabled={member.venue_fee_status !== "paid"}
+                          max={formatDate(new Date())}
                           className="w-full bg-gray-700 text-white p-2 rounded-lg border border-gray-600 [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full"
                         />
                         <img
