@@ -31,10 +31,10 @@ const MarkAttendance = () => {
       // Convert frontend type to backend type format
       const backendType = type === "social" ? "social_training" : type;
       const response = await axios.get(`${api}/schedules?type=${backendType}`);
-      
+
       if (response.data.success) {
         let meetingsData = response.data.data;
-        
+
         // Handle different response structures based on type
         if (type === "meetings") {
           meetingsData = response.data.data.meetings || [];
@@ -43,17 +43,23 @@ const MarkAttendance = () => {
         }
 
         // Transform the data to match the expected format
-        const transformedMeetings = meetingsData.map(meeting => {
-          const id = meeting.meeting_id || meeting.event_id || meeting.mdp_id || meeting.social_training_id;
+        const transformedMeetings = meetingsData.map((meeting) => {
+          const id =
+            meeting.meeting_id ||
+            meeting.event_id ||
+            meeting.mdp_id ||
+            meeting.social_training_id;
           return {
             id: id,
-            display_title: `${meeting.title} - ${new Date(meeting.date).toLocaleDateString()} ${meeting.time}`,
+            display_title: `${meeting.title} - ${new Date(
+              meeting.date
+            ).toLocaleDateString()} ${meeting.time}`,
             venue: meeting.venue,
             date: meeting.date,
-            time: meeting.time
+            time: meeting.time,
           };
         });
-        
+
         setMeetings(transformedMeetings);
       } else {
         showAlert("error", "Failed to load meetings");
@@ -88,7 +94,7 @@ const MarkAttendance = () => {
 
   // Add dummy stats data
   useEffect(() => {
-    // Simulate API response with dummy data
+  
     setStats({
       meetings: { total: 15, marked: 10, pending: 5 },
       mdp: { total: 8, marked: 6, pending: 2 },
@@ -291,7 +297,6 @@ const MarkAttendance = () => {
               className="w-full bg-gray-800 text-white p-3 rounded-xl border border-gray-700 focus:border-amber-500 focus:ring-0"
             >
               <option value="">Choose Meeting Type</option>
-              <option value="events">Events</option>
               <option value="meetings">Meetings</option>
               <option value="mdp">MDP</option>
               <option value="social">Social & Training</option>

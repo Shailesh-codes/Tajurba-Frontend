@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import Swal from "sweetalert2";
+import api from "../hooks/api";
 import attendanceIcon from "../assets/images/icons/attendance-icon.svg";
 import calendarIcon from "../assets/images/icons/calender-icon.svg";
 
@@ -18,6 +19,7 @@ const AttendanceVenueFee = () => {
     title: "-",
     date: "-",
     time: "-",
+    chapters: [],
   });
   const [stats, setStats] = useState({
     total_members: 0,
@@ -36,142 +38,183 @@ const AttendanceVenueFee = () => {
     },
   });
   const [members, setMembers] = useState([]);
+  const [chapterMembers, setChapterMembers] = useState({});
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
-  useEffect(() => {
+  const fetchMeetingData = async () => {
     if (!type || !meetingId) {
       navigate("/mark-attendance");
       return;
     }
 
-    // Simulate API response with dummy data
-    setMeetingDetails({
-      type:
-        type === "meetings"
-          ? "Weekly Meeting"
-          : type === "mdp"
-          ? "MDP Session"
-          : "Social Event",
-      title: "Business Network Meeting",
-      date: "2024-03-15",
-      time: "10:00 AM",
-    });
-
-    setStats({
-      total_members: 25,
-      attendance: {
-        marked: 20,
-        present: 15,
-        absent: 3,
-        late_less: 1,
-        late_more: 1,
-      },
-      venue_fee: {
-        collected: 2000,
-        total_expected: 2500,
-        paid_count: 20,
-        unpaid_count: 5,
-      },
-    });
-
-    // Dummy members data
-    setMembers([
-      {
-        id: 1,
-        full_name: "John Doe",
-        chapter_name: "Chapter A",
-        is_active: 1,
-        total_absences: 2,
-        total_substitutes: 1,
-        status: "present",
-        venue_fee_status: "paid",
-        payment_date: "2024-03-15",
-      },
-      {
-        id: 2,
-        full_name: "Jane Smith",
-        chapter_name: "Chapter B",
-        is_active: 1,
-        total_absences: 1,
-        total_substitutes: 0,
-        status: "late",
-        late_minutes: "less_than_10",
-        venue_fee_status: "paid",
-        payment_date: "2024-03-15",
-      },
-      {
-        id: 3,
-        full_name: "Mike Johnson",
-        chapter_name: "Chapter C",
-        is_active: 0,
-        total_absences: 3,
-        total_substitutes: 2,
-        status: "absent",
-        venue_fee_status: "unpaid",
-      },
-      {
-        id: 4,
-        full_name: "Sarah Williams",
-        chapter_name: "Chapter A",
-        is_active: 1,
-        total_absences: 0,
-        total_substitutes: 0,
-        status: "present",
-        venue_fee_status: "paid",
-        payment_date: "2024-03-15",
-      },
-      {
-        id: 5,
-        full_name: "Robert Brown",
-        chapter_name: "Chapter B",
-        is_active: 1,
-        total_absences: 1,
-        total_substitutes: 1,
-        status: "late",
-        late_minutes: "more_than_10",
-        venue_fee_status: "unpaid",
-      },
-    ]);
-
-    setLoading(false);
-  }, [type, meetingId]);
-
-  const loadTableData = async () => {
-    try {
-      const response = await axios.get(
-        `/api/attendance-venue-fee/meeting_stats?type=${type}&event_id=${meetingId}`
-      );
-      if (response.data.status === "success") {
-        setMeetingDetails(response.data.data.event_details);
-        setStats(response.data.data);
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      showError("Failed to load meeting stats");
-    }
-  };
-
-  const loadMeetingData = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(
-        `/api/attendance-venue-fee/meeting_members?type=${type}&meeting_id=${meetingId}`
+      const scheduleType =
+        type === "meetings"
+          ? "meeting"
+          : type === "social"
+          ? "socialTraining"
+          : type;
+
+      // First get attendance/venue fee data to ensure we have latest data
+      const attendanceResponse = await axios.get(
+        `${api}/attendance-venue-fee/meeting-members`,
+        {
+          params: {
+            type: scheduleType,
+            meeting_id: meetingId,
+          },
+        }
       );
-      if (response.data.status === "success") {
-        setMembers(response.data.data);
+
+      // Get meeting details with its chapters
+      const meetingResponse = await axios.get(
+        `${api}/schedules/${scheduleType}/${meetingId}`
+      );
+
+      if (meetingResponse.data.success) {
+        const meetingData = meetingResponse.data.data;
+
+        // Get all members
+        const membersResponse = await axios.get(`${api}/members/members`);
+
+        if (membersResponse.data.success) {
+          // Get meeting chapters
+          const meetingChapters = meetingData.chapters || [];
+
+          // Create chapter groups
+          const groupedByChapter = {};
+
+          // Process each chapter in the meeting
+          meetingChapters.forEach((chapter) => {
+            // Filter members for this chapter
+            const chapterMembers = membersResponse.data.data.filter(
+              (member) =>
+                parseInt(member.chapter) === parseInt(chapter.chapter_id) &&
+                member.status === "active"
+            );
+
+            if (chapterMembers.length > 0) {
+              groupedByChapter[chapter.chapter_name] = {
+                chapter_id: chapter.chapter_id,
+                members: chapterMembers
+                  .map((member) => {
+                    // Find existing attendance data
+                    const existingData = attendanceResponse.data.data.find(
+                      (m) => m.id === member.id
+                    );
+
+                    return {
+                      id: member.id,
+                      full_name: member.name,
+                      chapter: member.chapter,
+                      chapter_name: chapter.chapter_name,
+                      is_active: member.status === "active",
+                      status: existingData?.status || null,
+                      venue_fee_status: existingData?.venue_fee_status || null,
+                      payment_date: existingData?.payment_date || null,
+                      late_minutes: existingData?.late_minutes || null,
+                      is_substitute: existingData?.is_substitute || 0,
+                      total_absences: member.total_absences || 0,
+                      total_substitutes: member.total_substitutes || 0,
+                    };
+                  })
+                  .sort((a, b) => a.full_name.localeCompare(b.full_name)),
+              };
+
+              // Initialize chapter stats
+              groupedByChapter[chapter.chapter_name].stats = {
+                total: chapterMembers.length,
+                marked: 0,
+                present: 0,
+                substitutes: 0,
+                absent: 0,
+                late: 0,
+                paid: 0,
+                unpaid: 0,
+              };
+
+              // Calculate chapter stats
+              groupedByChapter[chapter.chapter_name].members.forEach(
+                (member) => {
+                  if (member.status)
+                    groupedByChapter[chapter.chapter_name].stats.marked++;
+
+                  // Count present only for non-substitutes
+                  if (member.status === "present" && member.is_substitute !== 1)
+                    groupedByChapter[chapter.chapter_name].stats.present++;
+
+                  // Count substitutes separately
+                  if (member.status === "present" && member.is_substitute === 1)
+                    groupedByChapter[chapter.chapter_name].stats.substitutes++;
+
+                  if (member.status === "absent")
+                    groupedByChapter[chapter.chapter_name].stats.absent++;
+                  if (member.status === "late")
+                    groupedByChapter[chapter.chapter_name].stats.late++;
+                  if (member.venue_fee_status === "paid")
+                    groupedByChapter[chapter.chapter_name].stats.paid++;
+                  if (member.venue_fee_status === "unpaid")
+                    groupedByChapter[chapter.chapter_name].stats.unpaid++;
+                }
+              );
+            }
+          });
+
+          setMeetingDetails({
+            type:
+              type === "social"
+                ? "socialTraining"
+                : type === "mdp"
+                ? "MDP"
+                : type.charAt(0).toUpperCase() + type.slice(1),
+            title: meetingData.title,
+            date: meetingData.date,
+            time: meetingData.time,
+            chapters: meetingChapters,
+          });
+
+          setChapterMembers(groupedByChapter);
+
+          // Set members as a flat array of all chapter members
+          const allMembers = Object.values(groupedByChapter).reduce(
+            (acc, chapter) => [...acc, ...chapter.members],
+            []
+          );
+          setMembers(allMembers);
+        }
+
+        // Get overall stats
+        const statsResponse = await axios.get(
+          `${api}/attendance-venue-fee/meeting-stats`,
+          {
+            params: {
+              type: scheduleType,
+              meeting_id: meetingId,
+            },
+          }
+        );
+
+        if (statsResponse.data.success) {
+          setStats(statsResponse.data.data);
+        }
       }
     } catch (error) {
-      console.error("Error:", error);
-      showError("Failed to load meeting data");
+      showError(`Failed to load meeting data: ${error.message}`);
     } finally {
       setLoading(false);
     }
   };
 
+  useEffect(() => {
+    fetchMeetingData();
+  }, [type, meetingId]);
+
   const handleAttendanceChange = (memberId, status) => {
-    setMembers(
-      members.map((member) => {
+    // Update members state
+    setMembers((prevMembers) =>
+      prevMembers.map((member) => {
         if (member.id === memberId) {
           return {
             ...member,
@@ -182,9 +225,53 @@ const AttendanceVenueFee = () => {
         return member;
       })
     );
+
+    // Update chapterMembers state
+    setChapterMembers((prevChapterMembers) => {
+      const newChapterMembers = { ...prevChapterMembers };
+      Object.keys(newChapterMembers).forEach((chapterName) => {
+        newChapterMembers[chapterName].members = newChapterMembers[
+          chapterName
+        ].members.map((member) => {
+          if (member.id === memberId) {
+            return {
+              ...member,
+              status,
+              late_minutes: status === "late" ? "less_than_10" : null,
+            };
+          }
+          return member;
+        });
+
+        // Update chapter stats - recalculate all stats
+        const stats = newChapterMembers[chapterName].stats;
+        stats.marked = 0;
+        stats.present = 0;
+        stats.substitutes = 0;
+        stats.absent = 0;
+        stats.late = 0;
+
+        newChapterMembers[chapterName].members.forEach((member) => {
+          if (member.status) stats.marked++;
+
+          // Count present only for non-substitutes
+          if (member.status === "present" && member.is_substitute !== 1)
+            stats.present++;
+
+          // Count substitutes separately
+          if (member.status === "present" && member.is_substitute === 1)
+            stats.substitutes++;
+
+          if (member.status === "absent") stats.absent++;
+          if (member.status === "late") stats.late++;
+        });
+      });
+      return newChapterMembers;
+    });
   };
 
   const handleSubstituteChange = (memberId, checked) => {
+    // Update members state
     setMembers(
       members.map((member) => {
         if (member.id === memberId) {
@@ -196,11 +283,46 @@ const AttendanceVenueFee = () => {
         return member;
       })
     );
+
+    // Update chapterMembers state with recalculated stats
+    setChapterMembers((prevChapterMembers) => {
+      const updatedChapterMembers = { ...prevChapterMembers };
+
+      Object.keys(updatedChapterMembers).forEach((chapterName) => {
+        // Update member data
+        updatedChapterMembers[chapterName].members = updatedChapterMembers[
+          chapterName
+        ].members.map((member) => {
+          if (member.id === memberId) {
+            return {
+              ...member,
+              is_substitute: checked ? 1 : 0,
+            };
+          }
+          return member;
+        });
+
+        // Recalculate chapter stats for present and substitutes
+        const stats = updatedChapterMembers[chapterName].stats;
+        stats.present = 0;
+        stats.substitutes = 0;
+
+        updatedChapterMembers[chapterName].members.forEach((member) => {
+          if (member.status === "present" && member.is_substitute !== 1)
+            stats.present++;
+          if (member.status === "present" && member.is_substitute === 1)
+            stats.substitutes++;
+        });
+      });
+
+      return updatedChapterMembers;
+    });
   };
 
   const handleLateMinutesChange = (memberId, minutes) => {
-    setMembers(
-      members.map((member) => {
+    // Update both states
+    setMembers((prevMembers) =>
+      prevMembers.map((member) => {
         if (member.id === memberId) {
           return {
             ...member,
@@ -210,33 +332,157 @@ const AttendanceVenueFee = () => {
         return member;
       })
     );
+
+    setChapterMembers((prevChapterMembers) => {
+      const newChapterMembers = { ...prevChapterMembers };
+      Object.keys(newChapterMembers).forEach((chapterName) => {
+        newChapterMembers[chapterName].members = newChapterMembers[
+          chapterName
+        ].members.map((member) => {
+          if (member.id === memberId) {
+            return {
+              ...member,
+              late_minutes: minutes,
+            };
+          }
+          return member;
+        });
+      });
+      return newChapterMembers;
+    });
+  };
+
+  const handleVenueFeeChange = (memberId, status) => {
+    const currentDate = new Date().toISOString().split("T")[0];
+
+    // Update members state
+    setMembers(
+      members.map((member) => {
+        if (member.id === memberId) {
+          return {
+            ...member,
+            venue_fee_status: status,
+            payment_date: status === "paid" ? currentDate : null,
+          };
+        }
+        return member;
+      })
+    );
+
+    // Update chapterMembers state
+    setChapterMembers((prevChapterMembers) => {
+      const updatedChapterMembers = { ...prevChapterMembers };
+      Object.keys(updatedChapterMembers).forEach((chapterName) => {
+        updatedChapterMembers[chapterName].members = updatedChapterMembers[
+          chapterName
+        ].members.map((member) => {
+          if (member.id === memberId) {
+            return {
+              ...member,
+              venue_fee_status: status,
+              payment_date: status === "paid" ? currentDate : null,
+            };
+          }
+          return member;
+        });
+
+        // Update chapter stats
+        const stats = updatedChapterMembers[chapterName].stats;
+        stats.paid = 0;
+        stats.unpaid = 0;
+        updatedChapterMembers[chapterName].members.forEach((member) => {
+          if (member.venue_fee_status === "paid") stats.paid++;
+          if (member.venue_fee_status === "unpaid") stats.unpaid++;
+        });
+      });
+      return updatedChapterMembers;
+    });
+  };
+
+  const handlePaymentDateChange = (memberId, date) => {
+    setMembers(
+      members.map((member) => {
+        if (member.id === memberId) {
+          return {
+            ...member,
+            payment_date: date,
+          };
+        }
+        return member;
+      })
+    );
+
+    // Update chapterMembers state
+    setChapterMembers((prevChapterMembers) => {
+      const updatedChapterMembers = { ...prevChapterMembers };
+      Object.keys(updatedChapterMembers).forEach((chapterName) => {
+        updatedChapterMembers[chapterName].members = updatedChapterMembers[
+          chapterName
+        ].members.map((member) => {
+          if (member.id === memberId) {
+            return {
+              ...member,
+              payment_date: date,
+            };
+          }
+          return member;
+        });
+      });
+      return updatedChapterMembers;
+    });
+  };
+
+  const validateAttendanceData = () => {
+    const unmarkedMembers = members.filter((member) => !member.status);
+    if (unmarkedMembers.length > 0) {
+      return {
+        isValid: false,
+        message: `${unmarkedMembers.length} member(s) have no attendance status marked`,
+      };
+    }
+    return { isValid: true };
+  };
+
+  const hasMarkedAttendance = () => {
+    return Object.values(chapterMembers).some((chapter) =>
+      chapter.members.some((member) => member.status)
+    );
   };
 
   const saveData = async () => {
-    const data = members.map((member) => {
-      if (markingType === "attendance") {
-        const memberData = {
-          member_id: member.id,
-          status: member.status,
-          late_minutes: member.status === "late" ? member.late_minutes : null,
-        };
-
-        if (type === "meetings") {
-          memberData.is_substitute = member.is_substitute;
-        }
-
-        return memberData;
-      } else {
-        return {
-          member_id: member.id,
-          venue_fee_status: member.venue_fee_status,
-          payment_date: member.payment_date,
-        };
-      }
-    });
-
     try {
-      await Swal.fire({
+      // Collect attendance data in the exact format backend expects
+      const attendanceData = [];
+      Object.values(chapterMembers).forEach((chapter) => {
+        chapter.members.forEach((member) => {
+          if (member.status) {
+            // Create a clean object with only the fields the backend expects
+            attendanceData.push({
+              member_id: member.id,
+              attendance_status: member.status,
+              late_minutes:
+                member.status === "late" ? member.late_minutes : null,
+              is_substitute: Boolean(member.is_substitute), // Convert to proper JavaScript boolean
+              venue_fee_status: member.venue_fee_status || null,
+              payment_date: member.payment_date || null,
+            });
+          }
+        });
+      });
+
+      if (attendanceData.length === 0) {
+        await Swal.fire({
+          icon: "warning",
+          title: "No Attendance Marked",
+          text: "Please mark attendance for at least one member before saving.",
+          background: "#111827",
+          color: "#fff",
+        });
+        return;
+      }
+
+      // Show saving dialog
+      Swal.fire({
         title: "Saving...",
         text: "Please wait while we save the data",
         allowOutsideClick: false,
@@ -248,29 +494,65 @@ const AttendanceVenueFee = () => {
         },
       });
 
-      const response = await axios.post(
-        `/api/attendance-venue-fee/save_${markingType}`,
-        {
-          event_id: meetingId,
-          type: type,
-          [`${markingType}_data`]: data,
-        }
-      );
+      const requestData = {
+        type:
+          type === "meetings"
+            ? "meeting"
+            : type === "social"
+            ? "socialTraining"
+            : type,
+        meeting_id: parseInt(meetingId),
+        attendance_data: attendanceData,
+      };
 
-      if (response.data.status === "success") {
+      console.log("Sending request:", JSON.stringify(requestData, null, 2));
+
+      // Make the API call with proper error handling
+      try {
+        const response = await axios.post(
+          `${api}/attendance-venue-fee/save-attendance`,
+          requestData
+        );
+
+        Swal.close(); // Close loading dialog
+
+        if (response.data.success) {
+          await Swal.fire({
+            icon: "success",
+            title: "Success!",
+            text: `Successfully saved attendance for ${attendanceData.length} members`,
+            background: "#111827",
+            color: "#fff",
+          });
+
+          // Refresh the data
+          await fetchMeetingData();
+        } else {
+          throw new Error(response.data.message || "Failed to save attendance");
+        }
+      } catch (error) {
+        Swal.close(); // Ensure loading dialog is closed
+        console.error("API Error:", error);
+
         await Swal.fire({
-          icon: "success",
-          title: "Success!",
-          text: response.data.message,
+          icon: "error",
+          title: "Error",
+          text: error.response?.data?.message || error.message,
           background: "#111827",
           color: "#fff",
         });
-        loadTableData();
-        loadMeetingData();
       }
     } catch (error) {
-      console.error("Error:", error);
-      showError("Failed to save data");
+      Swal.close(); // Ensure loading dialog is closed
+      console.error("Error in saveData:", error);
+
+      await Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: error.message,
+        background: "#111827",
+        color: "#fff",
+      });
     }
   };
 
@@ -384,86 +666,88 @@ const AttendanceVenueFee = () => {
             </div>
           </div>
         </div>
+        <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700 hover:bg-gray-800 transition-all duration-300">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-400">Marked Attendance</p>
+              <h3 className="text-2xl font-bold text-white mt-1">
+                {stats.attendance.marked}
+              </h3>
+            </div>
+            <div className="p-3 bg-amber-500/10 rounded-xl">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z"
+                  stroke="#22C55E"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-3 mt-3">
+            <div className="px-2.5 py-1 bg-green-500/10 rounded-lg">
+              <span className="text-sm text-green-500">
+                {stats.attendance.present} Present
+              </span>
+            </div>
+            {type === "meetings" && (
+              <div className="px-2.5 py-1 bg-blue-500/10 rounded-lg">
+                <span className="text-sm text-blue-500">
+                  {stats.attendance.substitutes || 0} Substitutes
+                </span>
+              </div>
+            )}
 
-        {markingType === "attendance" ? (
-          // Attendance Stats Card
-          <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700 hover:bg-gray-800 transition-all duration-300">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-400">Marked Attendance</p>
-                <h3 className="text-2xl font-bold text-white mt-1">
-                  {stats.attendance.marked}
-                </h3>
-              </div>
-              <div className="p-3 bg-amber-500/10 rounded-xl">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                  <path
-                    d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z"
-                    stroke="#22C55E"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </div>
+            <div className="px-2.5 py-1 bg-yellow-500/10 rounded-lg">
+              <span className="text-sm text-yellow-500">
+                {stats.attendance.late_total ||
+                  parseInt(stats.attendance.late_less || 0) +
+                    parseInt(stats.attendance.late_more || 0)}{" "}
+                Late
+              </span>
             </div>
-            <div className="flex items-center gap-3 mt-3">
-              <div className="px-2.5 py-1 bg-amber-500/10 rounded-lg">
-                <span className="text-sm text-amber-500">
-                  {stats.attendance.present} Present
-                </span>
-              </div>
-              <div className="px-2.5 py-1 bg-orange-500/10 rounded-lg">
-                <span className="text-sm text-orange-500">
-                  {parseInt(stats.attendance.late_less) +
-                    parseInt(stats.attendance.late_more)}{" "}
-                  Late
-                </span>
-              </div>
-              <div className="px-2.5 py-1 bg-red-500/10 rounded-lg">
-                <span className="text-sm text-red-500">
-                  {stats.attendance.absent} Absent
-                </span>
-              </div>
+            <div className="px-2.5 py-1 bg-red-500/10 rounded-lg">
+              <span className="text-sm text-red-500">
+                {stats.attendance.absent} Absent
+              </span>
             </div>
           </div>
-        ) : (
-          // Venue Fee Stats Card
-          <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700 hover:bg-gray-800 transition-all duration-300">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-400">Venue Fee Collection</p>
-                <h3 className="text-2xl font-bold text-white mt-1">
-                  ₹{stats.venue_fee.collected} / ₹
-                  {stats.venue_fee.total_expected}
-                </h3>
-              </div>
-              <div className="p-3 bg-purple-500/10 rounded-xl">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                  <path
-                    d="M12 6V12M12 12V18M12 12H18M12 12H6"
-                    stroke="#A855F7"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </div>
+        </div>
+        <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700 hover:bg-gray-800 transition-all duration-300">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-400">Venue Fee Collection</p>
+              <h3 className="text-2xl font-bold text-white mt-1">
+                ₹{stats.venue_fee.collected} / ₹{stats.venue_fee.total_expected}
+              </h3>
             </div>
-            <div className="flex items-center gap-3 mt-3">
-              <div className="px-2.5 py-1 bg-amber-500/10 rounded-lg">
-                <span className="text-sm text-amber-500">
-                  {stats.venue_fee.paid_count} Paid
-                </span>
-              </div>
-              <div className="px-2.5 py-1 bg-red-500/10 rounded-lg">
-                <span className="text-sm text-red-500">
-                  {stats.venue_fee.unpaid_count} Unpaid
-                </span>
-              </div>
+            <div className="p-3 bg-purple-500/10 rounded-xl">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M12 6V12M12 12V18M12 12H18M12 12H6"
+                  stroke="#A855F7"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
             </div>
           </div>
-        )}
+          <div className="flex items-center gap-3 mt-3">
+            <div className="px-2.5 py-1 bg-amber-500/10 rounded-lg">
+              <span className="text-sm text-amber-500">
+                {stats.venue_fee.paid_count} Paid
+              </span>
+            </div>
+            <div className="px-2.5 py-1 bg-red-500/10 rounded-lg">
+              <span className="text-sm text-red-500">
+                {stats.venue_fee.unpaid_count} Unpaid
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Table Section */}
@@ -482,220 +766,341 @@ const AttendanceVenueFee = () => {
           <div className="py-8 text-center text-gray-400">
             Loading members...
           </div>
-        ) : filteredMembers.length === 0 ? (
-          <div className="py-8 text-center text-gray-400">No members found</div>
+        ) : Object.keys(chapterMembers).length === 0 ? (
+          <div className="py-8 text-center text-gray-400">
+            No active members found in selected chapters
+          </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-separate border-spacing-0">
-              <thead>
-                <tr className="bg-gray-800">
-                  <th className="sticky top-0 p-4 font-semibold text-gray-300 whitespace-nowrap">
-                    #
-                  </th>
-                  <th className="sticky top-0 p-4 font-semibold text-gray-300 whitespace-nowrap">
-                    Member
-                  </th>
-                  {markingType === "attendance" ? (
-                    <>
-                      {type === "meetings" && (
-                        <th className="sticky top-0 p-4 text-center font-semibold text-gray-300 whitespace-nowrap">
-                          Substitute
-                        </th>
-                      )}
-                      <th className="sticky top-0 p-4 text-center font-semibold text-gray-300 whitespace-nowrap">
-                        Present
-                      </th>
-                      <th className="sticky top-0 p-4 text-center font-semibold text-gray-300 whitespace-nowrap">
-                        Absent
-                      </th>
-                      <th className="sticky top-0 p-4 text-center font-semibold text-gray-300 whitespace-nowrap">
-                        Late
-                      </th>
-                      <th className="sticky top-0 p-4 text-center font-semibold text-gray-300 whitespace-nowrap">
-                        Minutes Late
-                      </th>
-                    </>
-                  ) : (
-                    <>
-                      <th className="sticky top-0 p-4 text-center font-semibold text-gray-300 whitespace-nowrap">
-                        Paid
-                      </th>
-                      <th className="sticky top-0 p-4 text-center font-semibold text-gray-300 whitespace-nowrap">
-                        Unpaid
-                      </th>
-                      <th className="sticky top-0 p-4 text-center font-semibold text-gray-300 whitespace-nowrap">
-                        Payment Date
-                      </th>
-                    </>
-                  )}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-700">
-                {filteredMembers.map((member, index) => (
-                  <tr key={member.id} className="hover:bg-gray-800/50">
-                    <td className="p-4 text-gray-300">{index + 1}</td>
-                    <td className="p-4">
-                      <div className="flex items-center gap-2">
-                        <div className="flex flex-col gap-1">
-                          <span
-                            className={`px-2 py-1 text-xs font-medium ${
-                              parseInt(member.is_active) === 1
-                                ? "bg-amber-500/20 text-amber-500"
-                                : "bg-red-500/20 text-red-500"
-                            } rounded-full`}
-                          >
-                            {parseInt(member.is_active) === 1
-                              ? "Active"
-                              : "Inactive"}
-                          </span>
-                          <span className="px-2 py-1 text-xs font-medium bg-yellow-500/20 text-yellow-500 rounded-full">
-                            {member.total_absences} A
-                          </span>
-                          {type === "meetings" && (
-                            <span className="px-2 py-1 text-xs font-medium bg-blue-500/20 text-blue-500 rounded-full">
-                              {member.total_substitutes} S
-                            </span>
-                          )}
-                        </div>
-                        <div>
-                          <p className="font-medium text-white">
-                            {member.full_name}
-                          </p>
-                          <p className="text-sm text-gray-400">
-                            {member.chapter_name}
-                          </p>
-                        </div>
+          <div className="space-y-6">
+            {Object.entries(chapterMembers).map(([chapterName, data]) => {
+              // Filter members in this chapter based on search term
+              const filteredMembers = data.members.filter((member) =>
+                member.full_name
+                  .toLowerCase()
+                  .includes(searchTerm.toLowerCase())
+              );
+
+              // Skip rendering this chapter section if no members match the search
+              if (filteredMembers.length === 0) return null;
+
+              return (
+                <div key={chapterName} className="space-y-4">
+                  {/* Chapter Header */}
+                  <div className="bg-gray-700/50 p-4 rounded-xl">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                      <div>
+                        <h3 className="text-lg font-semibold text-white">
+                          {chapterName}
+                        </h3>
+                        <p className="text-sm text-gray-400">
+                          {filteredMembers.length} Active Members
+                        </p>
                       </div>
-                    </td>
-                    {markingType === "attendance" ? (
-                      <>
-                        {type === "meetings" && (
-                          <td className="p-4 text-center">
-                            <input
-                              type="checkbox"
-                              checked={member.is_substitute === 1}
-                              onChange={(e) =>
-                                handleSubstituteChange(
-                                  member.id,
-                                  e.target.checked
-                                )
-                              }
-                              className="substitute-checkbox"
-                            />
-                          </td>
+                      <div className="flex flex-wrap gap-3">
+                        {markingType === "attendance" ? (
+                          <>
+                            <div className="px-3 py-1.5 bg-green-500/10 rounded-lg">
+                              <span className="text-sm text-green-400">
+                                Present: {data.stats.present}
+                              </span>
+                            </div>
+
+                            {type === "meetings" && (
+                              <div className="px-3 py-1.5 bg-blue-500/10 rounded-lg">
+                                <span className="text-sm text-blue-400">
+                                  Substitutes: {data.stats.substitutes || 0}
+                                </span>
+                              </div>
+                            )}
+
+                            <div className="px-3 py-1.5 bg-red-500/10 rounded-lg">
+                              <span className="text-sm text-red-400">
+                                Absent: {data.stats.absent}
+                              </span>
+                            </div>
+                            <div className="px-3 py-1.5 bg-yellow-500/10 rounded-lg">
+                              <span className="text-sm text-yellow-400">
+                                Late: {data.stats.late}
+                              </span>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="px-3 py-1.5 bg-green-500/10 rounded-lg">
+                              <span className="text-sm text-green-400">
+                                Paid: {data.stats.paid}
+                              </span>
+                            </div>
+                            <div className="px-3 py-1.5 bg-red-500/10 rounded-lg">
+                              <span className="text-sm text-red-400">
+                                Unpaid: {data.stats.unpaid}
+                              </span>
+                            </div>
+                          </>
                         )}
-                        <td className="p-4 text-center">
-                          <input
-                            type="radio"
-                            name={`attendance_${member.id}`}
-                            value="present"
-                            checked={member.status === "present"}
-                            onChange={() =>
-                              handleAttendanceChange(member.id, "present")
-                            }
-                            className="attendance-radio"
-                          />
-                        </td>
-                        <td className="p-4 text-center">
-                          <input
-                            type="radio"
-                            name={`attendance_${member.id}`}
-                            value="absent"
-                            checked={member.status === "absent"}
-                            onChange={() =>
-                              handleAttendanceChange(member.id, "absent")
-                            }
-                            className="attendance-radio"
-                          />
-                        </td>
-                        <td className="p-4 text-center">
-                          <input
-                            type="radio"
-                            name={`attendance_${member.id}`}
-                            value="late"
-                            checked={member.status === "late"}
-                            onChange={() =>
-                              handleAttendanceChange(member.id, "late")
-                            }
-                            className="attendance-radio"
-                          />
-                        </td>
-                        <td className="p-4 text-center">
-                          <select
-                            value={member.late_minutes || "less_than_10"}
-                            onChange={(e) =>
-                              handleLateMinutesChange(member.id, e.target.value)
-                            }
-                            disabled={member.status !== "late"}
-                            className="bg-gray-700 text-white p-2 rounded-lg border border-gray-600 focus:border-amber-500 focus:ring-0"
-                          >
-                            <option value="less_than_10">Less than 10</option>
-                            <option value="more_than_10">More than 10</option>
-                          </select>
-                        </td>
-                      </>
-                    ) : (
-                      <>
-                        <td className="p-4 text-center">
-                          <input
-                            type="radio"
-                            name={`venue_fee_${member.id}`}
-                            value="paid"
-                            checked={member.venue_fee_status === "paid"}
-                            onChange={() =>
-                              handleVenueFeeChange(member.id, "paid")
-                            }
-                            className="venue-fee-radio"
-                          />
-                        </td>
-                        <td className="p-4 text-center">
-                          <input
-                            type="radio"
-                            name={`venue_fee_${member.id}`}
-                            value="unpaid"
-                            checked={member.venue_fee_status === "unpaid"}
-                            onChange={() =>
-                              handleVenueFeeChange(member.id, "unpaid")
-                            }
-                            className="venue-fee-radio"
-                          />
-                        </td>
-                        <td className="p-4 text-center">
-                          <div className="relative">
-                            <input
-                              type="date"
-                              value={member.payment_date || ""}
-                              onChange={(e) =>
-                                handlePaymentDateChange(
-                                  member.id,
-                                  e.target.value
-                                )
-                              }
-                              disabled={member.venue_fee_status !== "paid"}
-                              className="w-full bg-gray-700 text-white p-2 rounded-lg border border-gray-600 [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full"
-                            />
-                            <img
-                              src={calendarIcon}
-                              alt="calendar"
-                              className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 pointer-events-none"
-                            />
-                          </div>
-                        </td>
-                      </>
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Members Table */}
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-separate border-spacing-0">
+                      <thead>
+                        <tr className="bg-gray-800">
+                          <th className="sticky top-0 p-4 font-semibold text-gray-300 whitespace-nowrap">
+                            #
+                          </th>
+                          <th className="sticky top-0 p-4 font-semibold text-gray-300 whitespace-nowrap">
+                            Member
+                          </th>
+                          {markingType === "attendance" ? (
+                            <>
+                              {type === "meetings" && (
+                                <th className="sticky top-0 p-4 text-center font-semibold text-gray-300 whitespace-nowrap">
+                                  Substitute
+                                </th>
+                              )}
+                              <th className="sticky top-0 p-4 text-center font-semibold text-gray-300 whitespace-nowrap">
+                                Present
+                              </th>
+                              <th className="sticky top-0 p-4 text-center font-semibold text-gray-300 whitespace-nowrap">
+                                Absent
+                              </th>
+                              <th className="sticky top-0 p-4 text-center font-semibold text-gray-300 whitespace-nowrap">
+                                Late
+                              </th>
+                              <th className="sticky top-0 p-4 text-center font-semibold text-gray-300 whitespace-nowrap">
+                                Minutes Late
+                              </th>
+                            </>
+                          ) : (
+                            <>
+                              <th className="sticky top-0 p-4 text-center font-semibold text-gray-300 whitespace-nowrap">
+                                Paid
+                              </th>
+                              <th className="sticky top-0 p-4 text-center font-semibold text-gray-300 whitespace-nowrap">
+                                Unpaid
+                              </th>
+                              <th className="sticky top-0 p-4 text-center font-semibold text-gray-300 whitespace-nowrap">
+                                Payment Date
+                              </th>
+                            </>
+                          )}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-700">
+                        {filteredMembers.map((member, index) => (
+                          <tr key={member.id} className="hover:bg-gray-800/50">
+                            <td className="p-4 text-gray-300">{index + 1}</td>
+                            <td className="p-4">
+                              <div className="flex items-center gap-2">
+                                <div className="flex flex-col gap-1">
+                                  <span className="px-2 py-1 text-xs font-medium bg-amber-500/20 text-amber-500 rounded-full">
+                                    Active
+                                  </span>
+                                  <span className="px-2 py-1 text-xs font-medium bg-yellow-500/20 text-yellow-500 rounded-full">
+                                    {member.total_absences} A
+                                  </span>
+                                  {type === "meetings" && (
+                                    <span className="px-2 py-1 text-xs font-medium bg-blue-500/20 text-blue-500 rounded-full">
+                                      {member.total_substitutes}
+                                    </span>
+                                  )}
+                                </div>
+                                <div>
+                                  <p className="font-medium text-white">
+                                    {member.full_name}
+                                  </p>
+                                </div>
+                              </div>
+                            </td>
+                            {markingType === "attendance" ? (
+                              <>
+                                {type === "meetings" && (
+                                  <td className="p-4 text-center">
+                                    <input
+                                      type="checkbox"
+                                      checked={member.is_substitute === 1}
+                                      onChange={(e) => {
+                                        handleSubstituteChange(
+                                          member.id,
+                                          e.target.checked
+                                        );
+                                        // If checked as substitute, automatically mark as present
+                                        if (
+                                          e.target.checked &&
+                                          member.status !== "present"
+                                        ) {
+                                          handleAttendanceChange(
+                                            member.id,
+                                            "present"
+                                          );
+                                        }
+                                      }}
+                                      className="w-5 h-5 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 focus:ring-2"
+                                    />
+                                  </td>
+                                )}
+                                <td className="p-4 text-center">
+                                  <input
+                                    type="radio"
+                                    name={`attendance_${member.id}`}
+                                    value="present"
+                                    checked={member.status === "present"}
+                                    onChange={() =>
+                                      handleAttendanceChange(
+                                        member.id,
+                                        "present"
+                                      )
+                                    }
+                                    className="attendance-radio"
+                                  />
+                                </td>
+                                <td className="p-4 text-center">
+                                  <input
+                                    type="radio"
+                                    name={`attendance_${member.id}`}
+                                    value="absent"
+                                    checked={member.status === "absent"}
+                                    onChange={() =>
+                                      handleAttendanceChange(
+                                        member.id,
+                                        "absent"
+                                      )
+                                    }
+                                    className="attendance-radio"
+                                  />
+                                </td>
+                                <td className="p-4 text-center">
+                                  <input
+                                    type="radio"
+                                    name={`attendance_${member.id}`}
+                                    value="late"
+                                    checked={member.status === "late"}
+                                    onChange={() =>
+                                      handleAttendanceChange(member.id, "late")
+                                    }
+                                    className="attendance-radio"
+                                  />
+                                </td>
+                                <td className="p-4 text-center">
+                                  <select
+                                    value={
+                                      member.late_minutes || "less_than_10"
+                                    }
+                                    onChange={(e) =>
+                                      handleLateMinutesChange(
+                                        member.id,
+                                        e.target.value
+                                      )
+                                    }
+                                    disabled={member.status !== "late"}
+                                    className="bg-gray-700 text-white p-2 rounded-lg border border-gray-600 focus:border-amber-500 focus:ring-0"
+                                  >
+                                    <option value="less_than_10">
+                                      Less than 10
+                                    </option>
+                                    <option value="more_than_10">
+                                      More than 10
+                                    </option>
+                                  </select>
+                                </td>
+                              </>
+                            ) : (
+                              <>
+                                <td className="p-4 text-center">
+                                  <input
+                                    type="radio"
+                                    name={`venue_fee_${member.id}`}
+                                    value="paid"
+                                    checked={member.venue_fee_status === "paid"}
+                                    onChange={(e) =>
+                                      handleVenueFeeChange(
+                                        member.id,
+                                        e.target.value
+                                      )
+                                    }
+                                    className="venue-fee-radio"
+                                  />
+                                </td>
+                                <td className="p-4 text-center">
+                                  <input
+                                    type="radio"
+                                    name={`venue_fee_${member.id}`}
+                                    value="unpaid"
+                                    checked={
+                                      member.venue_fee_status === "unpaid"
+                                    }
+                                    onChange={(e) =>
+                                      handleVenueFeeChange(
+                                        member.id,
+                                        e.target.value
+                                      )
+                                    }
+                                    className="venue-fee-radio"
+                                  />
+                                </td>
+                                <td className="p-4 text-center">
+                                  <div className="relative">
+                                    <input
+                                      type="date"
+                                      value={member.payment_date || ""}
+                                      onChange={(e) =>
+                                        handlePaymentDateChange(
+                                          member.id,
+                                          e.target.value
+                                        )
+                                      }
+                                      disabled={
+                                        member.venue_fee_status !== "paid"
+                                      }
+                                      className="w-full bg-gray-700 text-white p-2 rounded-lg border border-gray-600 [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full"
+                                    />
+                                    <img
+                                      src={calendarIcon}
+                                      alt="calendar"
+                                      className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 pointer-events-none"
+                                    />
+                                  </div>
+                                </td>
+                              </>
+                            )}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
 
       {/* Save Button */}
       <div className="bg-gray-900 p-4 mt-4">
+        {/* <button
+          onClick={async () => {
+            console.log("Debug button clicked");
+            console.log("Current state:", {
+              type,
+              meetingId,
+              chapterMembers,
+              members,
+            });
+          }}
+          className="mr-4 px-4 py-2 bg-blue-500 text-white rounded"
+        >
+          Debug Log
+        </button> */}
         <button
           onClick={saveData}
-          className="ml-auto flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-600 to-amber-900 hover:from-amber-700 hover:to-amber-950 text-white rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-amber-900/30 hover:-translate-y-0.5"
+          disabled={!hasMarkedAttendance()}
+          className={`ml-auto flex items-center gap-2 px-6 py-3 ${
+            hasMarkedAttendance()
+              ? "bg-gradient-to-r from-amber-600 to-amber-900 hover:from-amber-700 hover:to-amber-950"
+              : "bg-gray-700 cursor-not-allowed"
+          } text-white rounded-xl transition-all duration-300`}
         >
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
             <path

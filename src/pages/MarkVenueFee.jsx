@@ -5,6 +5,7 @@ import Swal from "sweetalert2";
 import { motion } from "framer-motion";
 import attendanceIcon from "../assets/images/icons/attendance-icon.svg";
 import calendarIcon from "../assets/images/icons/calender-icon.svg";
+import api from "../hooks/api";
 
 const MarkvenueFee = () => {
   const navigate = useNavigate();
@@ -33,76 +34,151 @@ const MarkvenueFee = () => {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [chapterMembers, setChapterMembers] = useState({});
 
   useEffect(() => {
     if (!type || !meetingId) {
       navigate("/mark-attendance");
       return;
     }
-    loadTableData();
-    loadMeetingData();
+    fetchMeetingData();
   }, [type, meetingId]);
 
-  const loadTableData = async () => {
-    try {
-      // In production, replace with actual API call
-      const response = await axios.get(
-        `/api/attendance-venue-fee/meeting_stats?type=${type}&event_id=${meetingId}`
-      );
-
-      if (response.data.status === "success") {
-        setMeetingDetails(response.data.data.event_details);
-        setStats(response.data.data);
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      // For development, set dummy data on error
-      setMeetingDetails({
-        type:
-          type === "meetings"
-            ? "Weekly Meeting"
-            : type === "mdp"
-            ? "MDP Session"
-            : "Social Event",
-        title: "Business Network Meeting",
-        date: "2024-03-15",
-        time: "10:00 AM",
-      });
-
-      setStats({
-        total_members: 25,
-        venue_fee: {
-          collected: 2500,
-          total_expected: 3000,
-          paid_count: 20,
-          unpaid_count: 5,
-        },
-      });
+  const fetchMeetingData = async () => {
+    if (!type || !meetingId) {
+      navigate("/mark-attendance");
+      return;
     }
-  };
 
-  const loadMeetingData = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(
-        `/api/attendance-venue-fee/meeting_members?type=${type}&meeting_id=${meetingId}`
+      const scheduleType =
+        type === "meetings"
+          ? "meeting"
+          : type === "social"
+          ? "socialTraining" 
+          : type;
+
+      // Get attendance/venue fee data
+      const attendanceResponse = await axios.get(
+        `${api}/attendance-venue-fee/meeting-members`,
+        {
+          params: {
+            type: scheduleType,
+            meeting_id: meetingId,
+          },
+        }
       );
 
-      if (response.data.status === "success") {
-        setMembers(response.data.data);
+      // Get meeting details
+      const meetingResponse = await axios.get(
+        `${api}/schedules/${scheduleType}/${meetingId}`
+      );
+
+      if (meetingResponse.data.success) {
+        const meetingData = meetingResponse.data.data;
+
+        // Get all members
+        const membersResponse = await axios.get(`${api}/members/members`);
+
+        if (membersResponse.data.success) {
+          // Get meeting chapters
+          const meetingChapters = meetingData.chapters || [];
+
+          // Create chapter groups
+          const groupedByChapter = {};
+
+          // Process each chapter in the meeting
+          meetingChapters.forEach((chapter) => {
+            // Filter members for this chapter
+            const chapterMembers = membersResponse.data.data.filter(
+              (member) =>
+                parseInt(member.chapter) === parseInt(chapter.chapter_id) &&
+                member.status === "active"
+            );
+
+            if (chapterMembers.length > 0) {
+              groupedByChapter[chapter.chapter_name] = {
+                chapter_id: chapter.chapter_id,
+                members: chapterMembers
+                  .map((member) => {
+                    // Find existing attendance data
+                    const existingData = attendanceResponse.data.data.find(
+                      (m) => m.id === member.id
+                    );
+
+                    return {
+                      id: member.id,
+                      full_name: member.name,
+                      chapter: member.chapter,
+                      chapter_name: chapter.chapter_name,
+                      is_active: member.status === "active",
+                      venue_fee_status: existingData?.venue_fee_status || null,
+                      payment_date: existingData?.payment_date || null,
+                    };
+                  })
+                  .sort((a, b) => a.full_name.localeCompare(b.full_name)),
+              };
+
+              // Initialize chapter stats
+              groupedByChapter[chapter.chapter_name].stats = {
+                total: chapterMembers.length,
+                paid: 0,
+                unpaid: 0,
+              };
+
+              // Calculate chapter stats
+              groupedByChapter[chapter.chapter_name].members.forEach(
+                (member) => {
+                  if (member.venue_fee_status === "paid")
+                    groupedByChapter[chapter.chapter_name].stats.paid++;
+                  if (member.venue_fee_status === "unpaid")
+                    groupedByChapter[chapter.chapter_name].stats.unpaid++;
+                }
+              );
+            }
+          });
+
+          setMeetingDetails({
+            type:
+              type === "social"
+                ? "Social Training"
+                : type === "mdp"
+                ? "MDP"
+                : type.charAt(0).toUpperCase() + type.slice(1),
+            title: meetingData.title,
+            date: meetingData.date,
+            time: meetingData.time,
+            chapters: meetingChapters,
+          });
+
+          setChapterMembers(groupedByChapter);
+
+          // Set members as a flat array of all chapter members
+          const allMembers = Object.values(groupedByChapter).reduce(
+            (acc, chapter) => [...acc, ...chapter.members],
+            []
+          );
+          setMembers(allMembers);
+        }
+
+        // Get overall stats
+        const statsResponse = await axios.get(
+          `${api}/attendance-venue-fee/meeting-stats`,
+          {
+            params: {
+              type: scheduleType,
+              meeting_id: meetingId,
+            },
+          }
+        );
+
+        if (statsResponse.data.success) {
+          setStats(statsResponse.data.data);
+        }
       }
     } catch (error) {
-      console.error("Error:", error);
-      // For development, set dummy data on error
-      const dummyMembers = Array.from({ length: 25 }, (_, i) => ({
-        id: i + 1,
-        full_name: `Member ${i + 1}`,
-        chapter_name: `Chapter ${Math.floor(i / 5) + 1}`,
-        is_active: Math.random() > 0.2 ? 1 : 0,
-        venue_fee_status: Math.random() > 0.3 ? "paid" : "unpaid",
-        payment_date: Math.random() > 0.3 ? "2024-03-15" : null,
-      }));
-      setMembers(dummyMembers);
+      showError(`Failed to load meeting data: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -176,8 +252,7 @@ const MarkvenueFee = () => {
           background: "#111827",
           color: "#fff",
         });
-        loadTableData();
-        loadMeetingData();
+        fetchMeetingData();
       }
     } catch (error) {
       console.error("Error:", error);
@@ -319,8 +394,8 @@ const MarkvenueFee = () => {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="px-3 py-1.5 bg-amber-500/20 rounded-lg">
-              <span className="text-sm text-amber-400">
+            <div className="px-3 py-1.5 bg-green-500/20 rounded-lg">
+              <span className="text-sm text-green-400">
                 {stats.venue_fee.paid_count} Paid
               </span>
             </div>
@@ -403,7 +478,7 @@ const MarkvenueFee = () => {
                             }
                             className="venue-fee-radio-paid"
                           />
-                          <span className="text-amber-400">Paid</span>
+                          <span className="text-green-400">Paid</span>
                         </label>
                         <label className="flex items-center gap-2 cursor-pointer">
                           <input

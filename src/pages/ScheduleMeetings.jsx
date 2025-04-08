@@ -27,6 +27,7 @@ const ScheduleMeetings = () => {
     type: null,
     id: null
   });
+  const [searchCategory, setSearchCategory] = useState('all');
 
   // Helper function to determine schedule type
   const getScheduleType = (schedule) => {
@@ -48,6 +49,16 @@ const ScheduleMeetings = () => {
     );
   };
 
+  // Add this helper function to get a unique identifier for each schedule
+  const getScheduleUniqueId = (schedule) => {
+    const type = schedule.type || getScheduleType(schedule);
+    const id = type === 'meeting' ? schedule.meeting_id 
+      : type === 'event' ? schedule.event_id
+      : type === 'mdp' ? schedule.mdp_id
+      : schedule.social_training_id;
+    return `${type}-${id}`;
+  };
+
   // Fetch schedules from backend
   const fetchSchedules = async () => {
     try {
@@ -63,6 +74,7 @@ const ScheduleMeetings = () => {
           schedulesData = response.data.data.map((schedule) => ({
             ...schedule,
             type: selectedType,
+            chapters: schedule.chapters || []
           }));
         } else {
           // Combine all schedule types and add type identifier
@@ -70,22 +82,33 @@ const ScheduleMeetings = () => {
             ...(response.data.data.meetings?.map((meeting) => ({
               ...meeting,
               type: "meeting",
+              chapters: meeting.chapters || []
             })) || []),
             ...(response.data.data.events?.map((event) => ({
               ...event,
               type: "event",
+              chapters: event.chapters || []
             })) || []),
             ...(response.data.data.mdp?.map((mdp) => ({
               ...mdp,
               type: "mdp",
+              chapters: mdp.chapters || []
             })) || []),
             ...(response.data.data.socialTraining?.map((st) => ({
               ...st,
               type: "socialTraining",
+              chapters: st.chapters || []
             })) || []),
           ];
         }
-        setSchedules(schedulesData);
+
+        // Deduplicate schedules before setting state
+        const uniqueSchedules = Array.from(
+          new Map(schedulesData.map(schedule => [getScheduleUniqueId(schedule), schedule]))
+          .values()
+        );
+
+        setSchedules(uniqueSchedules);
       }
     } catch (error) {
       console.error("Error fetching schedules:", error);
@@ -119,55 +142,64 @@ const ScheduleMeetings = () => {
     fetchChapters();
   }, [selectedType]);
 
-  // Helper function to get chapter names from chapter IDs
-  const getChapterNames = (chapterIds) => {
-    if (!chapterIds) return "No chapters";
-
-    // Handle both array and JSON string cases
-    const ids = Array.isArray(chapterIds) ? chapterIds : JSON.parse(chapterIds);
-
-    return (
-      allChapters
-        .filter((chapter) => ids.includes(chapter.chapter_id))
-        .map((chapter) => chapter.chapter_name)
-        .join(", ") || "No chapters"
-    );
-  };
-
-  // Update the filteredSchedules function to handle type checking more safely
-  const filteredSchedules = schedules.filter((schedule) => {
-    if (!searchTerm) return true;
-
-    const searchValue = searchTerm.toLowerCase().trim();
-
-    // Check title
-    const titleMatch =
-      schedule.title?.toLowerCase().includes(searchValue) || false;
-
-    // Check venue
-    const venueMatch =
-      schedule.venue?.toLowerCase().includes(searchValue) || false;
-
-    // Check type safely
-    let typeMatch = false;
-    try {
-      const scheduleType = schedule.type || getScheduleType(schedule);
-      if (scheduleType) {
-        const typeName =
-          scheduleType === "socialTraining"
-            ? "Social Training"
-            : scheduleType === "mdp"
-            ? "MDP"
-            : scheduleType.charAt(0).toUpperCase() + scheduleType.slice(1);
-        typeMatch = typeName.toLowerCase().includes(searchValue);
-      }
-    } catch (error) {
-      console.error("Error checking type:", error);
+  // Update the getChapterNames function
+  const getChapterNames = (chapters) => {
+    if (!chapters || !Array.isArray(chapters) || chapters.length === 0) {
+      return "No chapters";
     }
 
-    // Return true if any of the fields match
-    return titleMatch || venueMatch || typeMatch;
-  });
+    return chapters.map(chapter => chapter.chapter_name).join(", ");
+  };
+
+  // Update the filteredSchedules function
+  const filteredSchedules = React.useMemo(() => {
+    // First deduplicate the schedules
+    const uniqueSchedules = Array.from(
+      new Map(schedules.map(schedule => [getScheduleUniqueId(schedule), schedule]))
+      .values()
+    );
+
+    // Then apply the search filter
+    return uniqueSchedules.filter((schedule) => {
+      if (!searchTerm) return true;
+
+      const searchValue = searchTerm.toLowerCase().trim();
+      const scheduleType = schedule.type || getScheduleType(schedule);
+      const typeName = scheduleType === "socialTraining" 
+        ? "Social Training" 
+        : scheduleType === "mdp" 
+          ? "MDP" 
+          : scheduleType.charAt(0).toUpperCase() + scheduleType.slice(1);
+
+      switch (searchCategory) {
+        case 'title':
+          return schedule.title?.toLowerCase().includes(searchValue);
+        case 'venue':
+          return schedule.venue?.toLowerCase().includes(searchValue);
+        case 'type':
+          return typeName.toLowerCase().includes(searchValue);
+        case 'chapter':
+          return schedule.chapters?.some(chapter => 
+            chapter.chapter_name.toLowerCase().includes(searchValue)
+          );
+        case 'all':
+        default:
+          return (
+            schedule.title?.toLowerCase().includes(searchValue) ||
+            schedule.venue?.toLowerCase().includes(searchValue) ||
+            typeName.toLowerCase().includes(searchValue) ||
+            schedule.chapters?.some(chapter => 
+              chapter.chapter_name.toLowerCase().includes(searchValue)
+            )
+          );
+      }
+    });
+  }, [schedules, searchTerm, searchCategory]);
+
+  // Add a useEffect to clear search when changing type
+  useEffect(() => {
+    setSearchTerm('');
+  }, [selectedType]);
 
   const getTypeColor = (type) => {
     switch (type) {
@@ -393,9 +425,29 @@ const ScheduleMeetings = () => {
                 d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
               />
             </svg>
-            <span className="text-gray-300">
-              {getChapterNames(schedule.chapters)}
-            </span>
+            <div className="flex flex-wrap gap-1">
+              {schedule.chapters && schedule.chapters.length > 0 ? (
+                schedule.chapters.map((chapter, idx) => (
+                  <span
+                    key={chapter.chapter_id}
+                    className={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full ${
+                      getTypeColor(schedule.type) === 'blue'
+                        ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                        : getTypeColor(schedule.type) === 'amber'
+                        ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                        : getTypeColor(schedule.type) === 'purple'
+                        ? 'bg-purple-500/10 text-purple-400 border-purple-500/20'
+                        : 'bg-orange-500/10 text-orange-400 border-orange-500/20'
+                    } border`}
+                  >
+                    {chapter.chapter_name}
+                    {idx < schedule.chapters.length - 1 ? ', ' : ''}
+                  </span>
+                ))
+              ) : (
+                <span className="text-gray-400">No chapters</span>
+              )}
+            </div>
           </div>
         </td>
         <td className="py-4 px-6">
@@ -519,13 +571,26 @@ const ScheduleMeetings = () => {
 
       {/* Add search and filter section */}
       <div className="mb-6 flex flex-col sm:flex-row gap-4">
-        <input
-          type="text"
-          placeholder="Search schedules..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="flex-1 bg-gray-800/40 text-white p-3 rounded-xl border border-gray-700 focus:border-amber-500 focus:ring-0 placeholder-gray-400"
-        />
+        <div className="flex-1 flex gap-4">
+          <select
+            value={searchCategory}
+            onChange={(e) => setSearchCategory(e.target.value)}
+            className="bg-gray-800/40 text-white p-3 rounded-xl border border-gray-700 focus:border-amber-500 focus:ring-0"
+          >
+            <option value="all">All Fields</option>
+            <option value="title">Title</option>
+            <option value="venue">Venue</option>
+            <option value="type">Type</option>
+            <option value="chapter">Chapter</option>
+          </select>
+          <input
+            type="text"
+            placeholder={`Search ${searchCategory === 'all' ? 'schedules' : searchCategory}...`}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="flex-1 bg-gray-800/40 text-white p-3 rounded-xl border border-gray-700 focus:border-amber-500 focus:ring-0 placeholder-gray-400"
+          />
+        </div>
         <select
           value={selectedType}
           onChange={(e) => setSelectedType(e.target.value)}
@@ -732,9 +797,19 @@ const ScheduleMeetings = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-700/50">
-                  {filteredSchedules.map((schedule, index) =>
-                    renderTableRow(schedule, index)
-                  )}
+                  {filteredSchedules
+                    .sort((a, b) => {
+                      // First sort by date
+                      const dateA = new Date(`${a.date} ${a.time}`);
+                      const dateB = new Date(`${b.date} ${b.time}`);
+                      if (dateA !== dateB) return dateB - dateA;
+                      
+                      // If dates are equal, sort by ID
+                      const idA = getScheduleUniqueId(a);
+                      const idB = getScheduleUniqueId(b);
+                      return idA.localeCompare(idB);
+                    })
+                    .map((schedule, index) => renderTableRow(schedule, index))}
                 </tbody>
               </table>
             </div>
@@ -751,8 +826,15 @@ const ScheduleMeetings = () => {
               {filteredSchedules.length}
             </span>{" "}
             of{" "}
-            <span className="font-medium text-white">{schedules.length}</span>{" "}
+            <span className="font-medium text-white">
+              {schedules.length}
+            </span>{" "}
             results
+            {searchTerm && (
+              <span className="ml-1">
+                for "{searchTerm}"
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <button className="px-4 py-2 text-sm text-gray-400 bg-gray-900/50 rounded-lg border border-gray-700 hover:bg-gray-700 transition-all duration-300">
