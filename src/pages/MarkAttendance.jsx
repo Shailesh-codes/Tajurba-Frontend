@@ -19,6 +19,7 @@ const MarkAttendance = () => {
     meetingId: "",
   });
   const [meetings, setMeetings] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   // Update loadMeetingsByType to fetch from backend
   const loadMeetingsByType = async (type) => {
@@ -28,7 +29,6 @@ const MarkAttendance = () => {
     }
 
     try {
-      // Convert frontend type to backend type format
       const backendType = type === "social" ? "social_training" : type;
       const response = await axios.get(`${api}/schedules?type=${backendType}`);
 
@@ -80,7 +80,6 @@ const MarkAttendance = () => {
       return;
     }
 
-    // Navigate to the appropriate page based on marking type
     if (markingType === "attendance") {
       navigate(
         `/attendance-venue-fee?marking_type=${markingType}&type=${attendanceType}&meeting_id=${meetingId}`
@@ -92,16 +91,96 @@ const MarkAttendance = () => {
     }
   };
 
-  // Add dummy stats data
+  // Replace the existing useEffect with this:
   useEffect(() => {
-  
-    setStats({
-      meetings: { total: 15, marked: 10, pending: 5 },
-      mdp: { total: 8, marked: 6, pending: 2 },
-      social: { total: 5, marked: 3, pending: 2 },
-      events: { total: 10, marked: 7, pending: 3 },
-    });
+    fetchStats();
   }, []);
+
+  // Add this new function to fetch stats
+  const fetchStats = async () => {
+    setLoading(true);
+    try {
+      // Fetch all schedules
+      const meetingsResponse = await axios.get(
+        `${api}/schedules?type=meetings`
+      );
+      const mdpResponse = await axios.get(`${api}/schedules?type=mdp`);
+      const socialResponse = await axios.get(
+        `${api}/schedules?type=social_training`
+      );
+
+      // Extract the meetings data correctly from the response
+      const meetings = meetingsResponse.data.data.meetings || [];
+      const mdpMeetings = mdpResponse.data.data || [];
+      const socialMeetings = socialResponse.data.data || [];
+
+      // Get attendance data for each type
+      const meetingsAttendance = await Promise.all(
+        meetings.map((meeting) =>
+          axios.get(`${api}/attendance-venue-fee/meeting-stats`, {
+            params: {
+              type: "meeting",
+              meeting_id: meeting.meeting_id,
+            },
+          })
+        )
+      );
+
+      const mdpAttendance = await Promise.all(
+        mdpMeetings.map((mdp) =>
+          axios.get(`${api}/attendance-venue-fee/meeting-stats`, {
+            params: {
+              type: "mdp",
+              meeting_id: mdp.mdp_id,
+            },
+          })
+        )
+      );
+
+      const socialAttendance = await Promise.all(
+        socialMeetings.map((social) =>
+          axios.get(`${api}/attendance-venue-fee/meeting-stats`, {
+            params: {
+              type: "socialTraining",
+              meeting_id: social.social_training_id,
+            },
+          })
+        )
+      );
+
+      // Calculate stats with proper error handling
+      const calculateStats = (meetings, attendanceData) => {
+        const total = meetings.length;
+        const marked = attendanceData.filter((att) => {
+          try {
+            return att.data.data.attendance.marked > 0;
+          } catch (error) {
+            console.error("Error processing attendance data:", error);
+            return false;
+          }
+        }).length;
+
+        return {
+          total,
+          marked,
+          pending: total - marked,
+        };
+      };
+
+      // Update stats with the calculated values
+      setStats({
+        meetings: calculateStats(meetings, meetingsAttendance),
+        mdp: calculateStats(mdpMeetings, mdpAttendance),
+        social: calculateStats(socialMeetings, socialAttendance),
+        events: { total: 0, marked: 0, pending: 0 }, // Keep this if you need events stats
+      });
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+      showAlert("error", "Failed to load meeting statistics");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleTypeChange = (e) => {
     const type = e.target.value;
@@ -149,13 +228,17 @@ const MarkAttendance = () => {
         {/* Stats Overview */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
           {/* Meetings Stats */}
-          <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
+          <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700 hover:bg-gray-800/70 transition-all duration-300">
             <div className="flex items-center justify-between mb-3">
               <div>
                 <p className="text-gray-400">Meetings</p>
-                <h3 className="text-2xl font-bold text-white mt-1">
-                  {stats.meetings.total}
-                </h3>
+                {loading ? (
+                  <div className="animate-pulse h-8 w-16 bg-gray-700 rounded mt-1"></div>
+                ) : (
+                  <h3 className="text-2xl font-bold text-white mt-1">
+                    {stats.meetings.total}
+                  </h3>
+                )}
               </div>
               <div className="p-3 bg-amber-500/10 rounded-xl">
                 <svg
@@ -176,16 +259,25 @@ const MarkAttendance = () => {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <div className="px-2.5 py-1 bg-amber-500/10 rounded-lg">
-                <span className="text-sm text-amber-500">
-                  {stats.meetings.marked} Marked
-                </span>
-              </div>
-              <div className="px-2.5 py-1 bg-orange-500/10 rounded-lg">
-                <span className="text-sm text-orange-500">
-                  {stats.meetings.pending} Pending
-                </span>
-              </div>
+              {loading ? (
+                <div className="flex gap-3">
+                  <div className="animate-pulse h-6 w-20 bg-gray-700 rounded"></div>
+                  <div className="animate-pulse h-6 w-20 bg-gray-700 rounded"></div>
+                </div>
+              ) : (
+                <>
+                  <div className="px-2.5 py-1 bg-amber-500/10 rounded-lg">
+                    <span className="text-sm text-amber-500">
+                      {stats.meetings.marked} Marked
+                    </span>
+                  </div>
+                  <div className="px-2.5 py-1 bg-orange-500/10 rounded-lg">
+                    <span className="text-sm text-orange-500">
+                      {stats.meetings.pending} Pending
+                    </span>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
@@ -194,9 +286,13 @@ const MarkAttendance = () => {
             <div className="flex items-center justify-between mb-3">
               <div>
                 <p className="text-gray-400">MDP</p>
-                <h3 className="text-2xl font-bold text-white mt-1">
-                  {stats.mdp.total}
-                </h3>
+                {loading ? (
+                  <div className="animate-pulse h-8 w-16 bg-gray-700 rounded mt-1"></div>
+                ) : (
+                  <h3 className="text-2xl font-bold text-white mt-1">
+                    {stats.mdp.total}
+                  </h3>
+                )}
               </div>
               <div className="p-3 bg-blue-500/10 rounded-xl">
                 <svg
@@ -220,16 +316,25 @@ const MarkAttendance = () => {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <div className="px-2.5 py-1 bg-amber-500/10 rounded-lg">
-                <span className="text-sm text-amber-500">
-                  {stats.mdp.marked} Marked
-                </span>
-              </div>
-              <div className="px-2.5 py-1 bg-orange-500/10 rounded-lg">
-                <span className="text-sm text-orange-500">
-                  {stats.mdp.pending} Pending
-                </span>
-              </div>
+              {loading ? (
+                <div className="flex gap-3">
+                  <div className="animate-pulse h-6 w-20 bg-gray-700 rounded"></div>
+                  <div className="animate-pulse h-6 w-20 bg-gray-700 rounded"></div>
+                </div>
+              ) : (
+                <>
+                  <div className="px-2.5 py-1 bg-amber-500/10 rounded-lg">
+                    <span className="text-sm text-amber-500">
+                      {stats.mdp.marked} Marked
+                    </span>
+                  </div>
+                  <div className="px-2.5 py-1 bg-orange-500/10 rounded-lg">
+                    <span className="text-sm text-orange-500">
+                      {stats.mdp.pending} Pending
+                    </span>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
@@ -238,9 +343,13 @@ const MarkAttendance = () => {
             <div className="flex items-center justify-between mb-3">
               <div>
                 <p className="text-gray-400">Social & Training</p>
-                <h3 className="text-2xl font-bold text-white mt-1">
-                  {stats.social.total}
-                </h3>
+                {loading ? (
+                  <div className="animate-pulse h-8 w-16 bg-gray-700 rounded mt-1"></div>
+                ) : (
+                  <h3 className="text-2xl font-bold text-white mt-1">
+                    {stats.social.total}
+                  </h3>
+                )}
               </div>
               <div className="p-3 bg-purple-500/10 rounded-xl">
                 <svg
@@ -261,16 +370,25 @@ const MarkAttendance = () => {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <div className="px-2.5 py-1 bg-amber-500/10 rounded-lg">
-                <span className="text-sm text-amber-500">
-                  {stats.social.marked} Marked
-                </span>
-              </div>
-              <div className="px-2.5 py-1 bg-orange-500/10 rounded-lg">
-                <span className="text-sm text-orange-500">
-                  {stats.social.pending} Pending
-                </span>
-              </div>
+              {loading ? (
+                <div className="flex gap-3">
+                  <div className="animate-pulse h-6 w-20 bg-gray-700 rounded"></div>
+                  <div className="animate-pulse h-6 w-20 bg-gray-700 rounded"></div>
+                </div>
+              ) : (
+                <>
+                  <div className="px-2.5 py-1 bg-amber-500/10 rounded-lg">
+                    <span className="text-sm text-amber-500">
+                      {stats.social.marked} Marked
+                    </span>
+                  </div>
+                  <div className="px-2.5 py-1 bg-orange-500/10 rounded-lg">
+                    <span className="text-sm text-orange-500">
+                      {stats.social.pending} Pending
+                    </span>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

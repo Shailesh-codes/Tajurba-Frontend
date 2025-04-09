@@ -19,6 +19,7 @@ const MarkvenueFee = () => {
     title: "-",
     date: "-",
     time: "-",
+    fee_amount: 0,
   });
 
   const [stats, setStats] = useState({
@@ -167,6 +168,7 @@ const MarkvenueFee = () => {
             date: meetingData.date,
             time: meetingData.time,
             chapters: meetingChapters,
+            fee_amount: meetingData.fee_amount || 0,
           });
 
           setChapterMembers(groupedByChapter);
@@ -177,21 +179,32 @@ const MarkvenueFee = () => {
             []
           );
           setMembers(allMembers);
-        }
 
-        // Get overall stats
-        const statsResponse = await axios.get(
-          `${api}/attendance-venue-fee/meeting-stats`,
-          {
-            params: {
-              type: scheduleType,
-              meeting_id: meetingId,
-            },
+          // Calculate and set the correct total members count
+          const totalMembers = allMembers.length;
+          setStats(prevStats => ({
+            ...prevStats,
+            total_members: totalMembers
+          }));
+
+          // Get overall stats
+          const statsResponse = await axios.get(
+            `${api}/attendance-venue-fee/meeting-stats`,
+            {
+              params: {
+                type: scheduleType,
+                meeting_id: meetingId,
+              },
+            }
+          );
+
+          if (statsResponse.data.success) {
+            // Preserve our correct total_members count while updating other stats
+            setStats(prevStats => ({
+              ...statsResponse.data.data,
+              total_members: totalMembers
+            }));
           }
-        );
-
-        if (statsResponse.data.success) {
-          setStats(statsResponse.data.data);
         }
       }
     } catch (error) {
@@ -553,7 +566,7 @@ const MarkvenueFee = () => {
             <div>
               <p className="text-gray-400">Venue Fee Collection</p>
               <h3 className="text-3xl font-bold text-white mt-2">
-                ₹{stats.venue_fee.collected} / ₹{stats.venue_fee.total_expected}
+                ₹{stats.venue_fee.paid_count * meetingDetails.fee_amount} / ₹{stats.total_members * meetingDetails.fee_amount}
               </h3>
             </div>
             <div className="p-4 bg-purple-500/20 rounded-xl">

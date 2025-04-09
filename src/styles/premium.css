@@ -1,0 +1,128 @@
+/* Premium Glass Morphism */
+.glass-card {
+  background: rgba(17, 24, 39, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+/* Premium Gradients */
+.gradient-primary {
+  background: linear-gradient(135deg, #D4B86A 0%, #B88746 100%);
+}
+
+.gradient-secondary {
+  background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
+}
+
+/* Premium Animations */
+.hover-scale {
+  transition: transform 0.3s ease;
+}
+
+.hover-scale:hover {
+  transform: scale(1.02);
+}
+
+/* Premium Shadows */
+.premium-shadow {
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.3);
+}
+
+/* Premium Button */
+.premium-button {
+  background: linear-gradient(135deg, #D4B86A 0%, #B88746 100%);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(212, 184, 106, 0.3);
+}
+
+.premium-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(212, 184, 106, 0.4);
+}
+
+/* Premium Table */
+.premium-table {
+  border-collapse: separate;
+  border-spacing: 0 0.5rem;
+}
+
+.premium-table tr {
+  transition: transform 0.2s ease;
+}
+
+.premium-table tr:hover {
+  transform: translateX(4px);
+}
+
+/* Premium Radio Buttons */
+.premium-radio {
+  position: relative;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.premium-radio:checked {
+  border-color: #D4B86A;
+  background: #D4B86A;
+}
+
+.premium-radio:checked::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: white;
+}
+
+/* Premium Input */
+.premium-input {
+  background: rgba(17, 24, 39, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.premium-input:focus {
+  border-color: #D4B86A;
+  box-shadow: 0 0 0 2px rgba(212, 184, 106, 0.2);
+}
+
+/* Premium Stats Card */
+.stats-card {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.7) 100%);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.stats-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* Premium Loading Animation */
+.premium-loader {
+  width: 48px;
+  height: 48px;
+  border: 3px solid #D4B86A;
+  border-bottom-color: transparent;
+  border-radius: 50%;
+  animation: rotation 1s linear infinite;
+}
+
+@keyframes rotation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

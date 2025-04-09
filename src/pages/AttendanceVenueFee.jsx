@@ -5,6 +5,8 @@ import Swal from "sweetalert2";
 import api from "../hooks/api";
 import attendanceIcon from "../assets/images/icons/attendance-icon.svg";
 import calendarIcon from "../assets/images/icons/calender-icon.svg";
+import { motion } from "framer-motion";
+import "../styles/premium.css";
 
 const AttendanceVenueFee = () => {
   const navigate = useNavigate();
@@ -20,6 +22,7 @@ const AttendanceVenueFee = () => {
     date: "-",
     time: "-",
     chapters: [],
+    fee_amount: 0,
   });
   const [stats, setStats] = useState({
     total_members: 0,
@@ -173,6 +176,7 @@ const AttendanceVenueFee = () => {
             date: meetingData.date,
             time: meetingData.time,
             chapters: meetingChapters,
+            fee_amount: meetingData.fee_amount || 0,
           });
 
           setChapterMembers(groupedByChapter);
@@ -183,21 +187,28 @@ const AttendanceVenueFee = () => {
             []
           );
           setMembers(allMembers);
-        }
 
-        // Get overall stats
-        const statsResponse = await axios.get(
-          `${api}/attendance-venue-fee/meeting-stats`,
-          {
-            params: {
-              type: scheduleType,
-              meeting_id: meetingId,
-            },
+          // Calculate and set the correct total members count
+          const totalMembers = allMembers.length;
+
+          // Get overall stats
+          const statsResponse = await axios.get(
+            `${api}/attendance-venue-fee/meeting-stats`,
+            {
+              params: {
+                type: scheduleType,
+                meeting_id: meetingId,
+              },
+            }
+          );
+
+          if (statsResponse.data.success) {
+            // Update stats while preserving the correct total_members count
+            setStats({
+              ...statsResponse.data.data,
+              total_members: totalMembers,
+            });
           }
-        );
-
-        if (statsResponse.data.success) {
-          setStats(statsResponse.data.data);
         }
       }
     } catch (error) {
@@ -574,7 +585,7 @@ const AttendanceVenueFee = () => {
 
   return (
     <div className="mt-32 p-6">
-      {/* Header Section */}
+      {/* Header Section - Enhanced styling */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div className="flex items-center gap-4">
           <div className="p-3 bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] rounded-xl">
@@ -617,47 +628,56 @@ const AttendanceVenueFee = () => {
         </button>
       </div>
 
-      {/* Meeting Details Card */}
-      <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700">
-        <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
-          <div className="space-y-1">
-            <p className="text-gray-400 text-sm">Meeting Type</p>
+      {/* Meeting Details Card - Add motion and improved styling */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-gray-800 rounded-xl p-6 mb-6 border border-gray-700"
+      >
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="space-y-2">
+            <p className="text-gray-400">Meeting Type</p>
             <h3 className="text-xl font-semibold text-white">
               {meetingDetails.type}
             </h3>
           </div>
-          <div className="space-y-1">
-            <p className="text-gray-400 text-sm">Meeting Name</p>
+          <div className="space-y-2">
+            <p className="text-gray-400">Meeting Name</p>
             <h3 className="text-xl font-semibold text-white">
               {meetingDetails.title}
             </h3>
           </div>
-          <div className="space-y-1">
-            <p className="text-gray-400 text-sm">Meeting Date</p>
+          <div className="space-y-2">
+            <p className="text-gray-400">Meeting Date & Time</p>
             <h3 className="text-xl font-semibold text-white">
-              {new Date(meetingDetails.date).toLocaleDateString("en-GB")}{" "}
+              {new Date(meetingDetails.date).toLocaleDateString()}{" "}
               {meetingDetails.time}
             </h3>
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
-        {/* Total Members Card */}
-        <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700 hover:bg-gray-800 transition-all duration-300">
+      {/* Stats Cards - Add motion and improved styling */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6"
+      >
+        {/* Total Members Card - Improved gradient background */}
+        <div className="bg-gradient-to-br from-blue-900/50 to-blue-600/30 rounded-xl p-6 border border-blue-800/50 hover:shadow-lg hover:shadow-blue-900/20 transition-all duration-300">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-400">Total Members</p>
-              <h3 className="text-2xl font-bold text-white mt-1">
+              <h3 className="text-3xl font-bold text-white mt-2">
                 {stats.total_members}
               </h3>
             </div>
-            <div className="p-3 bg-blue-500/10 rounded-xl">
+            <div className="p-4 bg-blue-500/20 rounded-xl">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                 <path
                   d="M17 20H22V18C22 16.3431 20.6569 15 19 15C18.0444 15 17.1931 15.4468 16.6438 16.1429M17 20H7M17 20V18C17 17.3438 16.8736 16.717 16.6438 16.1429M7 20H2V18C2 16.3431 3.34315 15 5 15C5.95561 15 6.80686 15.4468 7.35625 16.1429M7 20V18C7 17.3438 7.12642 16.717 7.35625 16.1429M7.35625 16.1429C8.0935 14.301 9.89482 13 12 13C14.1052 13 15.9065 14.301 16.6438 16.1429"
-                  stroke="#3B82F6"
+                  stroke="#60A5FA"
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -666,15 +686,17 @@ const AttendanceVenueFee = () => {
             </div>
           </div>
         </div>
-        <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700 hover:bg-gray-800 transition-all duration-300">
+
+        {/* Attendance Card - Improved gradient background */}
+        <div className="bg-gradient-to-br from-green-900/50 to-green-600/30 rounded-xl p-6 border border-green-800/50 hover:shadow-lg hover:shadow-green-900/20 transition-all duration-300">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-400">Marked Attendance</p>
-              <h3 className="text-2xl font-bold text-white mt-1">
+              <h3 className="text-3xl font-bold text-white mt-2">
                 {stats.attendance.marked}
               </h3>
             </div>
-            <div className="p-3 bg-amber-500/10 rounded-xl">
+            <div className="p-4 bg-green-500/20 rounded-xl">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                 <path
                   d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z"
@@ -686,44 +708,47 @@ const AttendanceVenueFee = () => {
               </svg>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-3 mt-3">
-            <div className="px-2.5 py-1 bg-green-500/10 rounded-lg">
-              <span className="text-sm text-green-500">
+          <div className="flex flex-wrap items-center gap-3 mt-4">
+            <div className="px-3 py-1.5 bg-green-500/20 rounded-lg">
+              <span className="text-sm text-green-400">
                 {stats.attendance.present} Present
               </span>
             </div>
             {type === "meetings" && (
-              <div className="px-2.5 py-1 bg-blue-500/10 rounded-lg">
-                <span className="text-sm text-blue-500">
+              <div className="px-3 py-1.5 bg-blue-500/20 rounded-lg">
+                <span className="text-sm text-blue-400">
                   {stats.attendance.substitutes || 0} Substitutes
                 </span>
               </div>
             )}
 
-            <div className="px-2.5 py-1 bg-yellow-500/10 rounded-lg">
-              <span className="text-sm text-yellow-500">
+            <div className="px-3 py-1.5 bg-yellow-500/20 rounded-lg">
+              <span className="text-sm text-yellow-400">
                 {stats.attendance.late_total ||
                   parseInt(stats.attendance.late_less || 0) +
                     parseInt(stats.attendance.late_more || 0)}{" "}
                 Late
               </span>
             </div>
-            <div className="px-2.5 py-1 bg-red-500/10 rounded-lg">
-              <span className="text-sm text-red-500">
+            <div className="px-3 py-1.5 bg-red-500/20 rounded-lg">
+              <span className="text-sm text-red-400">
                 {stats.attendance.absent} Absent
               </span>
             </div>
           </div>
         </div>
-        <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700 hover:bg-gray-800 transition-all duration-300">
-          <div className="flex items-center justify-between">
+
+        {/* Venue Fee Card - Improved gradient background */}
+        <div className="bg-gradient-to-br from-purple-900/50 to-purple-600/30 rounded-xl p-6 border border-purple-800/50 hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300">
+          <div className="flex items-center justify-between mb-4">
             <div>
               <p className="text-gray-400">Venue Fee Collection</p>
-              <h3 className="text-2xl font-bold text-white mt-1">
-                ₹{stats.venue_fee.collected} / ₹{stats.venue_fee.total_expected}
+              <h3 className="text-3xl font-bold text-white mt-2">
+                ₹{stats.venue_fee.paid_count * meetingDetails.fee_amount} / ₹
+                {stats.total_members * meetingDetails.fee_amount}
               </h3>
             </div>
-            <div className="p-3 bg-purple-500/10 rounded-xl">
+            <div className="p-4 bg-purple-500/20 rounded-xl">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                 <path
                   d="M12 6V12M12 12V18M12 12H18M12 12H6"
@@ -735,23 +760,28 @@ const AttendanceVenueFee = () => {
               </svg>
             </div>
           </div>
-          <div className="flex items-center gap-3 mt-3">
-            <div className="px-2.5 py-1 bg-amber-500/10 rounded-lg">
-              <span className="text-sm text-amber-500">
+          <div className="flex items-center gap-3">
+            <div className="px-3 py-1.5 bg-green-500/20 rounded-lg">
+              <span className="text-sm text-green-400">
                 {stats.venue_fee.paid_count} Paid
               </span>
             </div>
-            <div className="px-2.5 py-1 bg-red-500/10 rounded-lg">
-              <span className="text-sm text-red-500">
+            <div className="px-3 py-1.5 bg-red-500/20 rounded-lg">
+              <span className="text-sm text-red-400">
                 {stats.venue_fee.unpaid_count} Unpaid
               </span>
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Table Section */}
-      <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 mt-6">
+      {/* Table Section - Improved styling */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="bg-gray-800 rounded-xl p-6 border border-gray-700"
+      >
         <div className="mb-6">
           <input
             type="text"
@@ -763,12 +793,26 @@ const AttendanceVenueFee = () => {
         </div>
 
         {loading ? (
-          <div className="py-8 text-center text-gray-400">
-            Loading members...
+          <div className="py-12 text-center">
+            <div className="inline-block w-8 h-8 border-4 border-gray-700 border-t-amber-500 rounded-full animate-spin"></div>
+            <p className="mt-4 text-gray-400">Loading members...</p>
           </div>
         ) : Object.keys(chapterMembers).length === 0 ? (
-          <div className="py-8 text-center text-gray-400">
-            No active members found in selected chapters
+          <div className="py-12 text-center text-gray-400">
+            <svg
+              className="w-16 h-16 mx-auto mb-4 text-gray-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+              />
+            </svg>
+            <p>No active members found in selected chapters</p>
           </div>
         ) : (
           <div className="space-y-6">
@@ -785,8 +829,8 @@ const AttendanceVenueFee = () => {
 
               return (
                 <div key={chapterName} className="space-y-4">
-                  {/* Chapter Header */}
-                  <div className="bg-gray-700/50 p-4 rounded-xl">
+                  {/* Chapter Header - Improved styling */}
+                  <div className="bg-gradient-to-r from-gray-800 to-gray-700/50 p-4 rounded-xl border border-gray-700">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                       <div>
                         <h3 className="text-lg font-semibold text-white">
@@ -842,46 +886,46 @@ const AttendanceVenueFee = () => {
                     </div>
                   </div>
 
-                  {/* Members Table */}
+                  {/* Members Table - Improved styling */}
                   <div className="overflow-x-auto">
                     <table className="w-full text-left border-separate border-spacing-0">
                       <thead>
-                        <tr className="bg-gray-800">
-                          <th className="sticky top-0 p-4 font-semibold text-gray-300 whitespace-nowrap">
+                        <tr className="bg-gray-700/50">
+                          <th className="p-4 font-semibold text-gray-300 whitespace-nowrap rounded-tl-lg">
                             #
                           </th>
-                          <th className="sticky top-0 p-4 font-semibold text-gray-300 whitespace-nowrap">
+                          <th className="p-4 font-semibold text-gray-300 whitespace-nowrap">
                             Member
                           </th>
                           {markingType === "attendance" ? (
                             <>
                               {type === "meetings" && (
-                                <th className="sticky top-0 p-4 text-center font-semibold text-gray-300 whitespace-nowrap">
+                                <th className="p-4 text-center font-semibold text-gray-300 whitespace-nowrap">
                                   Substitute
                                 </th>
                               )}
-                              <th className="sticky top-0 p-4 text-center font-semibold text-gray-300 whitespace-nowrap">
+                              <th className="p-4 text-center font-semibold text-gray-300 whitespace-nowrap">
                                 Present
                               </th>
-                              <th className="sticky top-0 p-4 text-center font-semibold text-gray-300 whitespace-nowrap">
+                              <th className="p-4 text-center font-semibold text-gray-300 whitespace-nowrap">
                                 Absent
                               </th>
-                              <th className="sticky top-0 p-4 text-center font-semibold text-gray-300 whitespace-nowrap">
+                              <th className="p-4 text-center font-semibold text-gray-300 whitespace-nowrap">
                                 Late
                               </th>
-                              <th className="sticky top-0 p-4 text-center font-semibold text-gray-300 whitespace-nowrap">
+                              <th className="p-4 text-center font-semibold text-gray-300 whitespace-nowrap rounded-tr-lg">
                                 Minutes Late
                               </th>
                             </>
                           ) : (
                             <>
-                              <th className="sticky top-0 p-4 text-center font-semibold text-gray-300 whitespace-nowrap">
+                              <th className="p-4 text-center font-semibold text-gray-300 whitespace-nowrap">
                                 Paid
                               </th>
-                              <th className="sticky top-0 p-4 text-center font-semibold text-gray-300 whitespace-nowrap">
+                              <th className="p-4 text-center font-semibold text-gray-300 whitespace-nowrap">
                                 Unpaid
                               </th>
-                              <th className="sticky top-0 p-4 text-center font-semibold text-gray-300 whitespace-nowrap">
+                              <th className="p-4 text-center font-semibold text-gray-300 whitespace-nowrap rounded-tr-lg">
                                 Payment Date
                               </th>
                             </>
@@ -890,27 +934,34 @@ const AttendanceVenueFee = () => {
                       </thead>
                       <tbody className="divide-y divide-gray-700">
                         {filteredMembers.map((member, index) => (
-                          <tr key={member.id} className="hover:bg-gray-800/50">
+                          <tr
+                            key={member.id}
+                            className="hover:bg-gray-700/50 transition-colors"
+                          >
                             <td className="p-4 text-gray-300">{index + 1}</td>
                             <td className="p-4">
-                              <div className="flex items-center gap-2">
-                                <div className="flex flex-col gap-1">
-                                  <span className="px-2 py-1 text-xs font-medium bg-amber-500/20 text-amber-500 rounded-full">
-                                    Active
-                                  </span>
-                                  <span className="px-2 py-1 text-xs font-medium bg-yellow-500/20 text-yellow-500 rounded-full">
-                                    {member.total_absences} A
-                                  </span>
-                                  {type === "meetings" && (
-                                    <span className="px-2 py-1 text-xs font-medium bg-blue-500/20 text-blue-500 rounded-full">
-                                      {member.total_substitutes}
-                                    </span>
-                                  )}
-                                </div>
+                              <div className="flex items-center gap-3">
+                                <div
+                                  className={`w-2 h-2 rounded-full ${
+                                    member.is_active
+                                      ? "bg-amber-500"
+                                      : "bg-red-500"
+                                  }`}
+                                ></div>
                                 <div>
                                   <p className="font-medium text-white">
                                     {member.full_name}
                                   </p>
+                                  <div className="flex gap-2 mt-1">
+                                    <span className="px-2 py-0.5 text-xs font-medium bg-yellow-500/20 text-yellow-500 rounded-full">
+                                      {member.total_absences} A
+                                    </span>
+                                    {type === "meetings" && (
+                                      <span className="px-2 py-0.5 text-xs font-medium bg-blue-500/20 text-blue-500 rounded-full">
+                                        {member.total_substitutes} S
+                                      </span>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                             </td>
@@ -926,7 +977,6 @@ const AttendanceVenueFee = () => {
                                           member.id,
                                           e.target.checked
                                         );
-                                        // If checked as substitute, automatically mark as present
                                         if (
                                           e.target.checked &&
                                           member.status !== "present"
@@ -953,7 +1003,7 @@ const AttendanceVenueFee = () => {
                                         "present"
                                       )
                                     }
-                                    className="attendance-radio"
+                                    className="attendance-radio-present"
                                   />
                                 </td>
                                 <td className="p-4 text-center">
@@ -968,7 +1018,7 @@ const AttendanceVenueFee = () => {
                                         "absent"
                                       )
                                     }
-                                    className="attendance-radio"
+                                    className="attendance-radio-absent"
                                   />
                                 </td>
                                 <td className="p-4 text-center">
@@ -980,7 +1030,7 @@ const AttendanceVenueFee = () => {
                                     onChange={() =>
                                       handleAttendanceChange(member.id, "late")
                                     }
-                                    className="attendance-radio"
+                                    className="attendance-radio-late"
                                   />
                                 </td>
                                 <td className="p-4 text-center">
@@ -1020,7 +1070,7 @@ const AttendanceVenueFee = () => {
                                         e.target.value
                                       )
                                     }
-                                    className="venue-fee-radio"
+                                    className="venue-fee-radio-paid"
                                   />
                                 </td>
                                 <td className="p-4 text-center">
@@ -1037,7 +1087,7 @@ const AttendanceVenueFee = () => {
                                         e.target.value
                                       )
                                     }
-                                    className="venue-fee-radio"
+                                    className="venue-fee-radio-unpaid"
                                   />
                                 </td>
                                 <td className="p-4 text-center">
@@ -1075,24 +1125,10 @@ const AttendanceVenueFee = () => {
             })}
           </div>
         )}
-      </div>
+      </motion.div>
 
-      {/* Save Button */}
-      <div className="bg-gray-900 p-4 mt-4">
-        {/* <button
-          onClick={async () => {
-            console.log("Debug button clicked");
-            console.log("Current state:", {
-              type,
-              meetingId,
-              chapterMembers,
-              members,
-            });
-          }}
-          className="mr-4 px-4 py-2 bg-blue-500 text-white rounded"
-        >
-          Debug Log
-        </button> */}
+      {/* Save Button - Improved styling */}
+      <div className="sticky -bottom-5 bg-gray-900 p-4 mt-4">
         <button
           onClick={saveData}
           disabled={!hasMarkedAttendance()}
@@ -1100,7 +1136,7 @@ const AttendanceVenueFee = () => {
             hasMarkedAttendance()
               ? "bg-gradient-to-r from-amber-600 to-amber-900 hover:from-amber-700 hover:to-amber-950"
               : "bg-gray-700 cursor-not-allowed"
-          } text-white rounded-xl transition-all duration-300`}
+          } text-white rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-amber-900/30 hover:-translate-y-0.5`}
         >
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
             <path
@@ -1113,6 +1149,40 @@ const AttendanceVenueFee = () => {
           {markingType === "attendance" ? "Save Attendance" : "Save Venue Fee"}
         </button>
       </div>
+
+      {/* Custom CSS - Add new styles for radio buttons */}
+      <style jsx>{`
+        .venue-fee-radio-paid,
+        .venue-fee-radio-unpaid,
+        .attendance-radio-present,
+        .attendance-radio-absent,
+        .attendance-radio-late {
+          appearance: none;
+          width: 1.2rem;
+          height: 1.2rem;
+          border: 2px solid #374151;
+          border-radius: 50%;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .venue-fee-radio-paid:checked,
+        .attendance-radio-present:checked {
+          border-color: #22c55e;
+          background-color: #22c55e;
+        }
+
+        .venue-fee-radio-unpaid:checked,
+        .attendance-radio-absent:checked {
+          border-color: #ef4444;
+          background-color: #ef4444;
+        }
+
+        .attendance-radio-late:checked {
+          border-color: #f59e0b;
+          background-color: #f59e0b;
+        }
+      `}</style>
     </div>
   );
 };
