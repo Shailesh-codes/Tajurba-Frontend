@@ -172,7 +172,7 @@ const MarkAttendance = () => {
         meetings: calculateStats(meetings, meetingsAttendance),
         mdp: calculateStats(mdpMeetings, mdpAttendance),
         social: calculateStats(socialMeetings, socialAttendance),
-        events: { total: 0, marked: 0, pending: 0 }, // Keep this if you need events stats
+        events: { total: 0, marked: 0, pending: 0 },
       });
     } catch (error) {
       console.error("Error fetching stats:", error);
@@ -240,7 +240,7 @@ const MarkAttendance = () => {
                   </h3>
                 )}
               </div>
-              <div className="p-3 bg-amber-500/10 rounded-xl">
+              <div className="p-3 bg-green-500/10 rounded-xl">
                 <svg
                   width="24"
                   height="24"

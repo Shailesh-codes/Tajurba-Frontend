@@ -40,10 +40,12 @@ const EditScheduleMeeting = () => {
         if (scheduleResponse.data.success && chaptersResponse.data.status === "success") {
           const scheduleData = scheduleResponse.data.data;
           
-          // Parse chapters if it's a string
-          const parsedChapters = typeof scheduleData.chapters === 'string' 
-            ? JSON.parse(scheduleData.chapters) 
-            : scheduleData.chapters;
+          // Ensure chapters is always an array of objects with chapter_id
+          const parsedChapters = Array.isArray(scheduleData.chapters) 
+            ? scheduleData.chapters.map(ch => 
+                typeof ch === 'object' ? ch : { chapter_id: ch }
+              )
+            : [];
 
           // Format date for input field
           const formattedDate = new Date(scheduleData.date).toISOString().split('T')[0];
@@ -104,9 +106,9 @@ const EditScheduleMeeting = () => {
   const handleChapterToggle = (chapterId) => {
     setFormData((prev) => ({
       ...prev,
-      chapters: prev.chapters.includes(chapterId)
-        ? prev.chapters.filter((id) => id !== chapterId)
-        : [...prev.chapters, chapterId],
+      chapters: prev.chapters.some(ch => ch.chapter_id === chapterId)
+        ? prev.chapters.filter(ch => ch.chapter_id !== chapterId)
+        : [...prev.chapters, { chapter_id: chapterId }]
     }));
   };
 
@@ -115,10 +117,15 @@ const EditScheduleMeeting = () => {
     try {
       const formDataToSend = new FormData();
       
+      // Prepare chapters data - extract only chapter_ids
+      const chapterIds = formData.chapters.map(ch => 
+        typeof ch === 'object' ? ch.chapter_id : ch
+      ).filter(id => id !== undefined && id !== null);
+
       // Append all form fields
       Object.keys(formData).forEach(key => {
         if (key === 'chapters') {
-          formDataToSend.append(key, JSON.stringify(formData[key]));
+          formDataToSend.append(key, JSON.stringify(chapterIds));
         } else if (key === 'qr_code' && formData[key] instanceof File) {
           formDataToSend.append(key, formData[key]);
         } else if (key !== 'qr_code') {
@@ -377,7 +384,9 @@ const EditScheduleMeeting = () => {
                   >
                     <input
                       type="checkbox"
-                      checked={formData.chapters.includes(chapter.chapter_id)}
+                      checked={formData.chapters.some(ch => 
+                        (typeof ch === 'object' ? ch.chapter_id : ch) === chapter.chapter_id
+                      )}
                       onChange={() => handleChapterToggle(chapter.chapter_id)}
                       className="form-checkbox bg-gray-600 border-gray-500 rounded text-amber-500 focus:ring-0 focus:ring-offset-0"
                     />

@@ -40,6 +40,9 @@ const ViewBDM = () => {
       instagram: "https://instagram.com",
     },
     verifyStatus: "pending",
+    verified_date: "",
+    rejected_date: "",
+    created_at: "",
   });
 
   // Status badge styles based on status
@@ -58,7 +61,6 @@ const ViewBDM = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // Fetch BDM data
         const bdmResponse = await axios.get(`${api}/bdm/${id}`);
         const bdmInfo = bdmResponse.data;
 
@@ -70,6 +72,7 @@ const ViewBDM = () => {
 
         // Combine BDM and member data
         setBdmData({
+          ...bdmData,
           memberName: bdmInfo.memberName,
           chapter: bdmInfo.chapter,
           status: bdmInfo.status,
@@ -88,9 +91,9 @@ const ViewBDM = () => {
             instagram: "https://instagram.com",
           },
           verifyStatus: bdmInfo.status,
+          verified_date: bdmInfo.verified_date,
+          rejected_date: bdmInfo.rejected_date,
           created_at: bdmInfo.created_at,
-          verifiedDate: bdmInfo.verifiedDate,
-          verifiedBy: bdmInfo.verifiedBy,
         });
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -325,25 +328,13 @@ const ViewBDM = () => {
                 ? "bg-red-500/20"
                 : "bg-amber-500/20"
             }`}>
-              <svg
-                className={`w-5 h-5 ${
-                  bdmData.status === "verified"
-                    ? "text-green-400"
-                    : bdmData.status === "rejected"
-                    ? "text-red-400"
-                    : "text-amber-400"
-                }`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
+              {bdmData.status === "verified" ? (
+                <CheckCircle className="w-5 h-5 text-green-400" />
+              ) : bdmData.status === "rejected" ? (
+                <XCircle className="w-5 h-5 text-red-400" />
+              ) : (
+                <Clock className="w-5 h-5 text-amber-400" />
+              )}
             </div>
             <h3 className="text-lg font-semibold text-white">
               Verification Details
@@ -357,24 +348,23 @@ const ViewBDM = () => {
                   <p className="text-gray-300">
                     Verified on{" "}
                     <span className="text-green-400 font-medium">
-                      {formatDate(bdmData.verifiedDate)}
+                      {formatDate(bdmData.verified_date)}
                     </span>
                   </p>
                 </div>
-                {bdmData.verifiedBy && (
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-green-400"></div>
-                    <p className="text-gray-300">
-                      Verified by{" "}
-                      <span className="text-green-400 font-medium">
-                        {bdmData.verifiedBy}
-                      </span>
-                    </p>
-                  </div>
-                )}
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-green-400"></div>
+                  <p className="text-gray-300">
+                    Request submitted on{" "}
+                    <span className="text-green-400 font-medium">
+                      {formatDate(bdmData.created_at)}
+                    </span>
+                  </p>
+                </div>
                 <div className="flex items-center gap-2 mt-2">
-                  <div className="px-3 py-1.5 bg-green-500/20 text-green-400 rounded-lg text-sm font-medium">
-                    ✓ Verification Approved
+                  <div className="px-3 py-1.5 bg-green-500/20 text-green-400 rounded-lg text-sm font-medium flex items-center gap-2">
+                    <CheckCircle size={16} />
+                    <span>Verification Approved</span>
                   </div>
                 </div>
               </div>
@@ -385,24 +375,23 @@ const ViewBDM = () => {
                   <p className="text-gray-300">
                     Rejected on{" "}
                     <span className="text-red-400 font-medium">
-                      {formatDate(bdmData.verifiedDate)}
+                      {formatDate(bdmData.rejected_date)}
                     </span>
                   </p>
                 </div>
-                {bdmData.verifiedBy && (
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-red-400"></div>
-                    <p className="text-gray-300">
-                      Rejected by{" "}
-                      <span className="text-red-400 font-medium">
-                        {bdmData.verifiedBy}
-                      </span>
-                    </p>
-                  </div>
-                )}
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-red-400"></div>
+                  <p className="text-gray-300">
+                    Request submitted on{" "}
+                    <span className="text-red-400 font-medium">
+                      {formatDate(bdmData.created_at)}
+                    </span>
+                  </p>
+                </div>
                 <div className="flex items-center gap-2 mt-2">
-                  <div className="px-3 py-1.5 bg-red-500/20 text-red-400 rounded-lg text-sm font-medium">
-                    ✕ Verification Rejected
+                  <div className="px-3 py-1.5 bg-red-500/20 text-red-400 rounded-lg text-sm font-medium flex items-center gap-2">
+                    <XCircle size={16} />
+                    <span>Verification Rejected</span>
                   </div>
                 </div>
               </div>
@@ -410,11 +399,21 @@ const ViewBDM = () => {
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-amber-400"></div>
+                  <p className="text-gray-300">
+                    Request submitted on{" "}
+                    <span className="text-amber-400 font-medium">
+                      {formatDate(bdmData.created_at)}
+                    </span>
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-amber-400"></div>
                   <p className="text-gray-300">Awaiting verification</p>
                 </div>
                 <div className="flex items-center gap-2 mt-2">
-                  <div className="px-3 py-1.5 bg-amber-500/20 text-amber-400 rounded-lg text-sm font-medium">
-                    ⏳ Pending Verification
+                  <div className="px-3 py-1.5 bg-amber-500/20 text-amber-400 rounded-lg text-sm font-medium flex items-center gap-2">
+                    <Clock size={16} />
+                    <span>Pending Verification</span>
                   </div>
                 </div>
               </div>

@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import api from "../hooks/api";
 import Swal from "sweetalert2";
+import { format } from "date-fns";
 
 const MemberReferGiven = () => {
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ const MemberReferGiven = () => {
     "Mobile Number",
     "Chapter",
     "Status",
-    "Verified Date",
+    "Verification Date",
     "Referral Date",
     "Actions",
   ];
@@ -70,6 +71,15 @@ const MemberReferGiven = () => {
 
     return matchesSearch && matchesStatus;
   });
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "-";
+    try {
+      return format(new Date(dateString), "dd MMM yyyy");
+    } catch {
+      return "-";
+    }
+  };
 
   return (
     <div className="mt-32 p-1 lg:p-6 flex flex-col gap-1 space-y-5">
@@ -241,8 +251,10 @@ const MemberReferGiven = () => {
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-sm text-gray-400">
-                          {referral.verified_date 
-                            ? new Date(referral.verified_date).toLocaleDateString()
+                          {referral.verify_status === "verified" && referral.verified_date 
+                            ? formatDate(referral.verified_date)
+                            : referral.verify_status === "rejected" && referral.rejected_date
+                            ? formatDate(referral.rejected_date)
                             : "-"}
                         </span>
                       </td>

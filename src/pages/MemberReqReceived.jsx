@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Eye,
@@ -11,39 +11,102 @@ import {
 } from "lucide-react";
 import requestIcon from "../assets/images/icons/request.svg";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import api from "../hooks/api";
+import { format } from "date-fns";
 
 const MemberReqReceived = () => {
   const navigate = useNavigate();
   const [selectedType, setSelectedType] = useState("bdm");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedChapter, setSelectedChapter] = useState("all");
+  const [loading, setLoading] = useState(false);
+  const [stats, setStats] = useState({
+    bdm: { total: 0, verified: 0, pending: 0, rejected: 0 },
+    business: { total: 0, verified: 0, pending: 0, rejected: 0 },
+    referral: { total: 0, verified: 0, pending: 0, rejected: 0 },
+  });
+  const [requests_data, setRequestsData] = useState([]);
 
-  // Dummy data for demonstration
-  const stats = {
-    bdm: { total: 16, verified: 12, pending: 2, rejected: 2 },
-    business: { total: 14, verified: 10, pending: 3, rejected: 1 },
-    referral: { total: 18, verified: 13, pending: 4, rejected: 1 },
+  // Fetch BDM requests and stats
+  const fetchRequests = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${api}/bdm`);
+      const bdms = response.data || [];
+
+      const formattedBdms = bdms.map((bdm) => ({
+        ...bdm,
+        id: bdm.bdm_id,
+        request_type: bdm.request_type || "BDM", 
+        date: bdm.bdmDate || bdm.created_at, 
+      }));
+
+      // Rest of your filtering logic
+      let filteredBdms = formattedBdms;
+      if (selectedStatus !== "all") {
+        filteredBdms = filteredBdms.filter(
+          (bdm) => bdm.status === selectedStatus
+        );
+      }
+      if (selectedChapter !== "all") {
+        filteredBdms = filteredBdms.filter(
+          (bdm) => bdm.chapter === selectedChapter
+        );
+      }
+
+      setStats({
+        bdm: {
+          total: formattedBdms.length,
+          verified: formattedBdms.filter((b) => b.status === "verified").length,
+          pending: formattedBdms.filter((b) => b.status === "pending").length,
+          rejected: formattedBdms.filter((b) => b.status === "rejected").length,
+        },
+        business: { total: 0, verified: 0, pending: 0, rejected: 0 },
+        referral: { total: 0, verified: 0, pending: 0, rejected: 0 },
+      });
+
+      setRequestsData(filteredBdms);
+    } catch (error) {
+      console.error("Error fetching requests:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const requests_data = [
-    {
-      id: 1,
-      member_name: "John Doe",
-      chapter: "Mumbai Central",
-      request_type: "bdm",
-      date: "2024-03-20",
-      status: "pending",
-    },
-    {
-      id: 2,
-      member_name: "Jane Smith",
-      chapter: "Delhi North",
-      request_type: "business",
-      amount: 25000,
-      date: "2024-03-15",
-      status: "verified",
-    },
-  ];
+  // Handle request verification
+  const handleVerification = async (requestId, action) => {
+    try {
+      const status = action === "verify" ? "verified" : "rejected";
+      const currentDate = new Date().toISOString();
+      
+      // Include the verification/rejection date in the request
+      const updateData = {
+        status,
+        verified_date: status === "verified" ? currentDate : null,
+        rejected_date: status === "rejected" ? currentDate : null
+      };
+
+      await axios.put(`${api}/bdm/${requestId}`, updateData);
+      fetchRequests(); // Refresh the data
+    } catch (error) {
+      console.error("Error updating request:", error);
+    }
+  };
+
+  // Add a helper function to format dates
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    try {
+      return format(new Date(dateString), "dd MMM yyyy");
+    } catch {
+      return "N/A";
+    }
+  };
+
+  useEffect(() => {
+    fetchRequests();
+  }, [selectedStatus, selectedChapter]);
 
   const getStatusClass = (status) => {
     const classes = {
@@ -59,7 +122,7 @@ const MemberReqReceived = () => {
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
         <div className="flex items-center gap-4">
-          <div className="p-3 bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746]  rounded-xl">
+          <div className="p-3 bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] rounded-xl">
             <img src={requestIcon} alt="requests" className="w-6 h-6" />
           </div>
           <div>
@@ -271,32 +334,47 @@ const MemberReqReceived = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-700/50">
-                {requests_data.map((request, index) => (
+                {loading ? (
+                  <tr>
+                    <td colSpan={6} className="text-center py-8">
+                      <div className="flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500"></div>
+                      </div>
+                    </td>
+                  </tr>
+                ) : requests_data.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="text-center py-8 text-gray-400">
+                      No requests found
+                    </td>
+                  </tr>
+                ) : (
+                  requests_data.map((request) => (
                   <motion.tr
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
+                      transition={{ delay: 0.1 }}
                     key={request.id}
                     className="group hover:bg-gradient-to-r hover:from-gray-700/30 hover:via-gray-700/40 hover:to-gray-700/30 transition-all duration-300"
                   >
                     <td className="px-6 py-4">
                       <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
-                        {request.member_name}
+                          {request.memberName || "N/A"}
                       </span>
                     </td>
                     <td className="px-6 py-4">
                       <span className="text-sm text-gray-300">
-                        {request.chapter}
+                          {request.chapter || "N/A"}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-500/10 text-amber-500">
+                          {request.request_type || "BDM"}
                       </span>
                     </td>
                     <td className="px-6 py-4">
                       <span className="text-sm text-gray-300">
-                        {request.request_type.toUpperCase()}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-sm text-gray-300">
-                        {request.date}
+                          {formatDate(request.date)}
                       </span>
                     </td>
                     <td className="px-6 py-4">
@@ -305,59 +383,49 @@ const MemberReqReceived = () => {
                           request.status
                         )}`}
                       >
-                        {request.status.charAt(0).toUpperCase() +
-                          request.status.slice(1)}
+                          {request.status
+                            ? request.status.charAt(0).toUpperCase() +
+                              request.status.slice(1)
+                            : "N/A"}
                       </span>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-center gap-2">
-                        {request.status === "pending" ? (
-                          <>
-                            <button className="px-3 py-1 bg-green-500/10 text-green-500 hover:bg-green-500/20 rounded-lg text-sm transition-all duration-300 flex items-center gap-1">
+                          {request.status === "pending" && (
+                            <>
+                              <button
+                                onClick={() =>
+                                  handleVerification(request.id, "verify")
+                                }
+                                className="px-3 py-1 bg-green-500/10 text-green-500 hover:bg-green-500/20 rounded-lg text-sm transition-all duration-300 flex items-center gap-1"
+                              >
                               <Check size={16} />
                               Verify
                             </button>
-                            <button className="px-3 py-1 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg text-sm transition-all duration-300 flex items-center gap-1">
+                              <button
+                                onClick={() =>
+                                  handleVerification(request.id, "reject")
+                                }
+                                className="px-3 py-1 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg text-sm transition-all duration-300 flex items-center gap-1"
+                              >
                               <X size={16} />
                               Reject
                             </button>
-                            <button className="px-3 py-1 bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 rounded-lg text-sm transition-all duration-300">
+                            </>
+                          )}
+                          <button
+                            onClick={() => navigate(`/view-bdm/${request.id}`)}
+                            className="px-3 py-1 bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 rounded-lg text-sm transition-all duration-300"
+                          >
                               <Eye size={16} />
                             </button>
-                          </>
-                        ) : (
-                          <span className="text-sm text-gray-400">
-                            No actions needed
-                          </span>
-                        )}
                       </div>
                     </td>
                   </motion.tr>
-                ))}
+                  ))
+                )}
               </tbody>
             </table>
-
-            {/* Empty State */}
-            {requests_data.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-8">
-                <div className="p-3 bg-gray-800/50 rounded-xl mb-4">
-                  <svg
-                    className="w-8 h-8 text-gray-400"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                  >
-                    <path
-                      d="M9 5H7C5.89543 5 5 5.89543 5 7V19C5 20.1046 5.89543 21 7 21H17C18.1046 21 19 20.1046 19 19V7C19 5.89543 18.1046 5 17 5H15M9 5C9 6.10457 9.89543 7 11 7H13C14.1046 7 15 6.10457 15 5M9 5C9 3.89543 9.89543 3 11 3H13C14.1046 3 15 3.89543 15 5"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </div>
-                <p className="text-gray-400 text-center">No requests found</p>
-              </div>
-            )}
           </div>
         </div>
       </motion.div>

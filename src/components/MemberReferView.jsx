@@ -436,7 +436,7 @@ const MemberReferView = () => {
                       <p className="text-gray-300">
                         Verified on{" "}
                         <span className="text-green-400 font-medium">
-                          {new Date(referralData.verifiedDate).toLocaleDateString()}
+                          {formatDate(referralData.verifiedDate)}
                         </span>
                       </p>
                     </div>
@@ -451,7 +451,10 @@ const MemberReferView = () => {
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-red-400"></div>
                       <p className="text-gray-300">
-                        Verification rejected
+                        Rejected on{" "}
+                        <span className="text-red-400 font-medium">
+                          {formatDate(referralData.rejectedDate)}
+                        </span>
                       </p>
                     </div>
                     <div className="flex items-center gap-2 mt-2">

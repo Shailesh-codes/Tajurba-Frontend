@@ -5,7 +5,6 @@ import axios from "axios";
 import api from "../hooks/api";
 import eventIcon from "../assets/images/icons/event.svg";
 import editIcon from "../assets/images/icons/edit.svg";
-import deleteIcon from "../assets/images/icons/delete.svg";
 import { showToast } from "../utils/toast";
 
 const ViewScheduleMeeting = () => {
@@ -16,6 +15,7 @@ const ViewScheduleMeeting = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [allChapters, setAllChapters] = useState([]);
+  const [chapters, setChapters] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -25,14 +25,12 @@ const ViewScheduleMeeting = () => {
           `${api}/schedules/${type}/${id}`
         );
         const chaptersResponse = await axios.get(`${api}/chapters`);
-
         if (
           scheduleResponse.data.success &&
           chaptersResponse.data.status === "success"
         ) {
           const scheduleData = scheduleResponse.data.data;
 
-          // If QR code is a Buffer or Uint8Array, convert it to base64
           if (scheduleData.qr_code && scheduleData.qr_code.type === "Buffer") {
             scheduleData.qr_code = Buffer.from(scheduleData.qr_code).toString(
               "base64"
@@ -61,21 +59,62 @@ const ViewScheduleMeeting = () => {
     }
   }, [type, id]);
 
+  useEffect(() => {
+    const fetchChapters = async () => {
+      try {
+        const response = await axios.get(`${api}/chapters`);
+        setChapters(response.data.data);
+      } catch (error) {
+        console.error("Error fetching chapters:", error);
+      }
+    };
+    fetchChapters();
+  }, []);
+
   const getScheduleType = () => {
     return type || "unknown";
   };
 
   const getChapterNames = (chapterIds) => {
-    if (!chapterIds || !allChapters.length) return [];
+    if (!chapterIds || !chapterIds.length) {
+      return [];
+    }
+
     try {
-      const ids = Array.isArray(chapterIds)
-        ? chapterIds
-        : JSON.parse(chapterIds);
-      return allChapters
-        .filter((chapter) => ids.includes(chapter.chapter_id))
-        .map((chapter) => chapter.chapter_name);
+      let chapters;
+      if (Array.isArray(chapterIds)) {
+        chapters = chapterIds;
+      } else if (typeof chapterIds === "string") {
+        try {
+          chapters = JSON.parse(chapterIds);
+        } catch (e) {
+          chapters = [chapterIds];
+        }
+      } else {
+        return [];
+      }
+
+      if (!Array.isArray(chapters)) {
+        return [];
+      }
+
+      // Extract chapter names directly from the objects
+      const chapterNames = chapters
+        .map((chapter) => {
+          if (
+            typeof chapter === "object" &&
+            chapter !== null &&
+            chapter.chapter_name
+          ) {
+            return chapter.chapter_name;
+          }
+          return null;
+        })
+        .filter((name) => name !== null);
+
+      return chapterNames;
     } catch (error) {
-      console.error("Error parsing chapters:", error);
+      console.error("Error processing chapters:", error);
       return [];
     }
   };
@@ -221,12 +260,16 @@ const ViewScheduleMeeting = () => {
                 </svg>
                 <span className="text-sm">Back</span>
               </button>
-              
+
               <button
                 onClick={() => navigate(`/edit-schedule/${type}/${id}`)}
                 className="flex items-center gap-2 px-6 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white transition-all duration-300 shadow-lg hover:shadow-amber-500/25"
               >
-                <img src={editIcon} alt="Edit" className="w-4 h-4 transition-transform hover:scale-110" />
+                <img
+                  src={editIcon}
+                  alt="Edit"
+                  className="w-4 h-4 transition-transform hover:scale-110"
+                />
                 <span className="text-sm font-medium">Edit Schedule</span>
               </button>
             </div>

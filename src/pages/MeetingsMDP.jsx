@@ -1,40 +1,115 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import meetings from "../assets/images/icons/meeting.svg";
 import { FiEye } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import api from "../hooks/api";
 
 const MeetingsMDP = () => {
   const navigate = useNavigate();
   const [selectedType, setSelectedType] = useState("meetings");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedVenueFee, setSelectedVenueFee] = useState("all");
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    meetings: { total: 0, present: 0, late: 0, absent: 0, substitutes: 0 },
+    mdp: { total: 0, present: 0, late: 0, absent: 0 },
+    social: { total: 0, present: 0, late: 0, absent: 0 },
+  });
+  const [meetings_data, setMeetingsData] = useState([]);
 
-  // Dummy data for demonstration
-  const stats = {
-    meetings: { total: 12, present: 8, late: 2, absent: 2 },
-    mdp: { total: 4, present: 3, late: 1, absent: 0 },
-    social: { total: 6, present: 5, late: 0, absent: 1 },
+  // Fetch meetings data
+  const fetchMeetingsData = async () => {
+    try {
+      setLoading(true);
+      // Get all schedules
+      const response = await axios.get(`${api}/schedules`);
+      
+      if (response.data.success) {
+        const { meetings = [], mdp = [], socialTraining = [] } = response.data.data;
+        
+        // Process meetings data
+        const processedMeetings = await Promise.all(meetings.map(async (meeting) => {
+          // Get attendance stats for each meeting
+          const statsResponse = await axios.get(`${api}/attendance-venue-fee/meeting-stats`, {
+            params: {
+              type: "meeting",
+              meeting_id: meeting.meeting_id
+            }
+          });
+
+          const stats = statsResponse.data.success ? statsResponse.data.data : null;
+
+          return {
+            id: meeting.meeting_id,
+            title: meeting.title,
+            date_time: `${new Date(meeting.date).toLocaleDateString()} ${meeting.time}`,
+            venue: meeting.venue,
+            status: stats ? getOverallStatus(stats) : null,
+            venue_fee: {
+              amount: meeting.fee_amount,
+              status: stats ? (stats.venue_fee.paid_count > 0 ? "paid" : "not paid") : "not paid"
+            },
+            attendance_stats: stats
+          };
+        }));
+
+        // Update stats
+        const newStats = {
+          meetings: calculateTypeStats(processedMeetings),
+          mdp: calculateTypeStats(mdp),
+          social: calculateTypeStats(socialTraining)
+        };
+
+        setStats(newStats);
+        setMeetingsData(processedMeetings);
+      }
+    } catch (error) {
+      console.error("Error fetching meetings data:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const meetings_data = [
-    {
-      id: 1,
-      title: "Weekly Business Meeting",
-      date_time: "2024-03-20 09:00 AM",
-      venue: "Hotel Grand Plaza",
-      status: "present",
-      venue_fee: { amount: 250, status: "paid" },
-    },
-    {
-      id: 2,
-      title: "Monthly Chapter Meeting",
-      date_time: "2024-03-15 10:00 AM",
-      venue: "Business Center",
-      status: "late_less",
-      venue_fee: { amount: 300, status: "not paid" },
-    },
-  ];
+  useEffect(() => {
+    fetchMeetingsData();
+  }, []);
+
+  // Helper function to calculate overall status based on attendance stats
+  const getOverallStatus = (stats) => {
+    if (!stats || !stats.attendance) return "unknown";
+    
+    const { present, absent, late_less, late_more } = stats.attendance;
+    const total = present + absent + (late_less || 0) + (late_more || 0);
+    
+    if (present > (total * 0.7)) return "present";
+    if (absent > (total * 0.3)) return "absent";
+    return "late_less";
+  };
+
+  // Helper function to calculate stats for each type
+  const calculateTypeStats = (items) => {
+    const stats = {
+      total: items.length,
+      present: 0,
+      late: 0,
+      absent: 0,
+      substitutes: 0
+    };
+
+    items.forEach(item => {
+      if (item.attendance_stats) {
+        const { attendance } = item.attendance_stats;
+        stats.present += attendance.present || 0;
+        stats.late += (attendance.late_less || 0) + (attendance.late_more || 0);
+        stats.absent += attendance.absent || 0;
+        stats.substitutes += attendance.substitutes || 0;
+      }
+    });
+
+    return stats;
+  };
 
   // Helper functions for status display
   const getStatusClass = (status) => {
@@ -52,6 +127,13 @@ const MeetingsMDP = () => {
       ? "bg-green-500/10 text-green-500"
       : "bg-red-500/10 text-red-500";
   };
+
+  // Filter meetings based on selected filters
+  const filteredMeetings = meetings_data.filter(meeting => {
+    if (selectedStatus !== "all" && meeting.status !== selectedStatus) return false;
+    if (selectedVenueFee !== "all" && meeting.venue_fee.status !== selectedVenueFee) return false;
+    return true;
+  });
 
   return (
     <div className="mt-32 p-1 lg:p-6 flex flex-col space-y-5">
@@ -320,63 +402,79 @@ const MeetingsMDP = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-700/50">
-                {(meetings_data || []).map((meeting, index) => (
-                  <motion.tr
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    key={meeting.id}
-                    className="group hover:bg-gradient-to-r hover:from-gray-700/30 hover:via-gray-700/40 hover:to-gray-700/30 transition-all duration-300"
-                  >
-                    <td className="px-6 py-4">
-                      <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
-                        {meeting.title}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-sm text-gray-300">
-                        {meeting.date_time}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-sm text-gray-300">
-                        {meeting.venue}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`px-2.5 py-1 rounded-lg text-sm ${getStatusClass(
-                          meeting.status
-                        )}`}
-                      >
-                        {meeting.status
-                          .replace("_", " ")
-                          .charAt(0)
-                          .toUpperCase() + meeting.status.slice(1)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getVenueFeeClass(
-                          meeting.venue_fee.status
-                        )}`}
-                      >
-                        ₹{meeting.venue_fee.amount} - {meeting.venue_fee.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div
-                        className="flex items-center justify-center"
-                        onClick={() => navigate("/members-mdp-events")}
-                      >
-                        <button className="relative group/btn flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-r from-amber-600/90 to-amber-800/90 hover:from-amber-600 hover:to-amber-800 transition-all duration-300 shadow-lg hover:shadow-amber-900/30">
-                          <div className="absolute inset-0 rounded-xl bg-amber-600 opacity-0 group-hover/btn:opacity-20 blur-lg transition-opacity" />
-                          <FiEye className="w-5 h-5 text-white/90 group-hover/btn:text-white transition-colors relative" />
-                        </button>
+                {loading ? (
+                  <tr>
+                    <td colSpan="6" className="text-center py-8">
+                      <div className="flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-amber-500"></div>
                       </div>
                     </td>
-                  </motion.tr>
-                ))}
+                  </tr>
+                ) : filteredMeetings.length === 0 ? (
+                  <tr>
+                    <td colSpan="6" className="text-center py-8 text-gray-400">
+                      No meetings found matching the selected filters
+                    </td>
+                  </tr>
+                ) : (
+                  filteredMeetings.map((meeting, index) => (
+                    <motion.tr
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      key={meeting.id}
+                      className="group hover:bg-gradient-to-r hover:from-gray-700/30 hover:via-gray-700/40 hover:to-gray-700/30 transition-all duration-300"
+                    >
+                      <td className="px-6 py-4">
+                        <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
+                          {meeting.title}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm text-gray-300">
+                          {meeting.date_time}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm text-gray-300">
+                          {meeting.venue}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span
+                          className={`px-2.5 py-1 rounded-lg text-sm ${getStatusClass(
+                            meeting.status
+                          )}`}
+                        >
+                          {meeting.status
+                            .replace("_", " ")
+                            .charAt(0)
+                            .toUpperCase() + meeting.status.slice(1)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getVenueFeeClass(
+                            meeting.venue_fee.status
+                          )}`}
+                        >
+                          ₹{meeting.venue_fee.amount} - {meeting.venue_fee.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center justify-center">
+                          <button 
+                            onClick={() => navigate(`/members-mdp-events?type=meeting&meeting_id=${meeting.id}`)}
+                            className="relative group/btn flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-r from-amber-600/90 to-amber-800/90 hover:from-amber-600 hover:to-amber-800 transition-all duration-300 shadow-lg hover:shadow-amber-900/30"
+                          >
+                            <div className="absolute inset-0 rounded-xl bg-amber-600 opacity-0 group-hover/btn:opacity-20 blur-lg transition-opacity" />
+                            <FiEye className="w-5 h-5 text-white/90 group-hover/btn:text-white transition-colors relative" />
+                          </button>
+                        </div>
+                      </td>
+                    </motion.tr>
+                  ))
+                )}
               </tbody>
             </table>
 
