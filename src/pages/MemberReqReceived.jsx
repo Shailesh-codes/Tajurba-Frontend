@@ -27,6 +27,7 @@ const MemberReqReceived = () => {
     referral: { total: 0, verified: 0, pending: 0, rejected: 0 },
   });
   const [requests_data, setRequestsData] = useState([]);
+  const [referralData, setReferralData] = useState([]);
 
   // Fetch BDM requests and stats
   const fetchRequests = async () => {
@@ -38,8 +39,8 @@ const MemberReqReceived = () => {
       const formattedBdms = bdms.map((bdm) => ({
         ...bdm,
         id: bdm.bdm_id,
-        request_type: bdm.request_type || "BDM", 
-        date: bdm.bdmDate || bdm.created_at, 
+        request_type: bdm.request_type || "BDM",
+        date: bdm.bdmDate || bdm.created_at,
       }));
 
       // Rest of your filtering logic
@@ -74,27 +75,71 @@ const MemberReqReceived = () => {
     }
   };
 
-  // Handle request verification
+  const fetchReferrals = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${api}/referrals`);
+      console.log("API Response:", response);
+
+      if (response.data.success) {
+        const referrals = response.data.data;
+        console.log("Raw Referrals Data:", referrals);
+
+        const referralStats = {
+          total: referrals.length,
+          verified: referrals.filter((r) => r.verify_status === "verified")
+            .length,
+          pending: referrals.filter((r) => r.verify_status === "pending")
+            .length,
+          rejected: referrals.filter((r) => r.verify_status === "rejected")
+            .length,
+        };
+
+        setStats((prevStats) => ({
+          ...prevStats,
+          referral: referralStats,
+        }));
+
+        const formattedReferrals = referrals.map((referral) => ({
+          id: referral.referral_id,
+          givenByName: referral.givenByMember?.name || "N/A",
+          receivedByName: referral.receivedByMember?.name || "N/A",
+          chapter: referral.givenByMember?.Chapter?.chapter_name || "N/A",
+          refer_name: referral.refer_name,
+          mobile: referral.mobile,
+          status: referral.verify_status,
+          date: referral.referral_date,
+          verified_date: referral.verified_date,
+          rejected_date: referral.rejected_date,
+        }));
+
+        setReferralData(formattedReferrals);
+      }
+    } catch (error) {
+      console.error("Error fetching referrals:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleVerification = async (requestId, action) => {
     try {
       const status = action === "verify" ? "verified" : "rejected";
       const currentDate = new Date().toISOString();
-      
-      // Include the verification/rejection date in the request
+
       const updateData = {
         status,
         verified_date: status === "verified" ? currentDate : null,
-        rejected_date: status === "rejected" ? currentDate : null
+        rejected_date: status === "rejected" ? currentDate : null,
       };
 
       await axios.put(`${api}/bdm/${requestId}`, updateData);
-      fetchRequests(); // Refresh the data
+      fetchRequests();
     } catch (error) {
       console.error("Error updating request:", error);
     }
   };
 
-  // Add a helper function to format dates
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
     try {
@@ -105,8 +150,108 @@ const MemberReqReceived = () => {
   };
 
   useEffect(() => {
-    fetchRequests();
+    const fetchAllData = async () => {
+      try {
+        setLoading(true);
+
+        // Fetch BDM data
+        const bdmResponse = await axios.get(`${api}/bdm`);
+        const bdms = bdmResponse.data || [];
+        const formattedBdms = bdms.map((bdm) => ({
+          ...bdm,
+          id: bdm.bdm_id,
+          request_type: bdm.request_type || "BDM",
+          date: bdm.bdmDate || bdm.created_at,
+        }));
+
+        // Filter BDMs based on selected filters
+        let filteredBdms = formattedBdms;
+        if (selectedStatus !== "all") {
+          filteredBdms = filteredBdms.filter(
+            (bdm) => bdm.status === selectedStatus
+          );
+        }
+        if (selectedChapter !== "all") {
+          filteredBdms = filteredBdms.filter(
+            (bdm) => bdm.chapter === selectedChapter
+          );
+        }
+
+        // Fetch referral data
+        const referralResponse = await axios.get(`${api}/referrals`);
+        const referrals = referralResponse.data.success
+          ? referralResponse.data.data
+          : [];
+
+        // Calculate stats for both BDM and referrals
+        const bdmStats = {
+          total: formattedBdms.length,
+          verified: formattedBdms.filter((b) => b.status === "verified").length,
+          pending: formattedBdms.filter((b) => b.status === "pending").length,
+          rejected: formattedBdms.filter((b) => b.status === "rejected").length,
+        };
+
+        const referralStats = {
+          total: referrals.length,
+          verified: referrals.filter((r) => r.verify_status === "verified")
+            .length,
+          pending: referrals.filter((r) => r.verify_status === "pending")
+            .length,
+          rejected: referrals.filter((r) => r.verify_status === "rejected")
+            .length,
+        };
+
+        // Format referral data
+        const formattedReferrals = referrals.map((referral) => ({
+          id: referral.referral_id,
+          givenByName: referral.givenByMember?.name || "N/A",
+          receivedByName: referral.receivedByMember?.name || "N/A",
+          chapter: referral.givenByMember?.Chapter?.chapter_name || "N/A",
+          refer_name: referral.refer_name,
+          mobile: referral.mobile,
+          status: referral.verify_status,
+          date: referral.referral_date,
+          verified_date: referral.verified_date,
+          rejected_date: referral.rejected_date,
+        }));
+
+        // Update all state at once
+        setStats({
+          bdm: bdmStats,
+          referral: referralStats,
+          business: { total: 0, verified: 0, pending: 0, rejected: 0 },
+        });
+        setRequestsData(filteredBdms);
+        setReferralData(formattedReferrals);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAllData();
   }, [selectedStatus, selectedChapter]);
+
+  useEffect(() => {}, [selectedType]);
+
+  const handleReferralVerification = async (referralId, action) => {
+    try {
+      const status = action === "verify" ? "verified" : "rejected";
+      const currentDate = new Date().toISOString();
+
+      const updateData = {
+        verify_status: status,
+        verified_date: status === "verified" ? currentDate : null,
+        rejected_date: status === "rejected" ? currentDate : null,
+      };
+
+      await axios.put(`${api}/referrals/${referralId}`, updateData);
+      fetchReferrals(); // Refresh referral data
+    } catch (error) {
+      console.error("Error updating referral:", error);
+    }
+  };
 
   const getStatusClass = (status) => {
     const classes = {
@@ -115,6 +260,190 @@ const MemberReqReceived = () => {
       rejected: "bg-red-500/10 text-red-500",
     };
     return classes[status] || "bg-gray-500/10 text-gray-500";
+  };
+
+  const renderTableContent = () => {
+    if (loading) {
+      return (
+        <tr>
+          <td colSpan={6} className="text-center py-8">
+            <div className="flex items-center justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500"></div>
+            </div>
+          </td>
+        </tr>
+      );
+    }
+
+    if (selectedType === "referral") {
+      return referralData.length === 0 ? (
+        <tr>
+          <td colSpan={6} className="text-center py-8 text-gray-400">
+            No referrals found ({loading ? "Loading..." : "Empty data"})
+          </td>
+        </tr>
+      ) : (
+        referralData.map((referral) => {
+          return (
+            <motion.tr
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              key={referral.id}
+              className="group hover:bg-gradient-to-r hover:from-gray-700/30 hover:via-gray-700/40 hover:to-gray-700/30 transition-all duration-300"
+            >
+              <td className="px-6 py-4">
+                <div className="flex flex-col">
+                  <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
+                    {referral.givenByName || "N/A"}
+                  </span>
+                  <span className="text-xs text-gray-400 mt-1">
+                    For: {referral.refer_name || "N/A"}
+                  </span>
+                </div>
+              </td>
+              <td className="px-6 py-4">
+                <span className="text-sm text-gray-300">
+                  {referral.chapter}
+                </span>
+              </td>
+              <td className="px-6 py-4">
+                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-500/10 text-amber-500">
+                  Referral
+                </span>
+              </td>
+              <td className="px-6 py-4">
+                <span className="text-sm text-gray-300">
+                  {formatDate(referral.date)}
+                </span>
+              </td>
+              <td className="px-6 py-4">
+                <span
+                  className={`px-2.5 py-1 rounded-lg text-sm ${getStatusClass(
+                    referral.status
+                  )}`}
+                >
+                  {referral.status.charAt(0).toUpperCase() +
+                    referral.status.slice(1)}
+                </span>
+              </td>
+              <td className="px-6 py-4">
+                <div className="flex items-center justify-center gap-2">
+                  {referral.status === "pending" && (
+                    <>
+                      <button
+                        onClick={() =>
+                          handleReferralVerification(referral.id, "verify")
+                        }
+                        className="px-3 py-1 bg-green-500/10 text-green-500 hover:bg-green-500/20 rounded-lg text-sm transition-all duration-300 flex items-center gap-1"
+                      >
+                        <Check size={16} />
+                        Verify
+                      </button>
+                      <button
+                        onClick={() =>
+                          handleReferralVerification(referral.id, "reject")
+                        }
+                        className="px-3 py-1 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg text-sm transition-all duration-300 flex items-center gap-1"
+                      >
+                        <X size={16} />
+                        Reject
+                      </button>
+                    </>
+                  )}
+                  <button
+                    onClick={() => navigate(`/view-ref-given/${referral.id}`)}
+                    className="px-3 py-1 bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 rounded-lg text-sm transition-all duration-300"
+                  >
+                    <Eye size={16} />
+                  </button>
+                </div>
+              </td>
+            </motion.tr>
+          );
+        })
+      );
+    } else {
+      // Return existing BDM table content
+      return requests_data.length === 0 ? (
+        <tr>
+          <td colSpan={6} className="text-center py-8 text-gray-400">
+            No requests found
+          </td>
+        </tr>
+      ) : (
+        requests_data.map((request) => (
+          <motion.tr
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            key={request.id}
+            className="group hover:bg-gradient-to-r hover:from-gray-700/30 hover:via-gray-700/40 hover:to-gray-700/30 transition-all duration-300"
+          >
+            <td className="px-6 py-4">
+              <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
+                {request.memberName || "N/A"}
+              </span>
+            </td>
+            <td className="px-6 py-4">
+              <span className="text-sm text-gray-300">
+                {request.chapter || "N/A"}
+              </span>
+            </td>
+            <td className="px-6 py-4">
+              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-500/10 text-amber-500">
+                {request.request_type || "BDM"}
+              </span>
+            </td>
+            <td className="px-6 py-4">
+              <span className="text-sm text-gray-300">
+                {formatDate(request.date)}
+              </span>
+            </td>
+            <td className="px-6 py-4">
+              <span
+                className={`px-2.5 py-1 rounded-lg text-sm ${getStatusClass(
+                  request.status
+                )}`}
+              >
+                {request.status
+                  ? request.status.charAt(0).toUpperCase() +
+                    request.status.slice(1)
+                  : "N/A"}
+              </span>
+            </td>
+            <td className="px-6 py-4">
+              <div className="flex items-center justify-center gap-2">
+                {request.status === "pending" && (
+                  <>
+                    <button
+                      onClick={() => handleVerification(request.id, "verify")}
+                      className="px-3 py-1 bg-green-500/10 text-green-500 hover:bg-green-500/20 rounded-lg text-sm transition-all duration-300 flex items-center gap-1"
+                    >
+                      <Check size={16} />
+                      Verify
+                    </button>
+                    <button
+                      onClick={() => handleVerification(request.id, "reject")}
+                      className="px-3 py-1 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg text-sm transition-all duration-300 flex items-center gap-1"
+                    >
+                      <X size={16} />
+                      Reject
+                    </button>
+                  </>
+                )}
+                <button
+                  onClick={() => navigate(`/view-bdm/${request.id}`)}
+                  className="px-3 py-1 bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 rounded-lg text-sm transition-all duration-300"
+                >
+                  <Eye size={16} />
+                </button>
+              </div>
+            </td>
+          </motion.tr>
+        ))
+      );
+    }
   };
 
   return (
@@ -216,7 +545,7 @@ const MemberReqReceived = () => {
             <div>
               <p className="text-gray-400">Referral Requests</p>
               <h3 className="text-2xl font-bold text-white mt-1">
-                {stats.referral.total}
+                {stats.referral.total || 0}
               </h3>
             </div>
             <div className="p-3 bg-amber-500/10 rounded-xl">
@@ -226,17 +555,17 @@ const MemberReqReceived = () => {
           <div className="flex items-center gap-3">
             <div className="px-2.5 py-1 bg-green-500/10 rounded-lg">
               <span className="text-sm text-green-500">
-                {stats.referral.verified} Verified
+                {stats.referral.verified || 0} Verified
               </span>
             </div>
             <div className="px-2.5 py-1 bg-amber-500/10 rounded-lg">
               <span className="text-sm text-amber-500">
-                {stats.referral.pending} Pending
+                {stats.referral.pending || 0} Pending
               </span>
             </div>
             <div className="px-2.5 py-1 bg-red-500/10 rounded-lg">
               <span className="text-sm text-red-500">
-                {stats.referral.rejected} Rejected
+                {stats.referral.rejected || 0} Rejected
               </span>
             </div>
           </div>
@@ -334,96 +663,7 @@ const MemberReqReceived = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-700/50">
-                {loading ? (
-                  <tr>
-                    <td colSpan={6} className="text-center py-8">
-                      <div className="flex items-center justify-center">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500"></div>
-                      </div>
-                    </td>
-                  </tr>
-                ) : requests_data.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="text-center py-8 text-gray-400">
-                      No requests found
-                    </td>
-                  </tr>
-                ) : (
-                  requests_data.map((request) => (
-                  <motion.tr
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.1 }}
-                    key={request.id}
-                    className="group hover:bg-gradient-to-r hover:from-gray-700/30 hover:via-gray-700/40 hover:to-gray-700/30 transition-all duration-300"
-                  >
-                    <td className="px-6 py-4">
-                      <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
-                          {request.memberName || "N/A"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-sm text-gray-300">
-                          {request.chapter || "N/A"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-500/10 text-amber-500">
-                          {request.request_type || "BDM"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-sm text-gray-300">
-                          {formatDate(request.date)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`px-2.5 py-1 rounded-lg text-sm ${getStatusClass(
-                          request.status
-                        )}`}
-                      >
-                          {request.status
-                            ? request.status.charAt(0).toUpperCase() +
-                              request.status.slice(1)
-                            : "N/A"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-center gap-2">
-                          {request.status === "pending" && (
-                            <>
-                              <button
-                                onClick={() =>
-                                  handleVerification(request.id, "verify")
-                                }
-                                className="px-3 py-1 bg-green-500/10 text-green-500 hover:bg-green-500/20 rounded-lg text-sm transition-all duration-300 flex items-center gap-1"
-                              >
-                              <Check size={16} />
-                              Verify
-                            </button>
-                              <button
-                                onClick={() =>
-                                  handleVerification(request.id, "reject")
-                                }
-                                className="px-3 py-1 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg text-sm transition-all duration-300 flex items-center gap-1"
-                              >
-                              <X size={16} />
-                              Reject
-                            </button>
-                            </>
-                          )}
-                          <button
-                            onClick={() => navigate(`/view-bdm/${request.id}`)}
-                            className="px-3 py-1 bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 rounded-lg text-sm transition-all duration-300"
-                          >
-                              <Eye size={16} />
-                            </button>
-                      </div>
-                    </td>
-                  </motion.tr>
-                  ))
-                )}
+                {renderTableContent()}
               </tbody>
             </table>
           </div>

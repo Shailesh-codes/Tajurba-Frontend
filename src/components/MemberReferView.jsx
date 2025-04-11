@@ -15,6 +15,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import api from "../hooks/api";
 import Swal from "sweetalert2";
+import { format } from "date-fns";
 
 const MemberReferView = () => {
   const navigate = useNavigate();
@@ -26,6 +27,8 @@ const MemberReferView = () => {
     referralDate: "",
     verifyStatus: "pending",
     verifiedDate: "",
+    rejectedDate: "",
+    created_at: "",
     email: "",
     receivedMobile: "",
     refer_name: "",
@@ -44,6 +47,14 @@ const MemberReferView = () => {
     },
   });
   const [memberData, setMemberData] = useState(null);
+
+  const formatDate = (dateString) => {
+    try {
+      return format(new Date(dateString), "dd MMM yyyy");
+    } catch (error) {
+      return "Invalid Date";
+    }
+  };
 
   useEffect(() => {
     const fetchMemberData = async () => {
@@ -76,8 +87,9 @@ const MemberReferView = () => {
                 referralData.description || "No description provided",
               verifyStatus: referralData.verify_status || "pending",
               verifiedDate: referralData.verified_date || "",
+              rejectedDate: referralData.rejected_date || "",
+              created_at: referralData.created_at || "",
               receivedMobile: referralData.mobile || "N/A",
-
               givenByMember: givenByMember || null,
               receivedByMember: receivedByMember || null,
               receivedMemberName: receivedByMember?.name || "N/A",
@@ -332,12 +344,7 @@ const MemberReferView = () => {
               {[
                 {
                   icon: Users,
-                  label: "Given By Member",
-                  value: referralData.givenByMember?.name || "N/A",
-                },
-                {
-                  icon: Users,
-                  label: "Received By Member",
+                  label: "Referred To Member",
                   value: referralData.receivedMemberName,
                 },
                 {
@@ -354,11 +361,6 @@ const MemberReferView = () => {
                   icon: Phone,
                   label: "Referred Mobile ",
                   value: referralData.receivedMobile,
-                },
-                {
-                  icon: Folder,
-                  label: "Chapter",
-                  value: referralData.receivedByMember?.chapter_name || "N/A",
                 },
                 {
                   icon: Briefcase,
@@ -386,7 +388,6 @@ const MemberReferView = () => {
           </div>
         </motion.div>
 
-        {/* Verification Details and Description */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -397,13 +398,15 @@ const MemberReferView = () => {
             {/* Verification Info */}
             <div>
               <div className="flex items-center gap-3 mb-6">
-                <div className={`p-2 rounded-lg ${
-                  referralData.verifyStatus === "verified"
-                    ? "bg-green-500/20"
-                    : referralData.verifyStatus === "rejected"
-                    ? "bg-red-500/20"
-                    : "bg-amber-500/20"
-                }`}>
+                <div
+                  className={`p-2 rounded-lg ${
+                    referralData.verifyStatus === "verified"
+                      ? "bg-green-500/20"
+                      : referralData.verifyStatus === "rejected"
+                      ? "bg-red-500/20"
+                      : "bg-amber-500/20"
+                  }`}
+                >
                   <svg
                     className={`w-5 h-5 ${
                       referralData.verifyStatus === "verified"
@@ -440,6 +443,15 @@ const MemberReferView = () => {
                         </span>
                       </p>
                     </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-green-400"></div>
+                      <p className="text-gray-300">
+                        Request submitted on{" "}
+                        <span className="text-green-400 font-medium">
+                          {formatDate(referralData.created_at)}
+                        </span>
+                      </p>
+                    </div>
                     <div className="flex items-center gap-2 mt-2">
                       <div className="px-3 py-1.5 bg-green-500/20 text-green-400 rounded-lg text-sm font-medium">
                         ✓ Verification Approved
@@ -451,7 +463,7 @@ const MemberReferView = () => {
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-red-400"></div>
                       <p className="text-gray-300">
-                        Rejected on{" "}
+                        Rejected on {""}
                         <span className="text-red-400 font-medium">
                           {formatDate(referralData.rejectedDate)}
                         </span>
