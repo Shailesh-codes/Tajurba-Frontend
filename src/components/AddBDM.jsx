@@ -11,7 +11,8 @@ const AddBDM = () => {
   const { id } = useParams();
   const [members, setMembers] = useState([]);
   const [formData, setFormData] = useState({
-    memberId: "",
+    givenBy_MemberId: 1,
+    received_MemberId: "",
     memberName: "",
     chapter: "",
     bdmDate: "",
@@ -45,7 +46,8 @@ const AddBDM = () => {
           const response = await axios.get(`${api}/bdm/${id}`);
           const bdmData = response.data;
           setFormData({
-            memberId: bdmData.memberId,
+            givenBy_MemberId: 1,
+            received_MemberId: bdmData.memberId,
             memberName: bdmData.memberName,
             chapter: bdmData.chapter,
             bdmDate: bdmData.bdmDate.split("T")[0], // Format date for input
@@ -63,10 +65,15 @@ const AddBDM = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const submitData = {
+        ...formData,
+        givenBy_MemberId: 1,
+      };
+
       if (id) {
-        await axios.put(`${api}/bdm/${id}`, formData);
+        await axios.put(`${api}/bdm/${id}`, submitData);
       } else {
-        await axios.post(`${api}/bdm`, formData);
+        await axios.post(`${api}/bdm`, submitData);
       }
       navigate("/bdm");
     } catch (error) {
@@ -81,7 +88,7 @@ const AddBDM = () => {
     if (selectedMember) {
       setFormData({
         ...formData,
-        memberId: selectedMember.id,
+        received_MemberId: selectedMember.id,
         memberName: selectedMember.name,
         chapter: selectedMember.chapterName,
       });
@@ -155,19 +162,19 @@ const AddBDM = () => {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Grid Layout for Form Fields */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Member Selection */}
+            {/* Member Selection (Receiver) */}
             <div className="relative group">
               <label className="text-sm font-medium text-gray-300 mb-2 block">
-                Member <span className="text-red-500">*</span>
+                Business To Be Given To <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <select
                   required
-                  value={formData.memberId}
+                  value={formData.received_MemberId}
                   onChange={handleMemberSelect}
                   className="w-full p-3 bg-gray-700/50 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 text-white transition-all duration-300"
                 >
-                  <option value="">Select Member</option>
+                  <option value="">Select Member To Receive Business</option>
                   {members.map((member) => (
                     <option key={member.id} value={member.id}>
                       {member.name}
@@ -194,7 +201,7 @@ const AddBDM = () => {
               </div>
             </div>
 
-            {/* Updated Date Input */}
+            {/* Date Input */}
             <div className="relative group">
               <label className="text-sm font-medium text-gray-300 mb-2 block">
                 Date <span className="text-red-500">*</span>
@@ -234,13 +241,14 @@ const AddBDM = () => {
             ></textarea>
           </div>
 
-          {/* Submit Button */}
+          {/* Reset and Submit Buttons */}
           <div className="flex justify-end gap-4">
             <button
               type="button"
               onClick={() =>
                 setFormData({
-                  memberId: "",
+                  givenBy_MemberId: 1,
+                  received_MemberId: "",
                   memberName: "",
                   chapter: "",
                   bdmDate: "",

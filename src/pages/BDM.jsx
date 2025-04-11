@@ -103,14 +103,12 @@ const BDM = () => {
         );
       }
 
-      // Apply status filter
       if (statusFilter !== "all") {
         filteredBdms = filteredBdms.filter(
           (bdm) => bdm.status === statusFilter
         );
       }
 
-      // Apply chapter filter
       if (chapterFilter !== "all") {
         filteredBdms = filteredBdms.filter(
           (bdm) => bdm.chapter === chapterFilter
@@ -528,9 +526,11 @@ const BDM = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
-                          {bdm.memberName}
-                        </span>
+                        <div className="flex flex-col">
+                          <span className="text-sm text-white-400 mt-1">
+                            To: {bdm.receiverName}
+                          </span>
+                        </div>
                       </td>
                       <td className="px-6 py-4">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-700 text-amber-500">

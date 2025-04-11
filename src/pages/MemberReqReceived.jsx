@@ -28,6 +28,7 @@ const MemberReqReceived = () => {
   });
   const [requests_data, setRequestsData] = useState([]);
   const [referralData, setReferralData] = useState([]);
+  const [businessData, setBusinessData] = useState([]);
 
   // Fetch BDM requests and stats
   const fetchRequests = async () => {
@@ -215,14 +216,41 @@ const MemberReqReceived = () => {
           rejected_date: referral.rejected_date,
         }));
 
+        // Add business data fetch
+        const businessResponse = await axios.get(`${api}/business`);
+        const businesses = businessResponse.data || [];
+
+        // Format business data with giver's name
+        const formattedBusinesses = businesses.map(business => ({
+          id: business.business_id,
+          givenByName: business.Member?.name || "N/A",
+          memberName: business.memberName,
+          chapter: business.chapter,
+          amount: business.amount,
+          status: business.status,
+          date: business.businessDate,
+          verified_date: business.verified_date,
+          rejected_date: business.rejected_date
+        }));
+
+        // Calculate business stats
+        const businessStats = {
+          total: businesses.length,
+          verified: businesses.filter(b => b.status === "verified").length,
+          pending: businesses.filter(b => b.status === "pending").length,
+          rejected: businesses.filter(b => b.status === "rejected").length
+        };
+
         // Update all state at once
         setStats({
           bdm: bdmStats,
           referral: referralStats,
-          business: { total: 0, verified: 0, pending: 0, rejected: 0 },
+          business: businessStats
         });
         setRequestsData(filteredBdms);
         setReferralData(formattedReferrals);
+        setBusinessData(formattedBusinesses);
+
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -250,6 +278,52 @@ const MemberReqReceived = () => {
       fetchReferrals(); // Refresh referral data
     } catch (error) {
       console.error("Error updating referral:", error);
+    }
+  };
+
+  const handleBusinessVerification = async (businessId, action) => {
+    try {
+      const status = action === "verify" ? "verified" : "rejected";
+      const currentDate = new Date().toISOString();
+
+      const updateData = {
+        status,
+        verified_date: status === "verified" ? currentDate : null,
+        rejected_date: status === "rejected" ? currentDate : null
+      };
+
+      // Optimistically update the UI
+      setBusinessData(prevData => 
+        prevData.map(business => 
+          business.id === businessId
+            ? {
+                ...business,
+                status,
+                verified_date: status === "verified" ? currentDate : business.verified_date,
+                rejected_date: status === "rejected" ? currentDate : business.rejected_date
+              }
+            : business
+        )
+      );
+
+      // Update stats immediately
+      setStats(prevStats => {
+        const newStats = { ...prevStats };
+        newStats.business = {
+          ...newStats.business,
+          pending: newStats.business.pending - 1,
+          [status]: newStats.business[status] + 1
+        };
+        return newStats;
+      });
+
+      // Make API call
+      await axios.put(`${api}/business/${businessId}`, updateData);
+
+    } catch (error) {
+      console.error("Error updating business:", error);
+      // Revert changes if API call fails
+      fetchAllData();
     }
   };
 
@@ -362,6 +436,97 @@ const MemberReqReceived = () => {
             </motion.tr>
           );
         })
+      );
+    } else if (selectedType === "business") {
+      return businessData.length === 0 ? (
+        <tr>
+          <td colSpan={6} className="text-center py-8 text-gray-400">
+            No business data found ({loading ? "Loading..." : "Empty data"})
+          </td>
+        </tr>
+      ) : (
+        businessData.map((business) => (
+          <motion.tr
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            key={business.id}
+            className="group hover:bg-gradient-to-r hover:from-gray-700/30 hover:via-gray-700/40 hover:to-gray-700/30 transition-all duration-300"
+          >
+            <td className="px-6 py-4">
+              <div className="flex flex-col">
+                <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
+                  {business.givenByName}
+                </span>
+                <span className="text-xs text-gray-400 mt-1">
+                  Amount: ₹{business.amount.toLocaleString('en-IN')}
+                </span>
+              </div>
+            </td>
+            <td className="px-6 py-4">
+              <span className="text-sm text-gray-300">{business.chapter}</span>
+            </td>
+            <td className="px-6 py-4">
+              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-500/10 text-amber-500">
+                Business
+              </span>
+            </td>
+            <td className="px-6 py-4">
+              <span className="text-sm text-gray-300">
+                {formatDate(business.date)}
+              </span>
+            </td>
+            <td className="px-6 py-4">
+              <motion.span
+                initial={{ scale: 1 }}
+                animate={{ scale: business.status === "pending" ? 1 : [1, 1.1, 1] }}
+                className={`px-2.5 py-1 rounded-lg text-sm ${getStatusClass(
+                  business.status
+                )}`}
+              >
+                {business.status.charAt(0).toUpperCase() + business.status.slice(1)}
+              </motion.span>
+            </td>
+            <td className="px-6 py-4">
+              <div className="flex items-center justify-center gap-2">
+                {business.status === "pending" && (
+                  <motion.div className="flex gap-2">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() =>
+                        handleBusinessVerification(business.id, "verify")
+                      }
+                      className="px-3 py-1 bg-green-500/10 text-green-500 hover:bg-green-500/20 rounded-lg text-sm transition-all duration-300 flex items-center gap-1"
+                    >
+                      <Check size={16} />
+                      Verify
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() =>
+                        handleBusinessVerification(business.id, "reject")
+                      }
+                      className="px-3 py-1 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg text-sm transition-all duration-300 flex items-center gap-1"
+                    >
+                      <X size={16} />
+                      Reject
+                    </motion.button>
+                  </motion.div>
+                )}
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => navigate(`/view-business/${business.id}`)}
+                  className="px-3 py-1 bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 rounded-lg text-sm transition-all duration-300"
+                >
+                  <Eye size={16} />
+                </motion.button>
+              </div>
+            </td>
+          </motion.tr>
+        ))
       );
     } else {
       // Return existing BDM table content
@@ -513,7 +678,7 @@ const MemberReqReceived = () => {
             <div>
               <p className="text-gray-400">Business Requests</p>
               <h3 className="text-2xl font-bold text-white mt-1">
-                {stats.business.total}
+                {stats.business.total || 0}
               </h3>
             </div>
             <div className="p-3 bg-amber-500/10 rounded-xl">
@@ -523,17 +688,17 @@ const MemberReqReceived = () => {
           <div className="flex items-center gap-3">
             <div className="px-2.5 py-1 bg-green-500/10 rounded-lg">
               <span className="text-sm text-green-500">
-                {stats.business.verified} Verified
+                {stats.business.verified || 0} Verified
               </span>
             </div>
             <div className="px-2.5 py-1 bg-amber-500/10 rounded-lg">
               <span className="text-sm text-amber-500">
-                {stats.business.pending} Pending
+                {stats.business.pending || 0} Pending
               </span>
             </div>
             <div className="px-2.5 py-1 bg-red-500/10 rounded-lg">
               <span className="text-sm text-red-500">
-                {stats.business.rejected} Rejected
+                {stats.business.rejected || 0} Rejected
               </span>
             </div>
           </div>
