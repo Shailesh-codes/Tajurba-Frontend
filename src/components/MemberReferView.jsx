@@ -12,7 +12,6 @@ import {
   ClipboardList,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
-import axios from "axios";
 import api from "../hooks/api";
 import Swal from "sweetalert2";
 import { format } from "date-fns";
@@ -61,12 +60,12 @@ const MemberReferView = () => {
       try {
         setLoading(true);
         // First fetch referral data to get member IDs
-        const referralResponse = await axios.get(`${api}/referrals/${id}`);
+        const referralResponse = await api.get(`/referrals/${id}`);
 
         if (referralResponse.data.success) {
           const referralData = referralResponse.data.data;
 
-          const membersResponse = await axios.get(`${api}/members/members`);
+          const membersResponse = await api.get(`/members/members`);
           if (membersResponse.data.success) {
             const allMembers = membersResponse.data.data;
 

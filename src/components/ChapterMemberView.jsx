@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import { Users, Mail, Phone, Globe, Briefcase, Folder } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import memberIcon from "../assets/images/icons/members.svg";
-import axios from "axios";
 import api from "../hooks/api";
 
 const ChapterMemberView = () => {
@@ -35,9 +34,9 @@ const ChapterMemberView = () => {
     const fetchMemberData = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${api}/members/members/${id}`);
+        const response = await api.get(`/members/members/${id}`);
         const member = response.data.data;
-        const chaptersResponse = await axios.get(`${api}/chapters`);
+        const chaptersResponse = await api.get(`/chapters`);
         setChapters(chaptersResponse.data.data);
 
         setMemberData({

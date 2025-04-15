@@ -10,7 +10,6 @@ import {
   FiFolder,
 } from "react-icons/fi";
 import { useNavigate, useParams } from "react-router-dom";
-import axios from "axios";
 import api from "../hooks/api";
 
 const ViewReceivedBusiness = () => {
@@ -25,10 +24,10 @@ const ViewReceivedBusiness = () => {
     const fetchBusinessData = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${api}/business-received/${id}`);
+        const response = await api.get(`/business-received/${id}`);
 
-        const memberResponse = await axios.get(
-          `${api}/members/members/${response.data.given_by_memberId}`
+        const memberResponse = await api.get(
+          `/members/members/${response.data.given_by_memberId}`
         );
 
         // Combine business and member data

@@ -10,7 +10,6 @@ import { BsPersonPlus } from "react-icons/bs";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import DeleteModal from "../layout/DeleteModal";
-import axios from "axios";
 import api from "../hooks/api";
 import { showToast } from "../utils/toast";
 
@@ -38,7 +37,7 @@ const MemberVisitorsInvite = () => {
   const fetchVisitors = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${api}/visitors`, {
+      const response = await api.get(`/visitors`, {
         params: {
           page: currentPage,
           limit: resultsPerPage,
@@ -56,7 +55,7 @@ const MemberVisitorsInvite = () => {
       showToast({
         message: "Failed to fetch visitors",
         status: "error",
-        icon: "error"
+        icon: "error",
       });
     } finally {
       setLoading(false);
@@ -83,18 +82,15 @@ const MemberVisitorsInvite = () => {
   const confirmDelete = async () => {
     try {
       setLoading(true);
-      const response = await axios.delete(
-        `${api}/visitors/${visitorToDelete}`,
-        {
-          withCredentials: true,
-        }
-      );
+      const response = await api.delete(`/visitors/${visitorToDelete}`, {
+        withCredentials: true,
+      });
 
       if (response.data.success) {
         showToast({
           message: "Visitor invite deleted successfully",
           status: "success",
-          icon: "success"
+          icon: "success",
         });
         fetchVisitors();
       }
@@ -102,7 +98,7 @@ const MemberVisitorsInvite = () => {
       showToast({
         message: error.response?.data?.error || "Failed to delete visitor",
         status: "error",
-        icon: "error"
+        icon: "error",
       });
     } finally {
       setIsDeleteModalOpen(false);

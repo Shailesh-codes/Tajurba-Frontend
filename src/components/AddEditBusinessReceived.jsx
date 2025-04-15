@@ -3,14 +3,14 @@ import { motion } from "framer-motion";
 import { BsClipboardData } from "react-icons/bs";
 import { FiUsers, FiHome } from "react-icons/fi";
 import { useNavigate, useParams } from "react-router-dom";
-import axios from "axios";
 import api from "../hooks/api";
-
 import buss from "../assets/images/icons/buss.svg";
+import { useAuth } from "../contexts/AuthContext";
 
 const AddEditBusinessReceived = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { auth } = useAuth();
   const [loading, setLoading] = useState(false);
   const [members, setMembers] = useState([]);
   const [formData, setFormData] = useState({
@@ -25,7 +25,7 @@ const AddEditBusinessReceived = () => {
   const fetchMembers = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${api}/members/members`);
+      const response = await api.get(`/members/members`);
 
       if (response.data && response.data.data) {
         setMembers(response.data.data);
@@ -67,7 +67,7 @@ const AddEditBusinessReceived = () => {
 
     const businessData = {
       given_by_memberId: parseInt(formData.member),
-      receiver_memberId: 1,
+      receiver_memberId: auth.user?.id,
       memberName:
         members.find((m) => m.id === parseInt(formData.member))?.name || "",
       chapter: formData.chapter,
@@ -79,9 +79,9 @@ const AddEditBusinessReceived = () => {
     try {
       setLoading(true);
       if (id) {
-        await axios.put(`${api}/business-received/${id}`, businessData);
+        await api.put(`/business-received/${id}`, businessData);
       } else {
-        await axios.post(`${api}/business-received`, businessData);
+        await api.post(`/business-received`, businessData);
       }
       navigate("/business-received");
     } catch (error) {
@@ -101,7 +101,7 @@ const AddEditBusinessReceived = () => {
       const fetchBusiness = async () => {
         try {
           setLoading(true);
-          const response = await axios.get(`${api}/business-received/${id}`);
+          const response = await api.get(`/business-received/${id}`);
           if (response.data) {
             const businessData = response.data;
             setFormData({

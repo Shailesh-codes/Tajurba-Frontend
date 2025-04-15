@@ -10,7 +10,6 @@ import {
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import referralIcon from "../assets/images/icons/ref-given.svg";
-import axios from "axios";
 import api from "../hooks/api";
 import Swal from "sweetalert2";
 
@@ -33,7 +32,7 @@ const MemberReferEditAdd = () => {
   useEffect(() => {
     const fetchChapters = async () => {
       try {
-        const response = await axios.get(`${api}/chapters`);
+        const response = await api.get(`/chapters`);
         if (response.data.status === "success") {
           setChapters(response.data.data);
         }
@@ -59,7 +58,7 @@ const MemberReferEditAdd = () => {
       if (!formData.chapter) return;
 
       try {
-        const response = await axios.get(`${api}/members/members`);
+        const response = await api.get(`/members/members`);
         if (response.data.success) {
           const chapterMembers = response.data.data.filter(
             (member) =>
@@ -91,17 +90,18 @@ const MemberReferEditAdd = () => {
 
       try {
         setLoading(true);
-        const response = await axios.get(`${api}/referrals/${id}`);
-        
+        const response = await api.get(`/referrals/${id}`);
+
         if (response.data.success) {
           const referral = response.data.data;
-          
+
           // Set chapter first
-          const chapterValue = referral.receivedByMember?.Chapter?.chapter_id.toString();
-          setFormData(prev => ({ ...prev, chapter: chapterValue }));
+          const chapterValue =
+            referral.receivedByMember?.Chapter?.chapter_id.toString();
+          setFormData((prev) => ({ ...prev, chapter: chapterValue }));
 
           // Fetch members for the chapter
-          const membersResponse = await axios.get(`${api}/members/members`);
+          const membersResponse = await api.get(`/members/members`);
           if (membersResponse.data.success) {
             const chapterMembers = membersResponse.data.data.filter(
               (member) =>
@@ -116,7 +116,9 @@ const MemberReferEditAdd = () => {
               member: referral.received_member_id.toString(),
               referralFor: referral.refer_name || "",
               mobile: referral.mobile || "",
-              date: referral.referral_date ? new Date(referral.referral_date).toISOString().split("T")[0] : "",
+              date: referral.referral_date
+                ? new Date(referral.referral_date).toISOString().split("T")[0]
+                : "",
               description: referral.description || "",
             });
           }
@@ -166,9 +168,9 @@ const MemberReferEditAdd = () => {
 
       let response;
       if (id) {
-        response = await axios.put(`${api}/referrals/${id}`, referralData);
+        response = await api.put(`/referrals/${id}`, referralData);
       } else {
-        response = await axios.post(`${api}/referrals`, referralData);
+        response = await api.post(`/referrals`, referralData);
       }
 
       if (response.data.success) {

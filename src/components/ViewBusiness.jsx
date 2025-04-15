@@ -11,7 +11,6 @@ import {
   FiCalendar,
 } from "react-icons/fi";
 import { useNavigate, useParams } from "react-router-dom";
-import axios from "axios";
 import api from "../hooks/api";
 import { format } from "date-fns";
 
@@ -63,11 +62,11 @@ const ViewBusiness = () => {
       try {
         setLoading(true);
         // Fetch business data
-        const businessResponse = await axios.get(`${api}/business/${id}`);
+        const businessResponse = await api.get(`/business/${id}`);
         const businessData = businessResponse.data;
 
         // Fetch member details using receiver_memberId
-        const memberResponse = await axios.get(`${api}/members/members`);
+        const memberResponse = await api.get(`/members/members`);
         const member = memberResponse.data.data.find(
           (m) => m.id === businessData.receiver_memberId
         );

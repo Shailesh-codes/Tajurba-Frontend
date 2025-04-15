@@ -9,7 +9,6 @@ import {
 import { BsClipboardData } from "react-icons/bs";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
 import api from "../hooks/api";
 import DeleteModal from "../layout/DeleteModal";
 
@@ -38,7 +37,7 @@ const BusinessReceived = () => {
   const fetchBusinessData = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${api}/business-received`);
+      const response = await api.get(`/business-received`);
       if (response.data) {
         setBusinessData(response.data);
         setTotalPages(Math.ceil(response.data.length / resultsPerPage));
@@ -72,7 +71,7 @@ const BusinessReceived = () => {
 
     try {
       setLoading(true);
-      await axios.delete(`${api}/business-received/${businessToDelete}`);
+      await api.delete(`/business-received/${businessToDelete}`);
       await fetchBusinessData(); // Refresh the data
       setIsDeleteModalOpen(false);
       setBusinessToDelete(null);
@@ -102,10 +101,10 @@ const BusinessReceived = () => {
 
   // Format date for display
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-GB', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
+    return new Date(dateString).toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
     });
   };
 
@@ -322,7 +321,7 @@ const BusinessReceived = () => {
       {totalPages > 1 && (
         <div className="flex justify-center gap-2">
           <button
-            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
             disabled={currentPage === 1}
             className="p-2 rounded-lg bg-gray-800 text-gray-400 hover:text-amber-500 disabled:opacity-50 disabled:hover:text-gray-400"
           >
@@ -332,7 +331,9 @@ const BusinessReceived = () => {
             Page {currentPage} of {totalPages}
           </span>
           <button
-            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+            }
             disabled={currentPage === totalPages}
             className="p-2 rounded-lg bg-gray-800 text-gray-400 hover:text-amber-500 disabled:opacity-50 disabled:hover:text-gray-400"
           >

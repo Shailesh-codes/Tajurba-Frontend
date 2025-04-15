@@ -13,7 +13,6 @@ import {
 } from "react-icons/fi";
 import { CheckCircle, UserCheck, XCircle, Clock } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
-import axios from "axios";
 import api from "../hooks/api";
 import { format } from "date-fns";
 
@@ -62,8 +61,8 @@ const ViewBDM = () => {
       try {
         setLoading(true);
         const [bdmResponse, chaptersResponse] = await Promise.all([
-          axios.get(`${api}/bdm/${id}`),
-          axios.get(`${api}/chapters`),
+          api.get(`/bdm/${id}`),
+          api.get(`/chapters`),
         ]);
 
         const bdmInfo = bdmResponse.data;
@@ -73,7 +72,7 @@ const ViewBDM = () => {
         );
 
         // Fetch member details
-        const memberResponse = await axios.get(`${api}/members/members`);
+        const memberResponse = await api.get(`/members/members`);
         const member = memberResponse.data.data.find(
           (m) => m.id === bdmInfo.received_MemberId
         );

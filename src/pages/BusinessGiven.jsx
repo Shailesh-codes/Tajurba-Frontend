@@ -10,7 +10,6 @@ import { BsClipboardData } from "react-icons/bs";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import DeleteModal from "../layout/DeleteModal";
-import axios from "axios";
 import api from "../hooks/api";
 import { format } from "date-fns";
 import {
@@ -55,11 +54,10 @@ const BusinessGiven = () => {
   const [businessToDelete, setBusinessToDelete] = useState(null);
   const [chapters, setChapters] = useState([]);
 
-  // Fetch businesses with filters
   const fetchBusinesses = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${api}/business`);
+      const response = await api.get(`/business`);
       let filteredData = response.data;
 
       // Apply search filter
@@ -106,7 +104,7 @@ const BusinessGiven = () => {
   // Fetch chapters for filter
   const fetchChapters = async () => {
     try {
-      const response = await axios.get(`${api}/chapters`);
+      const response = await api.get(`/chapters`);
       setChapters(response.data.data);
     } catch (error) {
       console.error("Error fetching chapters:", error);
@@ -147,7 +145,7 @@ const BusinessGiven = () => {
 
   const confirmDelete = async () => {
     try {
-      await axios.delete(`${api}/business/${businessToDelete}`);
+      await api.delete(`/business/${businessToDelete}`);
 
       fetchBusinesses();
       setIsDeleteModalOpen(false);

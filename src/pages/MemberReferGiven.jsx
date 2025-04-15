@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import { FiEye } from "react-icons/fi";
 import referralIcon from "../assets/images/icons/ref-given.svg";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import api from "../hooks/api";
 import Swal from "sweetalert2";
 import { format } from "date-fns";
@@ -32,19 +31,20 @@ const MemberReferGiven = () => {
     const fetchReferrals = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${api}/referrals`);
-        
+        const response = await api.get(`/referrals`);
+
         if (response.data.success) {
           setReferrals(response.data.data);
         } else {
-          throw new Error(response.data.message || 'Failed to fetch referrals');
+          throw new Error(response.data.message || "Failed to fetch referrals");
         }
       } catch (error) {
         console.error("Error fetching referrals:", error);
         Swal.fire({
           icon: "error",
           title: "Failed to fetch referrals",
-          text: error.message || "There was an error loading the referrals data.",
+          text:
+            error.message || "There was an error loading the referrals data.",
           background: "#1F2937",
           color: "#fff",
           confirmButtonColor: "#F59E0B",
@@ -63,7 +63,9 @@ const MemberReferGiven = () => {
     const matchesSearch =
       search === "" ||
       referral.refer_name?.toLowerCase().includes(searchLower) ||
-      referral.receivedByMember?.Chapter?.chapter_name?.toLowerCase().includes(searchLower) ||
+      referral.receivedByMember?.Chapter?.chapter_name
+        ?.toLowerCase()
+        .includes(searchLower) ||
       referral.mobile?.includes(search);
 
     const matchesStatus =
@@ -232,7 +234,8 @@ const MemberReferGiven = () => {
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-sm text-gray-300">
-                          {referral.receivedByMember?.Chapter?.chapter_name || 'N/A'}
+                          {referral.receivedByMember?.Chapter?.chapter_name ||
+                            "N/A"}
                         </span>
                       </td>
                       <td className="px-6 py-4">
@@ -251,23 +254,29 @@ const MemberReferGiven = () => {
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-sm text-gray-400">
-                          {referral.verify_status === "verified" && referral.verified_date 
+                          {referral.verify_status === "verified" &&
+                          referral.verified_date
                             ? formatDate(referral.verified_date)
-                            : referral.verify_status === "rejected" && referral.rejected_date
+                            : referral.verify_status === "rejected" &&
+                              referral.rejected_date
                             ? formatDate(referral.rejected_date)
                             : "-"}
                         </span>
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-sm text-gray-400">
-                          {new Date(referral.referral_date).toLocaleDateString()}
+                          {new Date(
+                            referral.referral_date
+                          ).toLocaleDateString()}
                         </span>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-center">
                           <button
                             onClick={() =>
-                              navigate(`/view-ref-given/${referral.referral_id}`)
+                              navigate(
+                                `/view-ref-given/${referral.referral_id}`
+                              )
                             }
                             className="relative group/btn flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-r from-amber-600/90 to-amber-800/90 hover:from-amber-600 hover:to-amber-800 transition-all duration-300 shadow-lg hover:shadow-amber-900/30"
                           >

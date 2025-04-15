@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, useParams } from "react-router-dom";
-import axios from "axios";
 import api from "../hooks/api";
 import {
   Mail,
@@ -36,8 +35,8 @@ const ViewMemberVisitor = () => {
     const fetchVisitorData = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${api}/visitors/${id}`, {
-          withCredentials: true
+        const response = await api.get(`/visitors/${id}`, {
+          withCredentials: true,
         });
 
         if (response.data.success) {
@@ -58,7 +57,7 @@ const ViewMemberVisitor = () => {
         showToast({
           message: "Failed to load visitor information",
           status: "error",
-          icon: "error"
+          icon: "error",
         });
       } finally {
         setLoading(false);

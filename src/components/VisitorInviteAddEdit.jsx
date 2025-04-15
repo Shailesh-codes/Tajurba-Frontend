@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import axios from "axios";
 import api from "../hooks/api";
 import { BsPersonPlus } from "react-icons/bs";
 import { motion } from "framer-motion";
@@ -26,17 +25,17 @@ const VisitorInviteAddEdit = () => {
       if (!id) return;
       try {
         setLoading(true);
-        const response = await axios.get(`${api}/visitors/${id}`, {
-          withCredentials: true
+        const response = await api.get(`/visitors/${id}`, {
+          withCredentials: true,
         });
-        
+
         if (response.data.success) {
           const visitor = response.data.data;
           // Format the date properly for the input field
           const formattedDate = new Date(visitor.invite_date)
             .toISOString()
-            .split('T')[0];
-          
+            .split("T")[0];
+
           setFormData({
             visitor_name: visitor.visitor_name,
             visitor_email: visitor.visitor_email,
@@ -51,7 +50,7 @@ const VisitorInviteAddEdit = () => {
         showToast({
           message: "Failed to fetch visitor details",
           status: "error",
-          icon: "error"
+          icon: "error",
         });
         navigate("/visitors-invited");
       } finally {
@@ -76,35 +75,33 @@ const VisitorInviteAddEdit = () => {
 
       if (id) {
         // Update existing visitor
-        response = await axios.put(
-          `${api}/visitors/${id}`, 
-          formattedData,
-          { withCredentials: true }
-        );
+        response = await api.put(`/visitors/${id}`, formattedData, {
+          withCredentials: true,
+        });
       } else {
         // Create new visitor
-        response = await axios.post(
-          `${api}/visitors`, 
-          formattedData,
-          { withCredentials: true }
-        );
+        response = await api.post(`/visitors`, formattedData, {
+          withCredentials: true,
+        });
       }
 
       if (response.data.success) {
         showToast({
           title: "Success",
-          message: id ? "Visitor updated successfully" : "Visitor created successfully",
+          message: id
+            ? "Visitor updated successfully"
+            : "Visitor created successfully",
           status: "success",
-          icon: "success"
+          icon: "success",
         });
         navigate("/visitors-invited");
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error("Error:", error);
       showToast({
         message: error.response?.data?.error || "Failed to save visitor",
         status: "error",
-        icon: "error"
+        icon: "error",
       });
     } finally {
       setLoading(false);

@@ -13,9 +13,9 @@ import { BsClipboardData, BsPlus } from "react-icons/bs";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import DeleteModal from "../layout/DeleteModal";
-import axios from "axios";
 import api from "../hooks/api";
 import { format } from "date-fns";
+import { useAuth } from "../contexts/AuthContext";
 
 // Add this dummy data array
 const dummyBDMs = [
@@ -74,6 +74,7 @@ const tableHeaders = [
 
 const BDM = () => {
   const navigate = useNavigate();
+  const { auth } = useAuth();
   const [loading, setLoading] = useState(false);
   const [bdms, setBdms] = useState(dummyBDMs);
   const [search, setSearch] = useState("");
@@ -94,8 +95,8 @@ const BDM = () => {
     try {
       setLoading(true);
       const [bdmResponse, chaptersResponse] = await Promise.all([
-        axios.get(`${api}/bdm`),
-        axios.get(`${api}/chapters`),
+        api.get(`/bdm`),
+        api.get(`/chapters`),
       ]);
 
       let filteredBdms = bdmResponse.data.map((bdm) => {
@@ -106,14 +107,15 @@ const BDM = () => {
         return {
           ...bdm,
           chapter: chapterData?.chapter_name || "N/A",
-          receiverName: bdm.ReceivedByMember?.name || bdm.memberName || "N/A",
+          displayName: bdm.isGiver ? bdm.receiverName : bdm.givenByName,
+          role: bdm.isGiver ? "Given To" : "Received From"
         };
       });
 
       // Apply search filter
       if (search) {
         filteredBdms = filteredBdms.filter((bdm) =>
-          bdm.receiverName.toLowerCase().includes(search.toLowerCase())
+          bdm.displayName.toLowerCase().includes(search.toLowerCase())
         );
       }
 
@@ -154,7 +156,7 @@ const BDM = () => {
   // Fetch chapters for filter
   const fetchChapters = async () => {
     try {
-      const response = await axios.get(`${api}/chapters`);
+      const response = await api.get(`/chapters`);
       setChapters(response.data.data);
     } catch (error) {
       console.error("Error fetching chapters:", error);
@@ -236,7 +238,7 @@ const BDM = () => {
   const confirmDelete = async () => {
     if (selectedBdmId) {
       try {
-        await axios.delete(`${api}/bdm/${selectedBdmId}`);
+        await api.delete(`/bdm/${selectedBdmId}`);
         fetchBDMs(); // Refresh the list
       } catch (error) {
         console.error("Error deleting BDM:", error);
@@ -542,8 +544,9 @@ const BDM = () => {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex flex-col">
+                          <span className="text-sm text-gray-400">{bdm.role}</span>
                           <span className="text-sm text-white-400 mt-1">
-                            {bdm.receiverName}
+                            {bdm.displayName}
                           </span>
                         </div>
                       </td>

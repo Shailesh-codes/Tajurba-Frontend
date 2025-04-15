@@ -33,18 +33,17 @@ export const AuthProvider = ({ children }) => {
   const login = async (data) => {
     const { token, member } = data;
     
-    // Store in localStorage
+    // Make sure the role is exactly "Member", "Admin", or "Super Admin"
     localStorage.setItem("token", token);
     localStorage.setItem("userRole", member.role);
     localStorage.setItem("userId", member.id);
     localStorage.setItem("userName", member.name);
 
-    // Update state
     setAuth({
       isAuthenticated: true,
       user: member,
       token,
-      role: member.role,
+      role: member.role  // This should match exactly with the allowedRoles check
     });
   };
 

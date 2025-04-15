@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 import requestIcon from "../assets/images/icons/request.svg";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import api from "../hooks/api";
 import { format } from "date-fns";
 
@@ -34,7 +33,7 @@ const MemberReqReceived = () => {
   const fetchRequests = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${api}/bdm`);
+      const response = await api.get(`/bdm`);
       const bdms = response.data || [];
 
       const formattedBdms = bdms.map((bdm) => ({
@@ -79,7 +78,7 @@ const MemberReqReceived = () => {
   const fetchReferrals = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${api}/referrals`);
+      const response = await api.get(`/referrals`);
       console.log("API Response:", response);
 
       if (response.data.success) {
@@ -134,7 +133,7 @@ const MemberReqReceived = () => {
         rejected_date: status === "rejected" ? currentDate : null,
       };
 
-      await axios.put(`${api}/bdm/${requestId}`, updateData);
+      await api.put(`/bdm/${requestId}`, updateData);
       fetchRequests();
     } catch (error) {
       console.error("Error updating request:", error);
@@ -156,11 +155,16 @@ const MemberReqReceived = () => {
         setLoading(true);
 
         // Fetch all required data in parallel
-        const [bdmResponse, chaptersResponse, referralResponse, businessResponse] = await Promise.all([
-          axios.get(`${api}/bdm`),
-          axios.get(`${api}/chapters`),
-          axios.get(`${api}/referrals`),
-          axios.get(`${api}/business`)
+        const [
+          bdmResponse,
+          chaptersResponse,
+          referralResponse,
+          businessResponse,
+        ] = await Promise.all([
+          api.get(`/bdm`),
+          api.get(`/chapters`),
+          api.get(`/referrals`),
+          api.get(`/business`),
         ]);
 
         const chapters = chaptersResponse.data.data || [];
@@ -168,7 +172,9 @@ const MemberReqReceived = () => {
 
         // Helper function to get chapter name
         const getChapterName = (chapterId) => {
-          const chapter = chapters.find(ch => ch.chapter_id.toString() === chapterId?.toString());
+          const chapter = chapters.find(
+            (ch) => ch.chapter_id.toString() === chapterId?.toString()
+          );
           return chapter?.chapter_name || "N/A";
         };
 
@@ -179,11 +185,13 @@ const MemberReqReceived = () => {
           request_type: bdm.request_type || "BDM",
           date: bdm.bdmDate || bdm.created_at,
           chapter: getChapterName(bdm.chapter), // Convert chapter ID to name
-          memberName: bdm.memberName || bdm.receiverName || "N/A"
+          memberName: bdm.memberName || bdm.receiverName || "N/A",
         }));
 
         // Keep the existing business and referral formatting as is since they work properly
-        const referrals = referralResponse.data.success ? referralResponse.data.data : [];
+        const referrals = referralResponse.data.success
+          ? referralResponse.data.data
+          : [];
         const businesses = businessResponse.data || [];
 
         const formattedReferrals = referrals.map((referral) => ({
@@ -199,7 +207,7 @@ const MemberReqReceived = () => {
           rejected_date: referral.rejected_date,
         }));
 
-        const formattedBusinesses = businesses.map(business => ({
+        const formattedBusinesses = businesses.map((business) => ({
           id: business.business_id,
           givenByName: business.Member?.name || "N/A",
           memberName: business.memberName,
@@ -208,7 +216,7 @@ const MemberReqReceived = () => {
           status: business.status,
           date: business.businessDate,
           verified_date: business.verified_date,
-          rejected_date: business.rejected_date
+          rejected_date: business.rejected_date,
         }));
 
         // Filter BDMs based on selected filters
@@ -237,22 +245,24 @@ const MemberReqReceived = () => {
           bdm: bdmStats,
           referral: {
             total: referrals.length,
-            verified: referrals.filter(r => r.verify_status === "verified").length,
-            pending: referrals.filter(r => r.verify_status === "pending").length,
-            rejected: referrals.filter(r => r.verify_status === "rejected").length,
+            verified: referrals.filter((r) => r.verify_status === "verified")
+              .length,
+            pending: referrals.filter((r) => r.verify_status === "pending")
+              .length,
+            rejected: referrals.filter((r) => r.verify_status === "rejected")
+              .length,
           },
           business: {
             total: businesses.length,
-            verified: businesses.filter(b => b.status === "verified").length,
-            pending: businesses.filter(b => b.status === "pending").length,
-            rejected: businesses.filter(b => b.status === "rejected").length
-          }
+            verified: businesses.filter((b) => b.status === "verified").length,
+            pending: businesses.filter((b) => b.status === "pending").length,
+            rejected: businesses.filter((b) => b.status === "rejected").length,
+          },
         });
-        
+
         setRequestsData(filteredBdms);
         setReferralData(formattedReferrals);
         setBusinessData(formattedBusinesses);
-
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -276,7 +286,7 @@ const MemberReqReceived = () => {
         rejected_date: status === "rejected" ? currentDate : null,
       };
 
-      await axios.put(`${api}/referrals/${referralId}`, updateData);
+      await api.put(`/referrals/${referralId}`, updateData);
       fetchReferrals(); // Refresh referral data
     } catch (error) {
       console.error("Error updating referral:", error);
@@ -291,37 +301,38 @@ const MemberReqReceived = () => {
       const updateData = {
         status,
         verified_date: status === "verified" ? currentDate : null,
-        rejected_date: status === "rejected" ? currentDate : null
+        rejected_date: status === "rejected" ? currentDate : null,
       };
 
       // Optimistically update the UI
-      setBusinessData(prevData => 
-        prevData.map(business => 
+      setBusinessData((prevData) =>
+        prevData.map((business) =>
           business.id === businessId
             ? {
                 ...business,
                 status,
-                verified_date: status === "verified" ? currentDate : business.verified_date,
-                rejected_date: status === "rejected" ? currentDate : business.rejected_date
+                verified_date:
+                  status === "verified" ? currentDate : business.verified_date,
+                rejected_date:
+                  status === "rejected" ? currentDate : business.rejected_date,
               }
             : business
         )
       );
 
       // Update stats immediately
-      setStats(prevStats => {
+      setStats((prevStats) => {
         const newStats = { ...prevStats };
         newStats.business = {
           ...newStats.business,
           pending: newStats.business.pending - 1,
-          [status]: newStats.business[status] + 1
+          [status]: newStats.business[status] + 1,
         };
         return newStats;
       });
 
       // Make API call
-      await axios.put(`${api}/business/${businessId}`, updateData);
-
+      await api.put(`/business/${businessId}`, updateData);
     } catch (error) {
       console.error("Error updating business:", error);
       // Revert changes if API call fails
@@ -461,7 +472,7 @@ const MemberReqReceived = () => {
                   {business.givenByName}
                 </span>
                 <span className="text-xs text-gray-400 mt-1">
-                  Amount: ₹{business.amount.toLocaleString('en-IN')}
+                  Amount: ₹{business.amount.toLocaleString("en-IN")}
                 </span>
               </div>
             </td>
@@ -481,12 +492,15 @@ const MemberReqReceived = () => {
             <td className="px-6 py-4">
               <motion.span
                 initial={{ scale: 1 }}
-                animate={{ scale: business.status === "pending" ? 1 : [1, 1.1, 1] }}
+                animate={{
+                  scale: business.status === "pending" ? 1 : [1, 1.1, 1],
+                }}
                 className={`px-2.5 py-1 rounded-lg text-sm ${getStatusClass(
                   business.status
                 )}`}
               >
-                {business.status.charAt(0).toUpperCase() + business.status.slice(1)}
+                {business.status.charAt(0).toUpperCase() +
+                  business.status.slice(1)}
               </motion.span>
             </td>
             <td className="px-6 py-4">

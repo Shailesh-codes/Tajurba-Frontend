@@ -3,16 +3,18 @@ import { motion } from "framer-motion";
 import { BsClipboardData } from "react-icons/bs";
 import { FiCalendar, FiUsers, FiHome, FiDollarSign } from "react-icons/fi";
 import { useNavigate, useParams } from "react-router-dom";
-import axios from "axios";
 import api from "../hooks/api";
+import { useAuth } from "../contexts/AuthContext";
 import calendarIcon from "../assets/images/icons/calender-icon.svg";
 
 const AddBusiness = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { auth } = useAuth();
   const [loading, setLoading] = useState(false);
   const [members, setMembers] = useState([]);
   const [formData, setFormData] = useState({
+    given_by_memberId: auth.user?.id,
     receiver_memberId: "",
     memberName: "",
     chapter: "",
@@ -26,7 +28,7 @@ const AddBusiness = () => {
     try {
       setLoading(true);
 
-      const response = await axios.get(`${api}/members/members`);
+      const response = await api.get(`/members/members`);
 
       if (response.data && response.data.data) {
         // Check for nested data structure
@@ -105,9 +107,9 @@ const AddBusiness = () => {
       setLoading(true);
 
       if (id) {
-        await axios.put(`${api}/business/${id}`, businessData);
+        await api.put(`/business/${id}`, businessData);
       } else {
-        await axios.post(`${api}/business`, businessData);
+        await api.post(`/business`, businessData);
       }
       navigate("/business-given");
     } catch (error) {
@@ -128,7 +130,7 @@ const AddBusiness = () => {
       const fetchBusiness = async () => {
         try {
           setLoading(true);
-          const response = await axios.get(`${api}/business/${id}`);
+          const response = await api.get(`/business/${id}`);
           if (response.data) {
             setFormData(response.data);
           }
@@ -316,6 +318,7 @@ const AddBusiness = () => {
               type="button"
               onClick={() =>
                 setFormData({
+                  given_by_memberId: "",
                   receiver_memberId: "",
                   memberName: "",
                   chapter: "",

@@ -1,6 +1,5 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { navigationConfig } from "../config/navigation";
 
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   const { auth } = useAuth();
@@ -20,154 +19,108 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     return <Navigate to="/" state={{ from: location }} replace />;
   }
 
-  // Get role key
-  const getRoleKey = (role) => {
-    switch (role) {
-      case "Super Admin":
-        return "superAdmin";
-      case "Regional Director":
-        return "regionalDirector";
-      case "Admin":
-        return "admin";
-      case "Member":
-        return "member";
-      default:
-        return role.toLowerCase();
-    }
-  };
+  // Simple role check
+  const isRoleAllowed = allowedRoles.includes(auth.role);
 
-  // Define additional routes for each role
-  const additionalRoutes = {
-    admin: [
-      // Add Member related routes
-      '/add-member',
-      '/edit-member',
-      '/member-view',
-      
-      // Attendance related routes
-      '/mark-attendance',
-      '/attendance-venue-fee',
-      '/mark-venue-fee',
-      
-      // Schedule related routes
-      '/edit-schedule',
-      '/view-schedule',
-      '/add-schedule',
-      
-      // BDM related routes
-      '/add-bdm',
-      '/edit-bdm',
-      '/view-bdm',
-      
-      // Business related routes
-      '/add-business',
-      '/view-business',
-      '/add-res-business',
-      '/view-res-business',
-      
-      // Chapter related routes
-      '/view-chapter-member',
-      
-      // Referral related routes
-      '/view-ref-given',
-      '/add-edit-ref-given',
-      
-      // Visitor related routes
-      '/add-visitor',
-      '/edit-visitor',
-      '/view-visitor'
-    ],
-    superAdmin: [
-      // Include all admin routes for Super Admin
-      '/add-member',
-      '/edit-member',
-      '/member-view',
-      '/mark-attendance',
-      '/attendance-venue-fee',
-      '/mark-venue-fee',
-      '/edit-schedule',
-      '/view-schedule',
-      '/add-schedule',
-      '/add-bdm',
-      '/edit-bdm',
-      '/view-bdm',
-      '/add-business',
-      '/view-business',
-      '/add-res-business',
-      '/view-res-business',
-      '/view-chapter-member',
-      '/view-ref-given',
-      '/add-edit-ref-given',
-      '/add-visitor',
-      '/edit-visitor',
-      '/view-visitor'
-    ]
-  };
-
-  // Check if user's role is allowed
-  const userRoleKey = getRoleKey(auth.role);
-  const isRoleAllowed = allowedRoles.some(role => getRoleKey(role) === userRoleKey);
-
+  // If role is not allowed, redirect to unauthorized
   if (!isRoleAllowed) {
     console.log(`Role ${auth.role} is not in allowed roles:`, allowedRoles);
     return <Navigate to="/unauthorized" replace />;
   }
 
-  // Get all allowed paths for the user's role
-  const getAllowedPaths = (roleKey) => {
-    const paths = new Set();
-    
-    // Add navigation config paths
-    if (navigationConfig[roleKey]) {
-      navigationConfig[roleKey].forEach(section => {
-        section.items.forEach(item => {
-          paths.add(item.path);
-        });
-      });
-    }
+  // Member specific routes check
+  if (auth.role === "Member") {
+    const memberAllowedPaths = [
+      '/member-dashboard',
+      '/bdm',
+      '/add-bdm',
+      '/edit-bdm',
+      '/view-bdm',
+      '/business-given',
+      '/add-business',
+      '/view-business',
+      '/business-received',
+      '/view-res-business',
+      '/add-res-business',
+      '/member-certificate',
+      '/chapter-members',
+      '/view-chapter-member',
+      '/meetings-mdp-socials',
+      '/members-mdp-events',
+      '/member-monthly-reward',
+      '/ref-given',
+      '/view-ref-given',
+      '/add-edit-ref-given',
+      '/request-received',
+      '/visitors-invited',
+      '/add-visitor',
+      '/edit-visitor',
+      '/view-visitor',
+      '/settings',
+      '/calendar',
+      '/privacy-policy'
+    ];
 
-    // Add additional routes for the role
-    if (additionalRoutes[roleKey]) {
-      additionalRoutes[roleKey].forEach(path => {
-        paths.add(path);
-      });
-    }
-
-    // Add common paths
-    if (navigationConfig.common) {
-      navigationConfig.common.forEach(section => {
-        section.items.forEach(item => {
-          paths.add(item.path);
-        });
-      });
-    }
-
-    return paths;
-  };
-
-  const allowedPaths = getAllowedPaths(userRoleKey);
-  
-  // Check if current path or any of its parent paths are allowed
-  const isPathAllowed = Array.from(allowedPaths).some(allowedPath => {
-    // Check exact match
-    if (location.pathname === allowedPath) return true;
-    
-    // Check if current path starts with allowed path
-    if (location.pathname.startsWith(allowedPath + '/')) return true;
-    
-    // Check if current path is a sub-route of allowed path
-    const pathParts = location.pathname.split('/');
-    const allowedParts = allowedPath.split('/');
-    return allowedParts.every((part, index) => {
-      if (part.startsWith(':')) return true; // Dynamic parameter
-      return part === pathParts[index];
+    // Check if current path starts with any allowed path
+    const isPathAllowed = memberAllowedPaths.some(path => {
+      // Exact match
+      if (location.pathname === path) return true;
+      
+      // Check for dynamic routes (paths with IDs)
+      if (location.pathname.startsWith(path + '/')) return true;
+      
+      // Handle special cases for edit/view routes
+      const specialPaths = ['/edit-', '/view-'];
+      return specialPaths.some(specialPath => 
+        location.pathname.includes(specialPath) && 
+        memberAllowedPaths.some(allowedPath => 
+          location.pathname.startsWith(allowedPath.replace(specialPath, specialPath))
+        )
+      );
     });
-  });
 
-  if (!isPathAllowed) {
-    console.log(`Access denied to ${location.pathname} for role ${auth.role}`);
-    console.log('Allowed paths:', Array.from(allowedPaths));
-    return <Navigate to="/unauthorized" replace />;
+    if (!isPathAllowed) {
+      console.log(`Access denied to ${location.pathname} for Member role`);
+      return <Navigate to="/unauthorized" replace />;
+    }
+  }
+
+  // Admin and Super Admin specific routes check
+  if (auth.role === "Admin" || auth.role === "Super Admin") {
+    const adminAllowedPaths = [
+      '/dashboard',
+      '/add-member',
+      '/edit-member',
+      '/member-view',
+      '/assign-certificates',
+      '/broadcast',
+      '/chapters-list',
+      '/creative-list',
+      '/certificate-list',
+      '/mark-attendance',
+      '/attendance-venue-fee',
+      '/mark-venue-fee',
+      '/member-list',
+      '/meetings',
+      '/edit-schedule',
+      '/view-schedule',
+      '/add-schedule',
+      '/visitor-list',
+      '/monthly-reward',
+      '/settings',
+      '/privacy-policy'
+    ];
+
+    const isPathAllowed = adminAllowedPaths.some(path => {
+      if (location.pathname === path) return true;
+      if (location.pathname.startsWith(path + '/')) return true;
+      return false;
+    });
+
+    if (!isPathAllowed) {
+      console.log(`Access denied to ${location.pathname} for ${auth.role} role`);
+      return <Navigate to="/unauthorized" replace />;
+    }
   }
 
   return children;

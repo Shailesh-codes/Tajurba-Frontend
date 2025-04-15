@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import meetings from "../assets/images/icons/meeting.svg";
 import { FiEye } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import api from "../hooks/api";
 
 const MeetingsMDP = () => {
@@ -24,7 +23,7 @@ const MeetingsMDP = () => {
     try {
       setLoading(true);
       // Get all schedules
-      const response = await axios.get(`${api}/schedules`);
+      const response = await api.get(`/schedules`);
       
       if (response.data.success) {
         const { meetings = [], mdp = [], socialTraining = [] } = response.data.data;
@@ -32,7 +31,7 @@ const MeetingsMDP = () => {
         // Process meetings data
         const processedMeetings = await Promise.all(meetings.map(async (meeting) => {
           // Get attendance stats for each meeting
-          const statsResponse = await axios.get(`${api}/attendance-venue-fee/meeting-stats`, {
+          const statsResponse = await api.get(`/attendance-venue-fee/meeting-stats`, {
             params: {
               type: "meeting",
               meeting_id: meeting.meeting_id

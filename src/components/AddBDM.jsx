@@ -4,14 +4,16 @@ import { BsClipboardData } from "react-icons/bs";
 import { FiCalendar, FiUsers, FiHome } from "react-icons/fi";
 import { useNavigate, useParams } from "react-router-dom";
 import calendarIcon from "../assets/images/icons/calender-icon.svg";
-import axios from "axios";
 import api from "../hooks/api";
+import { useAuth } from "../contexts/AuthContext";
+
 const AddBDM = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { auth } = useAuth();
   const [members, setMembers] = useState([]);
   const [formData, setFormData] = useState({
-    givenBy_MemberId: 1,
+    givenBy_MemberId: auth.user?.id,
     received_MemberId: "",
     memberName: "",
     chapter: "",
@@ -22,7 +24,7 @@ const AddBDM = () => {
   useEffect(() => {
     const fetchMembers = async () => {
       try {
-        const response = await axios.get(`${api}/members/members`);
+        const response = await api.get(`/members/members`);
         const membersWithChapter = response.data.data.map((member) => ({
           ...member,
           chapterName: member.Chapter?.chapter_name || member.chapter || "N/A",
@@ -40,7 +42,7 @@ const AddBDM = () => {
     const fetchBDM = async () => {
       if (id) {
         try {
-          const response = await axios.get(`${api}/bdm/${id}`);
+          const response = await api.get(`/bdm/${id}`);
           const bdmData = response.data;
           setFormData({
             givenBy_MemberId: 1,
@@ -64,13 +66,13 @@ const AddBDM = () => {
     try {
       const submitData = {
         ...formData,
-        givenBy_MemberId: 1,
+        givenBy_MemberId: auth.user?.id,
       };
 
       if (id) {
-        await axios.put(`${api}/bdm/${id}`, submitData);
+        await api.put(`/bdm/${id}`, submitData);
       } else {
-        await axios.post(`${api}/bdm`, submitData);
+        await api.post(`/bdm`, submitData);
       }
       navigate("/bdm");
     } catch (error) {
@@ -244,7 +246,7 @@ const AddBDM = () => {
               type="button"
               onClick={() =>
                 setFormData({
-                  givenBy_MemberId: 1,
+                  givenBy_MemberId: "",
                   received_MemberId: "",
                   memberName: "",
                   chapter: "",

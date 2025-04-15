@@ -64,7 +64,14 @@ function App() {
         {/* Protected Admin Routes */}
         <Route
           element={
-            <ProtectedRoute allowedRoles={["Super Admin", "Admin"]}>
+            <ProtectedRoute
+              allowedRoles={[
+                "Super Admin",
+                "Admin",
+                "Regional Director",
+                "Member",
+              ]}
+            >
               <Layout />
             </ProtectedRoute>
           }
@@ -199,7 +206,6 @@ function App() {
           <Route path="/view-visitor/:id" element={<ViewMemberVisitor />} />
           <Route path="/settings" element={<Setting />} />
           {/* <Route path="/privacy-policy" element={<PrivacyPolicy />} /> */}
-          <Route path="/calendar" element={<Calendar />} />
         </Route>
       </Routes>
     </AuthProvider>

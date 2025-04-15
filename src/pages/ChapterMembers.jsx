@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import { FiEye } from "react-icons/fi";
 import users from "../assets/images/icons/members.svg";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import api from "../hooks/api";
 
 const ChapterMembers = () => {
@@ -19,11 +18,11 @@ const ChapterMembers = () => {
       try {
         setLoading(true);
         // Fetch members
-        const membersResponse = await axios.get(`${api}/members/members`);
+        const membersResponse = await api.get(`/members/members`);
         setMembers(membersResponse.data.data);
 
         // Fetch chapters
-        const chaptersResponse = await axios.get(`${api}/chapters`);
+        const chaptersResponse = await api.get(`/chapters`);
         setChapters(chaptersResponse.data.data);
       } catch (error) {
         console.error("Error fetching data:", error);
