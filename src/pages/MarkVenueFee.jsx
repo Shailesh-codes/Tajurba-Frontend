@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import axios from "axios";
 import Swal from "sweetalert2";
 import { motion } from "framer-motion";
 import attendanceIcon from "../assets/images/icons/attendance-icon.svg";
@@ -62,8 +61,8 @@ const MarkvenueFee = () => {
           : type;
 
       // Get attendance/venue fee data
-      const attendanceResponse = await axios.get(
-        `${api}/attendance-venue-fee/meeting-members`,
+      const attendanceResponse = await api.get(
+        `/attendance-venue-fee/meeting-members`,
         {
           params: {
             type: scheduleType,
@@ -73,15 +72,15 @@ const MarkvenueFee = () => {
       );
 
       // Get meeting details
-      const meetingResponse = await axios.get(
-        `${api}/schedules/${scheduleType}/${meetingId}`
+      const meetingResponse = await api.get(
+        `/schedules/${scheduleType}/${meetingId}`
       );
 
       if (meetingResponse.data.success) {
         const meetingData = meetingResponse.data.data;
 
         // Get all members
-        const membersResponse = await axios.get(`${api}/members/members`);
+        const membersResponse = await api.get(`/members/members`);
 
         if (membersResponse.data.success) {
           // Get meeting chapters
@@ -182,14 +181,14 @@ const MarkvenueFee = () => {
 
           // Calculate and set the correct total members count
           const totalMembers = allMembers.length;
-          setStats(prevStats => ({
+          setStats((prevStats) => ({
             ...prevStats,
-            total_members: totalMembers
+            total_members: totalMembers,
           }));
 
           // Get overall stats
-          const statsResponse = await axios.get(
-            `${api}/attendance-venue-fee/meeting-stats`,
+          const statsResponse = await api.get(
+            `/attendance-venue-fee/meeting-stats`,
             {
               params: {
                 type: scheduleType,
@@ -200,9 +199,9 @@ const MarkvenueFee = () => {
 
           if (statsResponse.data.success) {
             // Preserve our correct total_members count while updating other stats
-            setStats(prevStats => ({
+            setStats((prevStats) => ({
               ...statsResponse.data.data,
-              total_members: totalMembers
+              total_members: totalMembers,
             }));
           }
         }
@@ -407,8 +406,8 @@ const MarkvenueFee = () => {
       console.log("Sending request data:", requestData);
 
       // Make the API call
-      const response = await axios.post(
-        `${api}/attendance-venue-fee/save-venue-fee`,
+      const response = await api.post(
+        `/attendance-venue-fee/save-venue-fee`,
         requestData
       );
 
@@ -566,7 +565,8 @@ const MarkvenueFee = () => {
             <div>
               <p className="text-gray-400">Venue Fee Collection</p>
               <h3 className="text-3xl font-bold text-white mt-2">
-                ₹{stats.venue_fee.paid_count * meetingDetails.fee_amount} / ₹{stats.total_members * meetingDetails.fee_amount}
+                ₹{stats.venue_fee.paid_count * meetingDetails.fee_amount} / ₹
+                {stats.total_members * meetingDetails.fee_amount}
               </h3>
             </div>
             <div className="p-4 bg-purple-500/20 rounded-xl">

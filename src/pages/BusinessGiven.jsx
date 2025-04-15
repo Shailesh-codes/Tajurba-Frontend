@@ -30,7 +30,6 @@ const tableHeaders = [
   "Amount",
   "Status",
   "Business Date",
-  "Created Date",
   "Actions",
 ];
 
@@ -443,11 +442,7 @@ const BusinessGiven = () => {
                           {formatDate(business.businessDate)}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
-                        <span className="text-sm text-gray-400">
-                          {formatDate(business.created_at)}
-                        </span>
-                      </td>
+
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-center gap-2">
                           <button

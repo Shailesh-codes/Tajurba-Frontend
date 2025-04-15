@@ -6,7 +6,7 @@ import { BiBell } from "react-icons/bi";
 import { useNavigate } from "react-router-dom";
 import reward from "../assets/sidebar-icon/reward.svg";
 import info from "../assets/sidebar-icon/info.svg";
-import axios from "axios";
+
 import api from "../hooks/api";
 import Swal from "sweetalert2";
 
@@ -21,19 +21,19 @@ const Header = ({ setIsSidebarOpen, isSidebarOpen }) => {
   // Fetch broadcasts
   const fetchBroadcasts = async () => {
     try {
-      const response = await axios.get(`${api}/broadcasts`);
+      const response = await api.get(`/broadcasts`);
       if (response.data.success) {
-        setBroadcasts(response.data.data);
+        // Only show active broadcasts in header
+        const validBroadcasts = response.data.data.filter((broadcast) => {
+          const isActive = broadcast.status === 'active';
+          const isNotExpired = !broadcast.end_date || new Date(broadcast.end_date) > new Date();
+          return isActive && isNotExpired;
+        });
+        setBroadcasts(validBroadcasts);
       }
     } catch (error) {
       console.error("Error fetching broadcasts:", error);
-      // Set default announcement on error
-      setBroadcasts([
-        {
-          announcement_text:
-            "📢 Welcome to Tajurba CRM 🌟 Your Gateway to Professional Networking & Growth! 🚀 Explore rewards 🎁, track achievements 🏆, and connect with fellow members 🤝",
-        },
-      ]);
+      setBroadcasts([]);
     }
   };
 
@@ -43,6 +43,22 @@ const Header = ({ setIsSidebarOpen, isSidebarOpen }) => {
     return () => clearInterval(interval);
   }, []);
 
+  // Add this function to listen for broadcast status changes
+  useEffect(() => {
+    // Create an event listener for broadcast updates
+    const handleBroadcastUpdate = () => {
+      fetchBroadcasts();
+    };
+
+    // Listen for the custom event
+    window.addEventListener('broadcastUpdated', handleBroadcastUpdate);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('broadcastUpdated', handleBroadcastUpdate);
+    };
+  }, []);
+
   const showAnnouncementDetails = () => {
     if (!broadcasts || broadcasts.length === 0) {
       Swal.fire({
@@ -50,22 +66,12 @@ const Header = ({ setIsSidebarOpen, isSidebarOpen }) => {
           '<span class="text-xl font-bold bg-gradient-to-r from-amber-500 to-amber-700 bg-clip-text text-transparent">Welcome to Tajurba CRM!</span>',
         html: `
           <div class="text-left p-4 bg-gray-800/50 rounded-xl border border-amber-500/20">
-            <p class="mb-3 text-amber-400 font-medium">📢 System Announcements</p>
+            <p class="mb-3 text-amber-400 font-medium">📢 No Active Announcements</p>
             <div class="space-y-2 text-gray-200">
               <p class="flex items-center gap-2">
-                <span class="text-amber-500">•</span> Manage your points and achievements
-              </p>
-              <p class="flex items-center gap-2">
-                <span class="text-amber-500">•</span> Track rewards and milestones
-              </p>
-              <p class="flex items-center gap-2">
-                <span class="text-amber-500">•</span> Explore exclusive member benefits
-              </p>
-              <p class="flex items-center gap-2">
-                <span class="text-amber-500">•</span> Connect with fellow members
+                <span class="text-amber-500">•</span> Check back later for updates
               </p>
             </div>
-            <p class="mt-4 text-sm text-gray-400">Contact admin for assistance</p>
           </div>
         `,
         showCloseButton: true,
@@ -80,7 +86,7 @@ const Header = ({ setIsSidebarOpen, isSidebarOpen }) => {
     } else {
       const announcementHtml = broadcasts
         .map(
-          (broadcast, index) => `
+          (broadcast) => `
         <div class="mb-4 p-4 bg-gray-800/50 rounded-xl border border-amber-500/20 hover:bg-gray-800 transition-all duration-300">
           <div class="flex items-center justify-between mb-2">
             <p class="text-amber-400 font-semibold">📢 Announcement ${
@@ -128,8 +134,9 @@ const Header = ({ setIsSidebarOpen, isSidebarOpen }) => {
 
   const getAnnouncementText = () => {
     if (!broadcasts || broadcasts.length === 0) {
-      return "📢 Welcome to Tajurba CRM 🌟 Your Gateway to Professional Networking & Growth!";
+      return "📢No active announcements check back later🌟 ";
     }
+
     return broadcasts.map((b) => `📢 ${b.announcement_text}`).join("   ●   ");
   };
 

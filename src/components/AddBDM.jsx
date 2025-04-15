@@ -25,10 +25,7 @@ const AddBDM = () => {
         const response = await axios.get(`${api}/members/members`);
         const membersWithChapter = response.data.data.map((member) => ({
           ...member,
-          chapterName:
-            member.Chapter?.chapter_name ||
-            member.chapter_name ||
-            member.chapter,
+          chapterName: member.Chapter?.chapter_name || member.chapter || "N/A",
         }));
         setMembers(membersWithChapter);
       } catch (error) {
@@ -90,7 +87,7 @@ const AddBDM = () => {
         ...formData,
         received_MemberId: selectedMember.id,
         memberName: selectedMember.name,
-        chapter: selectedMember.chapterName,
+        chapter: selectedMember.chapterName || selectedMember.chapter || "N/A",
       });
     }
   };

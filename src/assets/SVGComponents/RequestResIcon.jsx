@@ -1,6 +1,13 @@
-const RequestReceivedIcon = ({ color = "currentColor" }) => {
+const RequestReceivedIcon = ({ className }) => {
   return (
-    <svg width="24" height="24" fill="none" stroke={color} viewBox="0 0 24 24">
+    <svg
+      className={className}
+      width="24"
+      height="24"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
       <path
         d="M3 13V8H21V13C21 16.7712 21 18.6569 19.8284 19.8284C18.6569 21 16.7712 21 13 21H11C7.22876 21 5.34315 21 4.17157 19.8284C3 18.6569 3 16.7712 3 13Z"
         stroke="currentColor"

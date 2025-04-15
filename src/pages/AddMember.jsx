@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import member from "../assets/images/icons/member.svg";
 import calendarIcon from "../assets/images/icons/calender-icon.svg";
 import api from "../hooks/api";
-import axios from "axios";
 import Swal from "sweetalert2";
 
 const AddMember = () => {
@@ -21,7 +20,7 @@ const AddMember = () => {
   useEffect(() => {
     const fetchChapters = async () => {
       try {
-        const response = await axios.get(`${api}/chapters`);
+        const response = await api.get("/chapters");
         if (response.data.status === "success") {
           setChapters(response.data.data);
         }
@@ -43,16 +42,16 @@ const AddMember = () => {
         company: formData.company,
         business_category: formData.business_category,
         joiningDate: formData.date,
-        status: "active"
+        status: "active",
       };
 
-      const response = await axios.post(`${api}/members/add-member`, memberData);
+      const response = await api.post(`/members/add-member`, memberData);
 
       if (response.data.success) {
         Swal.fire({
-          icon: 'success',
-          title: 'Success!',
-          text: 'Member added successfully',
+          icon: "success",
+          title: "Success!",
+          text: "Member added successfully",
           background: "#111827",
           color: "#fff",
           toast: true,
@@ -76,11 +75,11 @@ const AddMember = () => {
       }
     } catch (error) {
       console.error("Error adding member:", error);
-      
+
       Swal.fire({
-        icon: 'error',
-        title: 'Error!',
-        text: error.response?.data?.message || 'Failed to add member',
+        icon: "error",
+        title: "Error!",
+        text: error.response?.data?.message || "Failed to add member",
         background: "#111827",
         color: "#fff",
         toast: true,

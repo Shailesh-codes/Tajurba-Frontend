@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import axios from "axios";
 import api from "../hooks/api";
 
 import eventIcon from "../assets/images/icons/event.svg";
@@ -33,7 +32,7 @@ const AddMeetings = () => {
   const loadChapters = async () => {
     try {
       setIsLoading(true);
-      const response = await axios.get(`${api}/chapters`);
+      const response = await api.get(`/chapters`);
       if (response.data.status === "success") {
         const sortedChapters = response.data.data.sort((a, b) =>
           a.chapter_name.localeCompare(b.chapter_name)
@@ -138,7 +137,7 @@ const AddMeetings = () => {
         );
       }
 
-      const response = await axios.post(`${api}/schedules`, formDataToSend, {
+      const response = await api.post(`/schedules`, formDataToSend, {
         headers: {
           "Content-Type": "multipart/form-data",
         },

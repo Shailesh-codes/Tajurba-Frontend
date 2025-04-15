@@ -46,507 +46,163 @@ import VisitorInviteAddEdit from "./components/VisitorInviteAddEdit";
 import ViewMemberVisitor from "./components/ViewMemberVisitor";
 import MemberDashboard from "./pages/MemberDashboard";
 import Setting from "./pages/Settings";
-import PrivacyPolicy from "./pages/PrivacyPolicy";
+// import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Calendar from "./pages/Calendar";
 import LogoutModal from "./authentications/LogoutModal";
 import PageTitle from "./layout/PageTitile";
+import { AuthProvider } from "./contexts/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Unauthorized from "./pages/Unauthorized";
 
 function App() {
   return (
-    <Routes>
-      <Route
-        path="/"
-        element={
-          <>
-            <PageTitle title="Sign In | Tajurba" />
-            <SignIn />
-          </>
-        }
-      />
-      <Route element={<Layout />}>
-        <Route
-          path="/dashboard"
-          element={
-            <>
-              <PageTitle title="Dashboard | Tajurba" />
-              <Dashboard />
-            </>
-          }
-        />
+    <AuthProvider>
+      <Routes>
+        <Route path="/" element={<SignIn />} />
+        <Route path="/unauthorized" element={<Unauthorized />} />
 
+        {/* Protected Admin Routes */}
         <Route
-          path="/add-member"
           element={
-            <>
-              <PageTitle title="Add Member | Tajurba" />
-              <AddMember />
-            </>
+            <ProtectedRoute allowedRoles={["Super Admin", "Admin"]}>
+              <Layout />
+            </ProtectedRoute>
           }
-        />
-        <Route
-          path="/assign-certificates"
-          element={
-            <>
-              <PageTitle title="Assign Certificates | Tajurba" />
-              <AssignCertificate />
-            </>
-          }
-        />
-        <Route
-          path="/broadcast"
-          element={
-            <>
-              <PageTitle title="Broadcast | Tajurba" />
-              <Broadcast />
-            </>
-          }
-        />
-        <Route
-          path="/chapters-list"
-          element={
-            <>
-              <PageTitle title="Chapters List | Tajurba" />
-              <ChaptersList />
-            </>
-          }
-        />
-        <Route
-          path="/creative-list"
-          element={
-            <>
-              <PageTitle title="Creative List | Tajurba" />
-              <CreativeList />
-            </>
-          }
-        />
-        <Route
-          path="/certificate-list"
-          element={
-            <>
-              <PageTitle title="Certificate List | Tajurba" />
-              <CertificateLists />
-            </>
-          }
-        />
-        <Route
-          path="/mark-attendance"
-          element={
-            <>
-              <PageTitle title="Mark Attendance | Tajurba" />
-              <MarkAttendance />
-            </>
-          }
-        />
-        <Route
-          path="/attendance-venue-fee"
-          element={
-            <>
-              <PageTitle title="Attendance & Venue Fee | Tajurba" />
-              <AttendanceVenueFee />
-            </>
-          }
-        />
-        <Route
-          path="/mark-venue-fee"
-          element={
-            <>
-              <PageTitle title="Mark Venue Fee | Tajurba" />
-              <MarkvenueFee />
-            </>
-          }
-        />
-        <Route
-          path="/member-list"
-          element={
-            <>
-              <PageTitle title="Member List | Tajurba" />
-              <MemberList />
-            </>
-          }
-        />
-        <Route
-          path="/edit-member/:id"
-          element={
-            <>
-              <PageTitle title="Edit Member | Tajurba" />
-              <EditMemberModal />
-            </>
-          }
-        />
-        <Route
-          path="/member-view/:id"
-          element={
-            <>
-              <PageTitle title="Member Details | Tajurba" />
-              <MemberView />
-            </>
-          }
-        />
-        <Route
-          path="/meetings"
-          element={
-            <>
-              <PageTitle title="Meetings | Tajurba" />
-              <ScheduleMeetings />
-            </>
-          }
-        />
-        <Route
-          path="/edit-schedule/:id"
-          element={
-            <>
-              <PageTitle title="Edit Schedule | Tajurba" />
-              <EditScheduleMeeting />
-            </>
-          }
-        />
-        <Route
-          path="/edit-schedule/:type/:id"
-          element={
-            <>
-              <PageTitle title="Edit Schedule | Tajurba" />
-              <EditScheduleMeeting />
-            </>
-          }
-        />
-        <Route
-          path="/view-schedule/:id"
-          element={
-            <>
-              <PageTitle title="View Schedule | Tajurba" />
-              <ViewScheduleMeeting />
-            </>
-          }
-        />
-        <Route
-          path="/view-schedule/:type/:id"
-          element={
-            <>
-              <PageTitle title="View Schedule | Tajurba" />
-              <ViewScheduleMeeting />
-            </>
-          }
-        />
-        <Route
-          path="/add-schedule"
-          element={
-            <>
-              <PageTitle title="Add Schedule | Tajurba" />
-              <AddScheduleMeeting />
-            </>
-          }
-        />
-        <Route
-          path="/visitor-list"
-          element={
-            <>
-              <PageTitle title="Visitor List | Tajurba" />
-              <VisitorList />
-            </>
-          }
-        />
-        <Route
-          path="/monthly-reward"
-          element={
-            <>
-              <PageTitle title="Monthly Reward | Tajurba" />
-              <MonthlyReward />
-            </>
-          }
-        />
-        <Route
-          path="/member-levels"
-          element={
-            <>
-              <PageTitle title="Member Levels | Tajurba" />
-              <MemberStatistics />
-            </>
-          }
-        />
-        {/* Members Routes */}
-        <Route
-          path="/member-dashboard"
-          element={
-            <>
-              <PageTitle title="Member Dashboard | Tajurba" />
-              <MemberDashboard />
-            </>
-          }
-        />
-        <Route
-          path="/bdm"
-          element={
-            <>
-              <PageTitle title="BDM | Tajurba" />
-              <BDM />
-            </>
-          }
-        />
-        <Route
-          path="/add-bdm"
-          element={
-            <>
-              <PageTitle title="Add BDM | Tajurba" />
-              <AddBDM />
-            </>
-          }
-        />
-        <Route
-          path="/edit-bdm/:id"
-          element={
-            <>
-              <PageTitle title="Edit BDM | Tajurba" />
-              <AddBDM />
-            </>
-          }
-        />
-        <Route
-          path="/view-bdm/:id"
-          element={
-            <>
-              <PageTitle title="View BDM | Tajurba" />
-              <ViewBDM />
-            </>
-          }
-        />
-        <Route
-          path="/business-given"
-          element={
-            <>
-              <PageTitle title="Business Given | Tajurba" />
-              <BusinessGiven />
-            </>
-          }
-        />
-        <Route
-          path="/add-business"
-          element={
-            <>
-              <PageTitle title="Add Business | Tajurba" />
-              <AddBusiness />
-            </>
-          }
-        />
-        <Route
-          path="/add-business/:id"
-          element={
-            <>
-              <PageTitle title="Edit Business | Tajurba" />
-              <AddBusiness />
-            </>
-          }
-        />
-        <Route
-          path="view-business/:id"
-          element={
-            <>
-              <PageTitle title="View Business | Tajurba" />
-              <ViewBusiness />
-            </>
-          }
-        />
-        <Route
-          path="business-received"
-          element={
-            <>
-              <PageTitle title="Business Received | Tajurba" />
-              <BusinessReceived />
-            </>
-          }
-        />
-        <Route
-          path="view-res-business/:id"
-          element={
-            <>
-              <PageTitle title="View Received Business | Tajurba" />
-              <ViewResBusiness />
-            </>
-          }
-        />
-        <Route
-          path="add-res-business"
-          element={
-            <>
-              <PageTitle title="Add Received Business | Tajurba" />
-              <AddEditBusinessReceived />
-            </>
-          }
-        />
-        <Route
-          path="add-res-business/:id"
-          element={
-            <>
-              <PageTitle title="Edit Received Business | Tajurba" />
-              <AddEditBusinessReceived />
-            </>
-          }
-        />
-        <Route
-          path="member-certificate"
-          element={
-            <>
-              <PageTitle title="Member Certificate | Tajurba" />
-              <MemberCertificate />
-            </>
-          }
-        />
-        <Route
-          path="chapter-members"
-          element={
-            <>
-              <PageTitle title="Chapter Members | Tajurba" />
-              <ChapterMembers />
-            </>
-          }
-        />
-        <Route
-          path="view-chapter-member/:id"
-          element={
-            <>
-              <PageTitle title="View Chapter Member | Tajurba" />
-              <ChapterMemberView />
-            </>
-          }
-        />
-        <Route
-          path="meetings-mdp-socials"
-          element={
-            <>
-              <PageTitle title="Meetings MDP & Socials | Tajurba" />
-              <MeetingsMDP />
-            </>
-          }
-        />
-        <Route
-          path="members-mdp-events"
-          element={
-            <>
-              <PageTitle title="Members MDP Events | Tajurba" />
-              <MembersMDPEvents />
-            </>
-          }
-        />
-        <Route
-          path="member-monthly-reward"
-          element={
-            <>
-              <PageTitle title="Member Monthly Reward | Tajurba" />
-              <MemberMonthlyReward />
-            </>
-          }
-        />
-        <Route
-          path="ref-given"
-          element={
-            <>
-              <PageTitle title="References Given | Tajurba" />
-              <MemberReferGiven />
-            </>
-          }
-        />
-        <Route
-          path="view-ref-given/:id"
-          element={
-            <>
-              <PageTitle title="View Reference | Tajurba" />
-              <MemberReferView />
-            </>
-          }
-        />
-        <Route
-          path="add-edit-ref-given"
-          element={
-            <>
-              <PageTitle title="Add Reference | Tajurba" />
-              <MemberReferEditAdd />
-            </>
-          }
-        />
-        <Route
-          path="add-edit-ref-given/:id"
-          element={
-            <>
-              <PageTitle title="Edit Reference | Tajurba" />
-              <MemberReferEditAdd />
-            </>
-          }
-        />
-        <Route
-          path="request-received"
-          element={
-            <>
-              <PageTitle title="Requests Received | Tajurba" />
-              <MemberReqReceived />
-            </>
-          }
-        />
-        <Route
-          path="visitors-invited"
-          element={
-            <>
-              <PageTitle title="Visitors Invited | Tajurba" />
-              <MemberVisitorsInvite />
-            </>
-          }
-        />
-        <Route
-          path="add-visitor"
-          element={
-            <>
-              <PageTitle title="Add Visitor | Tajurba" />
-              <VisitorInviteAddEdit />
-            </>
-          }
-        />
-        <Route
-          path="edit-visitor/:id"
-          element={
-            <>
-              <PageTitle title="Edit Visitor | Tajurba" />
-              <VisitorInviteAddEdit />
-            </>
-          }
-        />
-        <Route
-          path="view-visitor/:id"
-          element={
-            <>
-              <PageTitle title="View Visitor | Tajurba" />
-              <ViewMemberVisitor />
-            </>
-          }
-        />
+        >
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/add-member" element={<AddMember />} />
+          <Route path="/assign-certificates" element={<AssignCertificate />} />
+          <Route path="/broadcast" element={<Broadcast />} />
+          <Route path="/chapters-list" element={<ChaptersList />} />
+          <Route path="/creative-list" element={<CreativeList />} />
+          <Route path="/certificate-list" element={<CertificateLists />} />
+          <Route path="/mark-attendance" element={<MarkAttendance />} />
+          <Route
+            path="/attendance-venue-fee"
+            element={<AttendanceVenueFee />}
+          />
+          <Route path="/mark-venue-fee" element={<MarkvenueFee />} />
+          <Route path="/member-list" element={<MemberList />} />
+          <Route path="/edit-member/:id" element={<EditMemberModal />} />
+          <Route path="/member-view/:id" element={<MemberView />} />
+          <Route path="/meetings" element={<ScheduleMeetings />} />
+          <Route path="/edit-schedule/:id" element={<EditScheduleMeeting />} />
+          <Route
+            path="/edit-schedule/:type/:id"
+            element={<EditScheduleMeeting />}
+          />
+          <Route path="/view-schedule/:id" element={<ViewScheduleMeeting />} />
+          <Route
+            path="/view-schedule/:type/:id"
+            element={<ViewScheduleMeeting />}
+          />
+          <Route path="/add-schedule" element={<AddScheduleMeeting />} />
+          <Route path="/visitor-list" element={<VisitorList />} />
+          <Route path="/monthly-reward" element={<MonthlyReward />} />
+          <Route path="/member-levels" element={<MemberStatistics />} />
+          <Route path="/bdm" element={<BDM />} />
+          <Route path="/add-bdm" element={<AddBDM />} />
+          <Route path="/edit-bdm/:id" element={<AddBDM />} />
+          <Route path="/view-bdm/:id" element={<ViewBDM />} />
+          <Route path="/business-given" element={<BusinessGiven />} />
+          <Route path="/add-business" element={<AddBusiness />} />
+          <Route path="/add-business/:id" element={<AddBusiness />} />
+          <Route path="view-business/:id" element={<ViewBusiness />} />
+          <Route path="business-received" element={<BusinessReceived />} />
+          <Route path="view-res-business/:id" element={<ViewResBusiness />} />
+          <Route
+            path="add-res-business"
+            element={<AddEditBusinessReceived />}
+          />
+          <Route
+            path="add-res-business/:id"
+            element={<AddEditBusinessReceived />}
+          />
+          <Route path="member-certificate" element={<MemberCertificate />} />
+          <Route path="chapter-members" element={<ChapterMembers />} />
+          <Route
+            path="view-chapter-member/:id"
+            element={<ChapterMemberView />}
+          />
+          <Route path="meetings-mdp-socials" element={<MeetingsMDP />} />
+          <Route path="members-mdp-events" element={<MembersMDPEvents />} />
+          <Route
+            path="member-monthly-reward"
+            element={<MemberMonthlyReward />}
+          />
+          <Route path="ref-given" element={<MemberReferGiven />} />
+          <Route path="view-ref-given/:id" element={<MemberReferView />} />
+          <Route path="add-edit-ref-given" element={<MemberReferEditAdd />} />
+          <Route
+            path="add-edit-ref-given/:id"
+            element={<MemberReferEditAdd />}
+          />
+          <Route path="request-received" element={<MemberReqReceived />} />
+          <Route path="visitors-invited" element={<MemberVisitorsInvite />} />
+          <Route path="add-visitor" element={<VisitorInviteAddEdit />} />
+          <Route path="edit-visitor/:id" element={<VisitorInviteAddEdit />} />
+          <Route path="view-visitor/:id" element={<ViewMemberVisitor />} />
+          <Route path="settings" element={<Setting />} />
+          {/* <Route path="privacy-policy" element={<PrivacyPolicy />} /> */}
+        </Route>
 
-        {/* Other Routes */}
+        {/* Protected Member Routes */}
         <Route
-          path="settings"
           element={
-            <>
-              <PageTitle title="Settings | Tajurba" />
-              <Setting />
-            </>
+            <ProtectedRoute allowedRoles={["Member"]}>
+              <Layout />
+            </ProtectedRoute>
           }
-        />
-        <Route
-          path="privacy-policy"
-          element={
-            <>
-              <PageTitle title="Privacy Policy | Tajurba" />
-              <PrivacyPolicy />
-            </>
-          }
-        />
-        <Route
-          path="calendar"
-          element={
-            <>
-              <PageTitle title="Calendar | Tajurba" />
-              <Calendar />
-            </>
-          }
-        />
-      </Route>
-    </Routes>
+        >
+          <Route path="/member-dashboard" element={<MemberDashboard />} />
+          <Route path="/bdm" element={<BDM />} />
+          <Route path="/add-bdm" element={<AddBDM />} />
+          <Route path="/edit-bdm/:id" element={<AddBDM />} />
+          <Route path="/view-bdm/:id" element={<ViewBDM />} />
+          <Route path="/business-given" element={<BusinessGiven />} />
+          <Route path="/add-business" element={<AddBusiness />} />
+          <Route path="/add-business/:id" element={<AddBusiness />} />
+          <Route path="/view-business/:id" element={<ViewBusiness />} />
+          <Route path="/business-received" element={<BusinessReceived />} />
+          <Route path="/view-res-business/:id" element={<ViewResBusiness />} />
+          <Route
+            path="/add-res-business"
+            element={<AddEditBusinessReceived />}
+          />
+          <Route
+            path="/add-res-business/:id"
+            element={<AddEditBusinessReceived />}
+          />
+          <Route path="/member-certificate" element={<MemberCertificate />} />
+          <Route path="/chapter-members" element={<ChapterMembers />} />
+          <Route
+            path="/view-chapter-member/:id"
+            element={<ChapterMemberView />}
+          />
+          <Route path="/meetings-mdp-socials" element={<MeetingsMDP />} />
+          <Route path="/members-mdp-events" element={<MembersMDPEvents />} />
+          <Route
+            path="/member-monthly-reward"
+            element={<MemberMonthlyReward />}
+          />
+          <Route path="/ref-given" element={<MemberReferGiven />} />
+          <Route path="/view-ref-given/:id" element={<MemberReferView />} />
+          <Route path="/add-edit-ref-given" element={<MemberReferEditAdd />} />
+          <Route
+            path="/add-edit-ref-given/:id"
+            element={<MemberReferEditAdd />}
+          />
+          <Route path="/request-received" element={<MemberReqReceived />} />
+          <Route path="/visitors-invited" element={<MemberVisitorsInvite />} />
+          <Route path="/add-visitor" element={<VisitorInviteAddEdit />} />
+          <Route path="/edit-visitor/:id" element={<VisitorInviteAddEdit />} />
+          <Route path="/view-visitor/:id" element={<ViewMemberVisitor />} />
+          <Route path="/settings" element={<Setting />} />
+          {/* <Route path="/privacy-policy" element={<PrivacyPolicy />} /> */}
+          <Route path="/calendar" element={<Calendar />} />
+        </Route>
+      </Routes>
+    </AuthProvider>
   );
 }
 

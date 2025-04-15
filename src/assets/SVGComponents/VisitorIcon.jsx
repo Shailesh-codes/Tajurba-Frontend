@@ -1,6 +1,13 @@
-const VisitorIcon = ({ color = "currentColor" }) => {
+const VisitorIcon = ({ className }) => {
   return (
-    <svg width="24" height="24" fill="none" stroke={color} viewBox="0 0 24 24">
+    <svg
+      className={className}
+      width="24"
+      height="24"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
       <path
         d="M7.5 19.5C7.5 18.5344 7.82853 17.5576 8.63092 17.0204C9.59321 16.3761 10.7524 16 12 16C13.2476 16 14.4068 16.3761 15.3691 17.0204C16.1715 17.5576 16.5 18.5344 16.5 19.5"
         stroke="currentColor"

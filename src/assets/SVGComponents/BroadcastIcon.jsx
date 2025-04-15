@@ -1,6 +1,13 @@
-const BroadcastIcon = ({ color = "currentColor" }) => {
+const BroadcastIcon = ({ className }) => {
   return (
-    <svg width="24" height="24" fill="none" stroke={color} viewBox="0 0 24 24">
+    <svg
+      className={className}
+      width="24"
+      height="24"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
       <path
         d="M12 11L12 20"
         stroke="currentColor"

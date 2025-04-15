@@ -1,6 +1,13 @@
-const MonthlyRewardIcon = ({ color = "currentColor" }) => {
+const MonthlyRewardIcon = ({ className }) => {
   return (
-    <svg width="24" height="24" fill="none" stroke={color} viewBox="0 0 24 24">
+    <svg
+      className={className}
+      width="24"
+      height="24"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
       <path
         d="M4.5 9.5C4.5 13.6421 7.85786 17 12 17C16.1421 17 19.5 13.6421 19.5 9.5C19.5 5.35786 16.1421 2 12 2C7.85786 2 4.5 5.35786 4.5 9.5Z"
         stroke="currentColor"

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import Swal from "sweetalert2";
 import certi from "../assets/images/icons/certi.svg";
 import calendarIcon from "../assets/images/icons/calender-icon.svg";
@@ -20,7 +19,7 @@ const AssignCertificate = () => {
 
   const loadMembers = async (chapterId) => {
     try {
-      const response = await axios.get(`${api}/members/members`);
+      const response = await api.get("/members/members");
       if (response.data.success) {
         const chapterMembers = response.data.data.filter(
           (member) =>
@@ -45,7 +44,7 @@ const AssignCertificate = () => {
   useEffect(() => {
     const fetchChapters = async () => {
       try {
-        const response = await axios.get(`${api}/chapters`);
+        const response = await api.get(`/chapters`);
         if (response.data.status === "success") {
           setChapters(response.data.data);
         }
@@ -100,7 +99,7 @@ const AssignCertificate = () => {
         ...formData,
       };
 
-      const response = await axios.post(`${api}/certificates`, submitData);
+      const response = await api.post(`/certificates`, submitData);
 
       if (response.data.status === "success") {
         Swal.fire({

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import axios from "axios";
 import api from "../hooks/api";
 import eventIcon from "../assets/images/icons/event.svg";
 import editIcon from "../assets/images/icons/edit.svg";
@@ -21,10 +20,10 @@ const ViewScheduleMeeting = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const scheduleResponse = await axios.get(
-          `${api}/schedules/${type}/${id}`
+        const scheduleResponse = await api.get(
+          `/schedules/${type}/${id}`
         );
-        const chaptersResponse = await axios.get(`${api}/chapters`);
+        const chaptersResponse = await api.get(`/chapters`);
         if (
           scheduleResponse.data.success &&
           chaptersResponse.data.status === "success"
@@ -62,7 +61,7 @@ const ViewScheduleMeeting = () => {
   useEffect(() => {
     const fetchChapters = async () => {
       try {
-        const response = await axios.get(`${api}/chapters`);
+        const response = await api.get(`/chapters`);
         setChapters(response.data.data);
       } catch (error) {
         console.error("Error fetching chapters:", error);

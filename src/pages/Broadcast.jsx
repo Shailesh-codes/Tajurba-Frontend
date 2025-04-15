@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import Swal from "sweetalert2";
 import broadcastIcon from "../assets/images/icons/broadcast-icon.svg";
 import { useNavigate } from "react-router-dom";
@@ -26,7 +25,7 @@ const Broadcast = () => {
   useEffect(() => {
     const fetchChapters = async () => {
       try {
-        const response = await axios.get(`${api}/chapters`);
+        const response = await api.get(`/chapters`);
         if (response.data.status === "success") {
           setChapters(response.data.data);
         }
@@ -62,7 +61,7 @@ const Broadcast = () => {
 
         console.log("Sending payload:", payload);
 
-        const response = await axios.post(`${api}/broadcasts`, payload);
+        const response = await api.post(`/broadcasts`, payload);
 
         if (response.data.success) {
           showSuccess("Broadcast created successfully");
@@ -88,7 +87,7 @@ const Broadcast = () => {
 
   const toggleBroadcast = async (id) => {
     try {
-      const response = await axios.patch(`${api}/broadcasts/toggle-status`, {
+      const response = await api.patch(`/broadcasts/toggle-status`, {
         broadcast_id: id,
       });
 
@@ -96,6 +95,8 @@ const Broadcast = () => {
         showSuccess("Broadcast status updated successfully");
         // Refresh broadcasts list
         fetchBroadcasts();
+        // Dispatch event to update header only
+        window.dispatchEvent(new Event("broadcastUpdated"));
       }
     } catch (error) {
       console.error("Error toggling broadcast:", error);
@@ -112,13 +113,17 @@ const Broadcast = () => {
 
   const handleDeleteConfirm = async () => {
     try {
-      const response = await axios.delete(`${api}/broadcasts/${broadcastToDelete.broadcast_id}`);
+      const response = await api.delete(
+        `/broadcasts/${broadcastToDelete.broadcast_id}`
+      );
 
       if (response.data.success) {
         showSuccess("Broadcast deleted successfully");
         setIsDeleteModalOpen(false);
         setBroadcastToDelete(null);
         fetchBroadcasts();
+        // Dispatch event to update header
+        window.dispatchEvent(new Event("broadcastUpdated"));
       }
     } catch (error) {
       console.error("Error deleting broadcast:", error);
@@ -128,7 +133,7 @@ const Broadcast = () => {
 
   const fetchBroadcasts = async () => {
     try {
-      const response = await axios.get(`${api}/broadcasts`);
+      const response = await api.get(`/broadcasts`);
       if (response.data.success) {
         setBroadcasts(response.data.data);
       }
@@ -187,36 +192,10 @@ const Broadcast = () => {
     });
   };
 
+  // Update the filteredBroadcasts constant to not filter by status
   const filteredBroadcasts = filterChapter
     ? broadcasts.filter((broadcast) => broadcast.chapter_name === filterChapter)
     : broadcasts;
-
-  // Add dummy broadcasts for demonstration
-  const dummyBroadcasts = [
-    {
-      broadcast_id: 1,
-      chapter_name: "Chapter Alpha",
-      announcement_slot: 1,
-      announcement_text:
-        "🎉 Join us for the Annual Leadership Summit 2024! Early bird registration now open with exclusive benefits for all members. Don't miss out on this transformative experience.",
-      status: "active",
-      created_at: "2024-03-15T10:00:00",
-      start_date: "2024-03-20T00:00:00",
-      end_date: "2024-04-20T00:00:00",
-    },
-    {
-      broadcast_id: 2,
-      chapter_name: "Chapter Beta",
-      announcement_slot: 2,
-      announcement_text:
-        "🏆 Congratulations to our chapter members for achieving the Excellence Award! Special recognition ceremony this Friday.",
-      status: "active",
-      created_at: "2024-03-14T15:30:00",
-      start_date: "2024-03-16T00:00:00",
-      end_date: null,
-    },
-    // ... add more dummy data as needed
-  ];
 
   return (
     <div className="mt-32 p-1 lg:p-6">
@@ -520,10 +499,7 @@ const Broadcast = () => {
 
         {/* Enhanced Announcement Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {(filteredBroadcasts.length === 0
-            ? dummyBroadcasts
-            : filteredBroadcasts
-          ).map((broadcast) => {
+          {filteredBroadcasts.map((broadcast) => {
             const isActive = broadcast.status === "active";
             const isExpired =
               broadcast.end_date && new Date(broadcast.end_date) < new Date();
@@ -539,6 +515,17 @@ const Broadcast = () => {
                   isActive ? "border-orange-500/30" : "border-gray-700/50"
                 } p-6 hover:shadow-lg transition-all duration-300 group`}
               >
+                {/* Status Badge */}
+                <div
+                  className={`absolute top-16 right-6 px-3 py-1 rounded-full text-xs font-medium ${
+                    isActive
+                      ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                      : "bg-red-500/20 text-red-400 border border-red-500/30"
+                  }`}
+                >
+                  {isActive ? "Active" : "Disabled"}
+                </div>
+
                 {/* Decorative Elements */}
                 <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 rounded-full blur-3xl group-hover:bg-orange-500/20 transition-all duration-500"></div>
 
@@ -630,11 +617,6 @@ const Broadcast = () => {
                           />
                         </svg>
                         Expires: {formatDate(broadcast.end_date)}
-                        {isExpired && (
-                          <span className="text-red-400 font-medium">
-                            (Expired)
-                          </span>
-                        )}
                       </div>
                     ) : (
                       <div className="text-xs text-gray-400">
@@ -671,7 +653,7 @@ const Broadcast = () => {
                     className={`px-4 py-1.5 rounded-lg bg-gradient-to-r ${
                       isActive
                         ? "from-red-600 to-red-900 hover:from-red-700 hover:to-red-950 hover:shadow-red-900/30"
-                        : "from-amber-600 to-amber-900 hover:from-amber-700 hover:to-amber-950 hover:shadow-amber-900/30"
+                        : "from-green-600 to-green-900 hover:from-green-700 hover:to-green-950 hover:shadow-green-900/30"
                     } text-sm text-white font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
                     {isActive ? "Disable" : "Enable"}

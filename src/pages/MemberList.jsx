@@ -9,7 +9,6 @@ import settingsIcon from "../assets/images/icons/setting.svg";
 import EditMemberModal from "../components/EditMemberModal";
 import Swal from "sweetalert2";
 import api from "../hooks/api";
-import axios from "axios";
 import { showToast } from "../utils/toast";
 
 const MemberList = () => {
@@ -24,12 +23,12 @@ const MemberList = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const membersResponse = await axios.get(`${api}/members/members`);
+        const membersResponse = await api.get(`/members/members`);
         if (membersResponse.data.success) {
           setMembers(membersResponse.data.data);
         }
 
-        const chaptersResponse = await axios.get(`${api}/chapters`);
+        const chaptersResponse = await api.get(`/chapters`);
         if (chaptersResponse.data.status === "success") {
           setChapters(chaptersResponse.data.data);
         }
@@ -63,7 +62,7 @@ const MemberList = () => {
 
   const handleEditSubmit = async (formData) => {
     try {
-      const response = await axios.put(`${api}/members/members/${selectedMember.id}`, {
+      const response = await api.put(`/members/members/${selectedMember.id}`, {
         name: formData.name,
         mobile: formData.mobile,
         email: formData.email,
@@ -74,7 +73,7 @@ const MemberList = () => {
       });
 
       if (response.data.success) {
-        const membersResponse = await axios.get(`${api}/members/members`);
+        const membersResponse = await api.get(`/members/members`);
         if (membersResponse.data.success) {
           setMembers(membersResponse.data.data);
         }
@@ -197,12 +196,12 @@ const MemberList = () => {
 
     if (result.isConfirmed) {
       try {
-        const requestUrl = `${api}/members/members/${member.id}/status`;
+        const requestUrl = `/members/members/${member.id}/status`;
         const requestData = {
           status: isActive ? "inactive" : "active",
         };
 
-        const response = await axios.patch(requestUrl, requestData);
+        const response = await api.patch(requestUrl, requestData);
 
         if (response.data.success) {
           const updatedMembers = members.map((m) =>

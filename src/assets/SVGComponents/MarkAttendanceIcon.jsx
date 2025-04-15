@@ -1,6 +1,13 @@
-const MarkAttendanceIcon = ({ color = "currentColor" }) => {
+const MarkAttendanceIcon = ({ className }) => {
   return (
-    <svg width="24" height="24" fill="none" stroke={color} viewBox="0 0 24 24">
+    <svg
+      className={className}
+      width="24"
+      height="24"
+      fill="none"
+      stroke="curretColor"
+      viewBox="0 0 24 24"
+    >
       <path
         d="M17 2V5M7 2V5"
         stroke="currentColor"

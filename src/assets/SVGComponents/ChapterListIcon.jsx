@@ -1,6 +1,13 @@
-const ChapterListIcon = ({ color = "currentColor" }) => {
+const ChapterListIcon = ({ className }) => {
   return (
-    <svg width="24" height="24" fill="none" stroke={color} viewBox="0 0 24 24">
+    <svg
+      className={className}
+      width="24"
+      height="24"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
       <path
         d="M9 5L21 5"
         stroke="currentColor"

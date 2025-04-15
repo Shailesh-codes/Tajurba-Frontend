@@ -120,7 +120,7 @@ const MemberCertificate = () => {
           {/* Add scrollbar container div */}
           <div className="absolute inset-0 overflow-auto scrollbar-thin scrollbar-track-gray-800/40 scrollbar-thumb-amber-600/50 hover:scrollbar-thumb-amber-500/80">
             <table className="w-full min-w-[800px] text-left border-separate border-spacing-0">
-              <thead>
+              <thead className="sticky top-0 z-20">
                 <tr>
                   <th className="sticky top-0 p-4 font-semibold text-gray-300 bg-gray-800 first:rounded-tl-xl whitespace-nowrap">
                     Sr No.

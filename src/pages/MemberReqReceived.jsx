@@ -155,14 +155,60 @@ const MemberReqReceived = () => {
       try {
         setLoading(true);
 
-        // Fetch BDM data
-        const bdmResponse = await axios.get(`${api}/bdm`);
+        // Fetch all required data in parallel
+        const [bdmResponse, chaptersResponse, referralResponse, businessResponse] = await Promise.all([
+          axios.get(`${api}/bdm`),
+          axios.get(`${api}/chapters`),
+          axios.get(`${api}/referrals`),
+          axios.get(`${api}/business`)
+        ]);
+
+        const chapters = chaptersResponse.data.data || [];
         const bdms = bdmResponse.data || [];
+
+        // Helper function to get chapter name
+        const getChapterName = (chapterId) => {
+          const chapter = chapters.find(ch => ch.chapter_id.toString() === chapterId?.toString());
+          return chapter?.chapter_name || "N/A";
+        };
+
+        // Format BDMs with chapter names - specifically handle BDM chapter mapping
         const formattedBdms = bdms.map((bdm) => ({
           ...bdm,
           id: bdm.bdm_id,
           request_type: bdm.request_type || "BDM",
           date: bdm.bdmDate || bdm.created_at,
+          chapter: getChapterName(bdm.chapter), // Convert chapter ID to name
+          memberName: bdm.memberName || bdm.receiverName || "N/A"
+        }));
+
+        // Keep the existing business and referral formatting as is since they work properly
+        const referrals = referralResponse.data.success ? referralResponse.data.data : [];
+        const businesses = businessResponse.data || [];
+
+        const formattedReferrals = referrals.map((referral) => ({
+          id: referral.referral_id,
+          givenByName: referral.givenByMember?.name || "N/A",
+          receivedByName: referral.receivedByMember?.name || "N/A",
+          chapter: referral.givenByMember?.Chapter?.chapter_name || "N/A",
+          refer_name: referral.refer_name,
+          mobile: referral.mobile,
+          status: referral.verify_status,
+          date: referral.referral_date,
+          verified_date: referral.verified_date,
+          rejected_date: referral.rejected_date,
+        }));
+
+        const formattedBusinesses = businesses.map(business => ({
+          id: business.business_id,
+          givenByName: business.Member?.name || "N/A",
+          memberName: business.memberName,
+          chapter: business.chapter, // This already works correctly
+          amount: business.amount,
+          status: business.status,
+          date: business.businessDate,
+          verified_date: business.verified_date,
+          rejected_date: business.rejected_date
         }));
 
         // Filter BDMs based on selected filters
@@ -178,13 +224,7 @@ const MemberReqReceived = () => {
           );
         }
 
-        // Fetch referral data
-        const referralResponse = await axios.get(`${api}/referrals`);
-        const referrals = referralResponse.data.success
-          ? referralResponse.data.data
-          : [];
-
-        // Calculate stats for both BDM and referrals
+        // Rest of your existing stats calculations...
         const bdmStats = {
           total: formattedBdms.length,
           verified: formattedBdms.filter((b) => b.status === "verified").length,
@@ -192,61 +232,23 @@ const MemberReqReceived = () => {
           rejected: formattedBdms.filter((b) => b.status === "rejected").length,
         };
 
-        const referralStats = {
-          total: referrals.length,
-          verified: referrals.filter((r) => r.verify_status === "verified")
-            .length,
-          pending: referrals.filter((r) => r.verify_status === "pending")
-            .length,
-          rejected: referrals.filter((r) => r.verify_status === "rejected")
-            .length,
-        };
-
-        // Format referral data
-        const formattedReferrals = referrals.map((referral) => ({
-          id: referral.referral_id,
-          givenByName: referral.givenByMember?.name || "N/A",
-          receivedByName: referral.receivedByMember?.name || "N/A",
-          chapter: referral.givenByMember?.Chapter?.chapter_name || "N/A",
-          refer_name: referral.refer_name,
-          mobile: referral.mobile,
-          status: referral.verify_status,
-          date: referral.referral_date,
-          verified_date: referral.verified_date,
-          rejected_date: referral.rejected_date,
-        }));
-
-        // Add business data fetch
-        const businessResponse = await axios.get(`${api}/business`);
-        const businesses = businessResponse.data || [];
-
-        // Format business data with giver's name
-        const formattedBusinesses = businesses.map(business => ({
-          id: business.business_id,
-          givenByName: business.Member?.name || "N/A",
-          memberName: business.memberName,
-          chapter: business.chapter,
-          amount: business.amount,
-          status: business.status,
-          date: business.businessDate,
-          verified_date: business.verified_date,
-          rejected_date: business.rejected_date
-        }));
-
-        // Calculate business stats
-        const businessStats = {
-          total: businesses.length,
-          verified: businesses.filter(b => b.status === "verified").length,
-          pending: businesses.filter(b => b.status === "pending").length,
-          rejected: businesses.filter(b => b.status === "rejected").length
-        };
-
-        // Update all state at once
+        // Update states
         setStats({
           bdm: bdmStats,
-          referral: referralStats,
-          business: businessStats
+          referral: {
+            total: referrals.length,
+            verified: referrals.filter(r => r.verify_status === "verified").length,
+            pending: referrals.filter(r => r.verify_status === "pending").length,
+            rejected: referrals.filter(r => r.verify_status === "rejected").length,
+          },
+          business: {
+            total: businesses.length,
+            verified: businesses.filter(b => b.status === "verified").length,
+            pending: businesses.filter(b => b.status === "pending").length,
+            rejected: businesses.filter(b => b.status === "rejected").length
+          }
         });
+        
         setRequestsData(filteredBdms);
         setReferralData(formattedReferrals);
         setBusinessData(formattedBusinesses);

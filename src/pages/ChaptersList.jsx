@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import Swal from "sweetalert2";
 import chaptersIcon from "../assets/images/icons/list.svg";
 import { motion } from "framer-motion";
@@ -28,8 +27,8 @@ const ChaptersList = () => {
     try {
       console.log("Deleting chapter:", chapterToDelete.chapter_id);
 
-      const response = await axios.delete(
-        `${api}/chapters/${chapterToDelete.chapter_id}`
+      const response = await api.delete(
+        `/chapters/${chapterToDelete.chapter_id}`
       );
 
       if (response.data.status === "success") {
@@ -52,7 +51,7 @@ const ChaptersList = () => {
 
   const loadChapters = async () => {
     try {
-      const response = await axios.get(`${api}/chapters`);
+      const response = await api.get(`/chapters`);
       if (response.data.status === "success") {
         const sortedChapters = response.data.data.sort((a, b) =>
           a.chapter_name.localeCompare(b.chapter_name)
@@ -67,7 +66,7 @@ const ChaptersList = () => {
   const handleAddChapter = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(`${api}/chapters/add-update`, {
+      const response = await api.post(`/chapters/add-update`, {
         action: "add",
         chapter_name: newChapterName,
       });
@@ -87,7 +86,7 @@ const ChaptersList = () => {
   const handleEditChapter = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(`${api}/chapters/add-update`, {
+      const response = await api.post(`/chapters/add-update`, {
         action: "update",
         chapter_id: editChapter.id,
         chapter_name: editChapter.name,

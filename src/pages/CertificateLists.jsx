@@ -5,7 +5,6 @@ import { Eye, Trash2 } from "lucide-react";
 import certificatesIcon from "../assets/images/icons/certi.svg";
 import calendarIcon from "../assets/images/icons/calender-icon.svg";
 import api from "../hooks/api";
-import axios from "axios";
 import DeleteModal from "../layout/DeleteModal";
 // Import certificate images
 import businessImage from "../Certificates/public/assets/businessImage.jpg";
@@ -36,8 +35,8 @@ const CertificatesList = () => {
       setLoading(true);
       // Fetch certificates and chapters in parallel
       const [certificatesResponse, chaptersResponse] = await Promise.all([
-        axios.get(`${api}/certificates`),
-        axios.get(`${api}/chapters`),
+        api.get(`/certificates`),
+        api.get(`/chapters`),
       ]);
 
       if (certificatesResponse.data.status === "success") {
@@ -345,8 +344,8 @@ const CertificatesList = () => {
       });
 
       // Make the delete request
-      const response = await axios.delete(
-        `${api}/certificates/${certificateToDelete.certificate_id}`
+      const response = await api.delete(
+        `/certificates/${certificateToDelete.certificate_id}`
       );
 
       if (response.data.status === "success") {

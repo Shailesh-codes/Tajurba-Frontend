@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import axios from "axios";
 import api from "../hooks/api";
 import { showToast } from "../utils/toast";
-
 import eventIcon from "../assets/images/icons/event.svg";
 import infoIcon from "../assets/images/icons/info.svg";
 
@@ -15,7 +13,7 @@ const EditScheduleMeeting = () => {
   const [allChapters, setAllChapters] = useState([]);
   const [formData, setFormData] = useState({
     type: "",
-    title: "",        
+    title: "",
     venue: "",
     date: "",
     time: "",
@@ -33,24 +31,29 @@ const EditScheduleMeeting = () => {
       try {
         setLoading(true);
         // Fetch schedule data
-        const scheduleResponse = await axios.get(`${api}/schedules/${type}/${id}`);
+        const scheduleResponse = await api.get(`/schedules/${type}/${id}`);
         // Fetch chapters data
-        const chaptersResponse = await axios.get(`${api}/chapters`);
+        const chaptersResponse = await api.get(`/chapters`);
 
-        if (scheduleResponse.data.success && chaptersResponse.data.status === "success") {
+        if (
+          scheduleResponse.data.success &&
+          chaptersResponse.data.status === "success"
+        ) {
           const scheduleData = scheduleResponse.data.data;
-          
+
           // Ensure chapters is always an array of objects with chapter_id
-          const parsedChapters = Array.isArray(scheduleData.chapters) 
-            ? scheduleData.chapters.map(ch => 
-                typeof ch === 'object' ? ch : { chapter_id: ch }
+          const parsedChapters = Array.isArray(scheduleData.chapters)
+            ? scheduleData.chapters.map((ch) =>
+                typeof ch === "object" ? ch : { chapter_id: ch }
               )
             : [];
 
           // Format date for input field
-          const formattedDate = new Date(scheduleData.date).toISOString().split('T')[0];
+          const formattedDate = new Date(scheduleData.date)
+            .toISOString()
+            .split("T")[0];
           // Format time for input field
-          const formattedTime = scheduleData.time.split('.')[0];
+          const formattedTime = scheduleData.time.split(".")[0];
 
           setFormData({
             ...scheduleData,
@@ -59,7 +62,7 @@ const EditScheduleMeeting = () => {
             type: type,
             chapters: parsedChapters,
           });
-          
+
           setAllChapters(chaptersResponse.data.data);
         }
       } catch (error) {
@@ -95,10 +98,10 @@ const EditScheduleMeeting = () => {
       if (formData.qr_code instanceof File) {
         URL.revokeObjectURL(getQRCodePreview());
       }
-      
-      setFormData(prev => ({
+
+      setFormData((prev) => ({
         ...prev,
-        qr_code: file
+        qr_code: file,
       }));
     }
   };
@@ -106,9 +109,9 @@ const EditScheduleMeeting = () => {
   const handleChapterToggle = (chapterId) => {
     setFormData((prev) => ({
       ...prev,
-      chapters: prev.chapters.some(ch => ch.chapter_id === chapterId)
-        ? prev.chapters.filter(ch => ch.chapter_id !== chapterId)
-        : [...prev.chapters, { chapter_id: chapterId }]
+      chapters: prev.chapters.some((ch) => ch.chapter_id === chapterId)
+        ? prev.chapters.filter((ch) => ch.chapter_id !== chapterId)
+        : [...prev.chapters, { chapter_id: chapterId }],
     }));
   };
 
@@ -116,29 +119,29 @@ const EditScheduleMeeting = () => {
     e.preventDefault();
     try {
       const formDataToSend = new FormData();
-      
+
       // Prepare chapters data - extract only chapter_ids
-      const chapterIds = formData.chapters.map(ch => 
-        typeof ch === 'object' ? ch.chapter_id : ch
-      ).filter(id => id !== undefined && id !== null);
+      const chapterIds = formData.chapters
+        .map((ch) => (typeof ch === "object" ? ch.chapter_id : ch))
+        .filter((id) => id !== undefined && id !== null);
 
       // Append all form fields
-      Object.keys(formData).forEach(key => {
-        if (key === 'chapters') {
+      Object.keys(formData).forEach((key) => {
+        if (key === "chapters") {
           formDataToSend.append(key, JSON.stringify(chapterIds));
-        } else if (key === 'qr_code' && formData[key] instanceof File) {
+        } else if (key === "qr_code" && formData[key] instanceof File) {
           formDataToSend.append(key, formData[key]);
-        } else if (key !== 'qr_code') {
+        } else if (key !== "qr_code") {
           formDataToSend.append(key, formData[key]);
         }
       });
 
-      const response = await axios.put(
-        `${api}/schedules/${type}/${id}`,
+      const response = await api.put(
+        `/schedules/${type}/${id}`,
         formDataToSend,
         {
           headers: {
-            'Content-Type': 'multipart/form-data',
+            "Content-Type": "multipart/form-data",
           },
         }
       );
@@ -166,17 +169,17 @@ const EditScheduleMeeting = () => {
   // Add this function to handle QR code preview
   const getQRCodePreview = () => {
     if (!formData.qr_code) return null;
-    
+
     // If it's a File object (new upload)
     if (formData.qr_code instanceof File) {
       return URL.createObjectURL(formData.qr_code);
     }
-    
+
     // If it's a base64 string (existing QR code)
-    if (typeof formData.qr_code === 'string') {
+    if (typeof formData.qr_code === "string") {
       return `data:image/png;base64,${formData.qr_code}`;
     }
-    
+
     return null;
   };
 
@@ -384,13 +387,17 @@ const EditScheduleMeeting = () => {
                   >
                     <input
                       type="checkbox"
-                      checked={formData.chapters.some(ch => 
-                        (typeof ch === 'object' ? ch.chapter_id : ch) === chapter.chapter_id
+                      checked={formData.chapters.some(
+                        (ch) =>
+                          (typeof ch === "object" ? ch.chapter_id : ch) ===
+                          chapter.chapter_id
                       )}
                       onChange={() => handleChapterToggle(chapter.chapter_id)}
                       className="form-checkbox bg-gray-600 border-gray-500 rounded text-amber-500 focus:ring-0 focus:ring-offset-0"
                     />
-                    <span className="text-gray-300">{chapter.chapter_name}</span>
+                    <span className="text-gray-300">
+                      {chapter.chapter_name}
+                    </span>
                   </label>
                 ))}
               </div>
@@ -517,7 +524,7 @@ const EditScheduleMeeting = () => {
                       htmlFor="qr-upload"
                       className="block px-4 py-2 bg-gray-700 text-gray-300 rounded-xl border border-gray-600 cursor-pointer hover:bg-gray-600 transition-colors"
                     >
-                      {formData.qr_code ? 'Change QR Code' : 'Choose File'}
+                      {formData.qr_code ? "Change QR Code" : "Choose File"}
                     </label>
                     {formData.qr_code instanceof File && (
                       <p className="text-sm text-gray-400">
@@ -561,8 +568,8 @@ const EditScheduleMeeting = () => {
                     alt="QR Code"
                     className="max-w-[200px] rounded-lg"
                     onError={(e) => {
-                      console.error('Error loading QR code image');
-                      e.target.style.display = 'none';
+                      console.error("Error loading QR code image");
+                      e.target.style.display = "none";
                     }}
                   />
                 ) : (

@@ -93,22 +93,38 @@ const BDM = () => {
   const fetchBDMs = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${api}/bdm`);
-      let filteredBdms = response.data;
+      const [bdmResponse, chaptersResponse] = await Promise.all([
+        axios.get(`${api}/bdm`),
+        axios.get(`${api}/chapters`),
+      ]);
+
+      let filteredBdms = bdmResponse.data.map((bdm) => {
+        const chapterData = chaptersResponse.data.data.find(
+          (ch) => ch.chapter_id.toString() === bdm.chapter?.toString()
+        );
+
+        return {
+          ...bdm,
+          chapter: chapterData?.chapter_name || "N/A",
+          receiverName: bdm.ReceivedByMember?.name || bdm.memberName || "N/A",
+        };
+      });
 
       // Apply search filter
       if (search) {
         filteredBdms = filteredBdms.filter((bdm) =>
-          bdm.memberName.toLowerCase().includes(search.toLowerCase())
+          bdm.receiverName.toLowerCase().includes(search.toLowerCase())
         );
       }
 
+      // Apply status filter
       if (statusFilter !== "all") {
         filteredBdms = filteredBdms.filter(
           (bdm) => bdm.status === statusFilter
         );
       }
 
+      // Apply chapter filter
       if (chapterFilter !== "all") {
         filteredBdms = filteredBdms.filter(
           (bdm) => bdm.chapter === chapterFilter
@@ -149,10 +165,9 @@ const BDM = () => {
   const handleResultsPerPageChange = (e) => {
     const newResultsPerPage = parseInt(e.target.value);
     setResultsPerPage(newResultsPerPage);
-    setCurrentPage(1); // Reset to first page when changing results per page
+    setCurrentPage(1);
   };
 
-  // Add this component for the results per page dropdown
   const ResultsPerPageDropdown = () => (
     <div className="relative h-[56px] w-full sm:w-auto">
       <select
@@ -528,13 +543,13 @@ const BDM = () => {
                       <td className="px-6 py-4">
                         <div className="flex flex-col">
                           <span className="text-sm text-white-400 mt-1">
-                            To: {bdm.receiverName}
+                            {bdm.receiverName}
                           </span>
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-700 text-amber-500">
-                          {bdm.chapter}
+                          {bdm.chapter || "N/A"}
                         </span>
                       </td>
                       <td className="px-6 py-4">

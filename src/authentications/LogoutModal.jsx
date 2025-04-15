@@ -2,16 +2,33 @@ import React from "react";
 import { LogOut } from "lucide-react";
 import { FiAlertCircle } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import api from "../hooks/api";
 
 const LogoutModal = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   if (!isOpen) return null;
 
-  const handleLogout = () => {
-    localStorage.clear();
-    navigate("/signin");
-    onClose();
+  const handleLogout = async () => {
+    try {
+      // Call logout API
+      await api.post('/members/logout');
+      
+      // Clear local storage and auth context
+      logout();
+      
+      // Navigate to login
+      navigate("/?logout=success");
+      onClose();
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Still clear local storage and redirect even if API call fails
+      logout();
+      navigate("/?logout=success");
+      onClose();
+    }
   };
 
   return (

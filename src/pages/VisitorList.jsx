@@ -8,7 +8,6 @@ import VisitorIcon from "../assets/images/icons/users.svg";
 import { Download, Eye } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import axios from "axios";
 import api from "../hooks/api";
 
 const VisitorList = () => {
@@ -49,7 +48,7 @@ const VisitorList = () => {
     const fetchVisitors = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${api}/visitors`, {
+        const response = await api.get(`/visitors`, {
           params: {
             page: pagination.currentPage,
             limit: pagination.limit,
@@ -58,16 +57,15 @@ const VisitorList = () => {
         });
 
         if (response.data.success) {
-        const { data, pagination: paginationData } = response.data;
-        setVisitors(data);
-        setFilteredVisitors(data);
-          setPagination(prev => ({
-          ...prev,
+          const { data, pagination: paginationData } = response.data;
+          setVisitors(data);
+          setFilteredVisitors(data);
+          setPagination((prev) => ({
+            ...prev,
             total: paginationData.total || 0,
-            totalPages: paginationData.pages || 1
-        }));
+            totalPages: paginationData.pages || 1,
+          }));
         }
-        
       } catch (error) {
         console.error("Error fetching visitors:", error);
         Swal.fire({
@@ -487,7 +485,9 @@ const VisitorList = () => {
                         >
                           <td className="px-6 py-4 text-sm">
                             <span className="flex items-center justify-center w-6 h-6 rounded-full bg-gray-700/50 text-amber-500 font-medium">
-                              {(pagination.currentPage - 1) * pagination.limit + index + 1}
+                              {(pagination.currentPage - 1) * pagination.limit +
+                                index +
+                                1}
                             </span>
                           </td>
                           <td className="px-6 py-4">
@@ -508,13 +508,13 @@ const VisitorList = () => {
                                 </svg>
                               </div>
                               <span className="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">
-                                {visitor.invited_by_name || 'N/A'}
+                                {visitor.invited_by_name || "N/A"}
                               </span>
                             </div>
                           </td>
                           <td className="px-6 py-4">
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-700 text-amber-500">
-                              {visitor.chapter_name || 'N/A'}
+                              {visitor.chapter_name || "N/A"}
                             </span>
                           </td>
                           <td className="px-6 py-4">
@@ -547,7 +547,9 @@ const VisitorList = () => {
                           </td>
                           <td className="px-6 py-4">
                             <span className="text-sm text-gray-400">
-                              {new Date(visitor.invite_date).toLocaleDateString()}
+                              {new Date(
+                                visitor.invite_date
+                              ).toLocaleDateString()}
                             </span>
                           </td>
                           <td className="px-6 py-4">
@@ -557,7 +559,9 @@ const VisitorList = () => {
                                 onClick={() => downloadVisitorPDF(visitor)}
                                 disabled={downloadingId === visitor.invite_id}
                                 className={`relative group/btn flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-r from-blue-600/90 to-blue-800/90 hover:from-blue-600 hover:to-blue-800 transition-all duration-300 shadow-lg hover:shadow-blue-900/30 ${
-                                  downloadingId === visitor.invite_id ? "opacity-75 cursor-not-allowed" : ""
+                                  downloadingId === visitor.invite_id
+                                    ? "opacity-75 cursor-not-allowed"
+                                    : ""
                                 }`}
                               >
                                 <div className="absolute inset-0 rounded-xl bg-blue-600 opacity-0 group-hover/btn:opacity-20 blur-lg transition-opacity" />

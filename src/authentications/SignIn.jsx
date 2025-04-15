@@ -4,15 +4,19 @@ import Swal from "sweetalert2";
 import Lottie from "react-lottie";
 import animation from "../../public/lottie/crmlottie.json";
 import Logo from "../assets/images/Tajurba-Logo-Golden.png";
+import api from "../hooks/api";
+import { useAuth } from "../contexts/AuthContext";
 
 const SignIn = () => {
   const navigate = useNavigate();
+  const { auth, login } = useAuth();
   const [formData, setFormData] = useState({
     mobile: "",
     password: "",
     rememberMe: false,
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const defaultOptions = {
     loop: true,
@@ -24,24 +28,77 @@ const SignIn = () => {
   };
 
   useEffect(() => {
-    // Check for logout message in URL
+    // Only redirect if authenticated and not loading
+    if (auth.isAuthenticated && !auth.isLoading) {
+      if (auth.role === "Member") {
+        navigate("/member-dashboard", { replace: true });
+      } else {
+        navigate("/dashboard", { replace: true });
+      }
+    }
+  }, [auth.isAuthenticated, auth.isLoading, auth.role, navigate]);
+
+  // Check for logout message only once on mount
+  useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get("logout") === "success") {
-      showSuccessAlert(
+      showToast(
         "Logged Out Successfully",
-        "You have been logged out of your account."
+        "You have been logged out of your account.",
+        "success"
       );
       navigate(window.location.pathname, { replace: true });
     }
-  }, [navigate]);
+  }, []);
 
-  const showSuccessAlert = (title, text) => {
+  const showToast = (title, text, icon) => {
     Swal.fire({
       title,
       text,
-      icon: "success",
-      confirmButtonColor: "#27DA68",
+      icon,
+      toast: true,
+      position: "top-end",
+      showConfirmButton: false,
+      timer: 3000,
+      timerProgressBar: true,
+      background: "#1F2937",
+      color: "#fff",
     });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const response = await api.post("/members/login", {
+        mobile: formData.mobile,
+        password: formData.password,
+      });
+
+      if (response.data.success) {
+        const { token, member } = response.data.data;
+
+        // Call login function from context
+        await login({ token, member });
+
+        showToast("Login Successful", "Welcome back!", "success");
+
+        // Navigate based on role
+        const redirectPath =
+          member.role === "Member" ? "/member-dashboard" : "/dashboard";
+        navigate(redirectPath, { replace: true });
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      showToast(
+        "Login Failed",
+        error.response?.data?.message || "Invalid credentials",
+        "error"
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleInputChange = (e) => {
@@ -86,7 +143,7 @@ const SignIn = () => {
           </div>
 
           {/* Login Form */}
-          <form onSubmit={(e) => e.preventDefault()} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {/* Mobile Input */}
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -106,6 +163,10 @@ const SignIn = () => {
               </div>
               <input
                 type="tel"
+                name="mobile"
+                required
+                pattern="[0-9]{10}"
+                maxLength="10"
                 className="w-full pl-10 pr-4 py-3.5 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder:text-gray-400 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all duration-200"
                 placeholder="Mobile Number"
                 value={formData.mobile}
@@ -134,6 +195,8 @@ const SignIn = () => {
               </div>
               <input
                 type={showPassword ? "text" : "password"}
+                name="password"
+                required
                 className="w-full pl-10 pr-10 py-3.5 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder:text-gray-400 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all duration-200"
                 placeholder="Password"
                 value={formData.password}
@@ -203,9 +266,16 @@ const SignIn = () => {
             {/* Sign In Button */}
             <button
               type="submit"
-              className="w-full py-3.5 px-4 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-medium rounded-lg hover:opacity-90 transition-all duration-200 transform hover:scale-[1.02] focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-gray-900"
+              disabled={loading}
+              className={`w-full py-3.5 px-4 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-medium rounded-lg 
+                ${
+                  loading
+                    ? "opacity-70 cursor-not-allowed"
+                    : "hover:opacity-90 transform hover:scale-[1.02]"
+                }
+                transition-all duration-200 focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-gray-900`}
             >
-              Sign In
+              {loading ? "Signing in..." : "Sign In"}
             </button>
           </form>
 

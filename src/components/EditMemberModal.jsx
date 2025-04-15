@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import calendarIcon from "../assets/images/icons/calender-icon.svg";
-import axios from "axios";
 import api from "../hooks/api";
 
 const EditMemberModal = ({ member, chapters, onClose, onSubmit }) => {
@@ -45,7 +44,7 @@ const EditMemberModal = ({ member, chapters, onClose, onSubmit }) => {
     setLoading(true);
 
     try {
-      const response = await axios.put(`${api}/members/members/${member.id}`, {
+      const response = await api.put(`/members/members/${member.id}`, {
         name: formData.name,
         mobile: formData.mobile,
         email: formData.email,

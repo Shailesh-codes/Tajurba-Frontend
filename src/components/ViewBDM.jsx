@@ -61,20 +61,28 @@ const ViewBDM = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const bdmResponse = await axios.get(`${api}/bdm/${id}`);
+        const [bdmResponse, chaptersResponse] = await Promise.all([
+          axios.get(`${api}/bdm/${id}`),
+          axios.get(`${api}/chapters`),
+        ]);
+
         const bdmInfo = bdmResponse.data;
+
+        const chapterData = chaptersResponse.data.data.find(
+          (ch) => ch.chapter_id.toString() === bdmInfo.chapter?.toString()
+        );
 
         // Fetch member details
         const memberResponse = await axios.get(`${api}/members/members`);
         const member = memberResponse.data.data.find(
-          (m) => m.id === bdmInfo.memberId
+          (m) => m.id === bdmInfo.received_MemberId
         );
 
         // Combine BDM and member data
         setBdmData({
           ...bdmData,
           memberName: bdmInfo.memberName,
-          chapter: bdmInfo.chapter,
+          chapter: chapterData?.chapter_name || "N/A",
           status: bdmInfo.status,
           bdmDate: bdmInfo.bdmDate,
           email: member?.email || "",
@@ -321,13 +329,15 @@ const ViewBDM = () => {
           className="lg:col-span-3 bg-gradient-to-b from-gray-800/40 to-gray-900/40 backdrop-blur-xl rounded-xl border border-gray-700 shadow-xl p-6"
         >
           <div className="flex items-center gap-3 mb-6">
-            <div className={`p-2 rounded-lg ${
-              bdmData.status === "verified"
-                ? "bg-green-500/20"
-                : bdmData.status === "rejected"
-                ? "bg-red-500/20"
-                : "bg-amber-500/20"
-            }`}>
+            <div
+              className={`p-2 rounded-lg ${
+                bdmData.status === "verified"
+                  ? "bg-green-500/20"
+                  : bdmData.status === "rejected"
+                  ? "bg-red-500/20"
+                  : "bg-amber-500/20"
+              }`}
+            >
               {bdmData.status === "verified" ? (
                 <CheckCircle className="w-5 h-5 text-green-400" />
               ) : bdmData.status === "rejected" ? (

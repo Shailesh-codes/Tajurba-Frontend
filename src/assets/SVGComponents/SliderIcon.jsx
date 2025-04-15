@@ -1,6 +1,13 @@
-const SliderIcon = ({ color = "currentColor" }) => {
+const SliderIcon = ({ className }) => {
   return (
-    <svg width="24" height="24" fill="none" stroke={color} viewBox="0 0 24 24">
+    <svg
+      className={className}
+      width="24"
+      height="24"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
       <path
         d="M3.99963 5.00055L9.99963 5.00031"
         stroke="currentColor"

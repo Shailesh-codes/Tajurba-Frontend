@@ -2,9 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import Swal from "sweetalert2";
-import axios from "axios";
 import EditMemberModal from "../components/EditMemberModal";
-// Import icons
 import memberListIcon from "../assets/images/icons/users.svg";
 import editIcon from "../assets/images/icons/edit.svg";
 import settingsIcon from "../assets/images/icons/setting.svg";
@@ -32,7 +30,7 @@ const MemberView = () => {
     const fetchData = async () => {
       try {
         // Fetch member data
-        const memberResponse = await axios.get(`${api}/members/members`);
+        const memberResponse = await api.get(`members/members`);
         if (memberResponse.data.success) {
           const memberData = memberResponse.data.data.find(
             (m) => m.id === parseInt(id)
@@ -43,7 +41,7 @@ const MemberView = () => {
         }
 
         // Fetch chapters data
-        const chaptersResponse = await axios.get(`${api}/chapters`);
+        const chaptersResponse = await api.get(`chapters`);
         if (chaptersResponse.data.status === "success") {
           setChapters(chaptersResponse.data.data);
         }
@@ -171,12 +169,9 @@ const MemberView = () => {
     if (result.isConfirmed) {
       try {
         // Update the API endpoint and request
-        const response = await axios.patch(
-          `${api}/members/members/${id}/status`,
-          {
-            status: isActive ? "inactive" : "active",
-          }
-        );
+        const response = await api.patch(`members/members/${id}/status`, {
+          status: isActive ? "inactive" : "active",
+        });
 
         if (response.data.success) {
           // Update the local member state with the new status

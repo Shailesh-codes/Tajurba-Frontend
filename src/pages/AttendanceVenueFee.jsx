@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import axios from "axios";
 import Swal from "sweetalert2";
 import api from "../hooks/api";
 import attendanceIcon from "../assets/images/icons/attendance-icon.svg";
@@ -61,8 +60,8 @@ const AttendanceVenueFee = () => {
           : type;
 
       // First get attendance/venue fee data to ensure we have latest data
-      const attendanceResponse = await axios.get(
-        `${api}/attendance-venue-fee/meeting-members`,
+      const attendanceResponse = await api.get(
+        `/attendance-venue-fee/meeting-members`,
         {
           params: {
             type: scheduleType,
@@ -72,15 +71,15 @@ const AttendanceVenueFee = () => {
       );
 
       // Get meeting details with its chapters
-      const meetingResponse = await axios.get(
-        `${api}/schedules/${scheduleType}/${meetingId}`
+      const meetingResponse = await api.get(
+        `/schedules/${scheduleType}/${meetingId}`
       );
 
       if (meetingResponse.data.success) {
         const meetingData = meetingResponse.data.data;
 
         // Get all members
-        const membersResponse = await axios.get(`${api}/members/members`);
+        const membersResponse = await api.get(`/members/members`);
 
         if (membersResponse.data.success) {
           // Get meeting chapters
@@ -192,8 +191,8 @@ const AttendanceVenueFee = () => {
           const totalMembers = allMembers.length;
 
           // Get overall stats
-          const statsResponse = await axios.get(
-            `${api}/attendance-venue-fee/meeting-stats`,
+          const statsResponse = await api.get(
+            `/attendance-venue-fee/meeting-stats`,
             {
               params: {
                 type: scheduleType,
@@ -520,8 +519,8 @@ const AttendanceVenueFee = () => {
 
       // Make the API call with proper error handling
       try {
-        const response = await axios.post(
-          `${api}/attendance-venue-fee/save-attendance`,
+        const response = await api.post(
+          `/attendance-venue-fee/save-attendance`,
           requestData
         );
 

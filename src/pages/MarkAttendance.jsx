@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import Swal from "sweetalert2";
 import attendanceIcon from "../assets/images/icons/attendance-icon.svg";
 import api from "../hooks/api";
@@ -30,7 +29,7 @@ const MarkAttendance = () => {
 
     try {
       const backendType = type === "social" ? "social_training" : type;
-      const response = await axios.get(`${api}/schedules?type=${backendType}`);
+      const response = await api.get(`/schedules?type=${backendType}`);
 
       if (response.data.success) {
         let meetingsData = response.data.data;
@@ -101,13 +100,9 @@ const MarkAttendance = () => {
     setLoading(true);
     try {
       // Fetch all schedules
-      const meetingsResponse = await axios.get(
-        `${api}/schedules?type=meetings`
-      );
-      const mdpResponse = await axios.get(`${api}/schedules?type=mdp`);
-      const socialResponse = await axios.get(
-        `${api}/schedules?type=social_training`
-      );
+      const meetingsResponse = await api.get(`/schedules?type=meetings`);
+      const mdpResponse = await api.get(`/schedules?type=mdp`);
+      const socialResponse = await api.get(`/schedules?type=social_training`);
 
       // Extract the meetings data correctly from the response
       const meetings = meetingsResponse.data.data.meetings || [];
@@ -117,7 +112,7 @@ const MarkAttendance = () => {
       // Get attendance data for each type
       const meetingsAttendance = await Promise.all(
         meetings.map((meeting) =>
-          axios.get(`${api}/attendance-venue-fee/meeting-stats`, {
+          api.get(`/attendance-venue-fee/meeting-stats`, {
             params: {
               type: "meeting",
               meeting_id: meeting.meeting_id,
@@ -128,7 +123,7 @@ const MarkAttendance = () => {
 
       const mdpAttendance = await Promise.all(
         mdpMeetings.map((mdp) =>
-          axios.get(`${api}/attendance-venue-fee/meeting-stats`, {
+          api.get(`/attendance-venue-fee/meeting-stats`, {
             params: {
               type: "mdp",
               meeting_id: mdp.mdp_id,
@@ -139,7 +134,7 @@ const MarkAttendance = () => {
 
       const socialAttendance = await Promise.all(
         socialMeetings.map((social) =>
-          axios.get(`${api}/attendance-venue-fee/meeting-stats`, {
+          api.get(`/attendance-venue-fee/meeting-stats`, {
             params: {
               type: "socialTraining",
               meeting_id: social.social_training_id,

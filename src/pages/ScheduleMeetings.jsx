@@ -2,12 +2,9 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import axios from "axios";
 import api from "../hooks/api";
 import DeleteModal from "../layout/DeleteModal";
 import { showToast } from "../utils/toast";
-
-// Import icons
 import eventIcon from "../assets/images/icons/event.svg";
 import addIcon from "../assets/images/icons/add.svg";
 import viewIcon from "../assets/images/icons/view.svg";
@@ -25,9 +22,9 @@ const ScheduleMeetings = () => {
   const [deleteModalState, setDeleteModalState] = useState({
     isOpen: false,
     type: null,
-    id: null
+    id: null,
   });
-  const [searchCategory, setSearchCategory] = useState('all');
+  const [searchCategory, setSearchCategory] = useState("all");
 
   // Helper function to determine schedule type
   const getScheduleType = (schedule) => {
@@ -52,10 +49,14 @@ const ScheduleMeetings = () => {
   // Add this helper function to get a unique identifier for each schedule
   const getScheduleUniqueId = (schedule) => {
     const type = schedule.type || getScheduleType(schedule);
-    const id = type === 'meeting' ? schedule.meeting_id 
-      : type === 'event' ? schedule.event_id
-      : type === 'mdp' ? schedule.mdp_id
-      : schedule.social_training_id;
+    const id =
+      type === "meeting"
+        ? schedule.meeting_id
+        : type === "event"
+        ? schedule.event_id
+        : type === "mdp"
+        ? schedule.mdp_id
+        : schedule.social_training_id;
     return `${type}-${id}`;
   };
 
@@ -64,8 +65,8 @@ const ScheduleMeetings = () => {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await axios.get(
-        `${api}/schedules${selectedType ? `?type=${selectedType}` : ""}`
+      const response = await api.get(
+        `/schedules${selectedType ? `?type=${selectedType}` : ""}`
       );
 
       if (response.data.success) {
@@ -74,7 +75,7 @@ const ScheduleMeetings = () => {
           schedulesData = response.data.data.map((schedule) => ({
             ...schedule,
             type: selectedType,
-            chapters: schedule.chapters || []
+            chapters: schedule.chapters || [],
           }));
         } else {
           // Combine all schedule types and add type identifier
@@ -82,30 +83,34 @@ const ScheduleMeetings = () => {
             ...(response.data.data.meetings?.map((meeting) => ({
               ...meeting,
               type: "meeting",
-              chapters: meeting.chapters || []
+              chapters: meeting.chapters || [],
             })) || []),
             ...(response.data.data.events?.map((event) => ({
               ...event,
               type: "event",
-              chapters: event.chapters || []
+              chapters: event.chapters || [],
             })) || []),
             ...(response.data.data.mdp?.map((mdp) => ({
               ...mdp,
               type: "mdp",
-              chapters: mdp.chapters || []
+              chapters: mdp.chapters || [],
             })) || []),
             ...(response.data.data.socialTraining?.map((st) => ({
               ...st,
               type: "socialTraining",
-              chapters: st.chapters || []
+              chapters: st.chapters || [],
             })) || []),
           ];
         }
 
         // Deduplicate schedules before setting state
         const uniqueSchedules = Array.from(
-          new Map(schedulesData.map(schedule => [getScheduleUniqueId(schedule), schedule]))
-          .values()
+          new Map(
+            schedulesData.map((schedule) => [
+              getScheduleUniqueId(schedule),
+              schedule,
+            ])
+          ).values()
         );
 
         setSchedules(uniqueSchedules);
@@ -127,7 +132,7 @@ const ScheduleMeetings = () => {
   // Add function to fetch chapters
   const fetchChapters = async () => {
     try {
-      const response = await axios.get(`${api}/chapters`);
+      const response = await api.get(`/chapters`);
       if (response.data.status === "success") {
         setAllChapters(response.data.data);
       }
@@ -148,15 +153,16 @@ const ScheduleMeetings = () => {
       return "No chapters";
     }
 
-    return chapters.map(chapter => chapter.chapter_name).join(", ");
+    return chapters.map((chapter) => chapter.chapter_name).join(", ");
   };
 
   // Update the filteredSchedules function
   const filteredSchedules = React.useMemo(() => {
     // First deduplicate the schedules
     const uniqueSchedules = Array.from(
-      new Map(schedules.map(schedule => [getScheduleUniqueId(schedule), schedule]))
-      .values()
+      new Map(
+        schedules.map((schedule) => [getScheduleUniqueId(schedule), schedule])
+      ).values()
     );
 
     // Then apply the search filter
@@ -165,30 +171,31 @@ const ScheduleMeetings = () => {
 
       const searchValue = searchTerm.toLowerCase().trim();
       const scheduleType = schedule.type || getScheduleType(schedule);
-      const typeName = scheduleType === "socialTraining" 
-        ? "Social Training" 
-        : scheduleType === "mdp" 
-          ? "MDP" 
+      const typeName =
+        scheduleType === "socialTraining"
+          ? "Social Training"
+          : scheduleType === "mdp"
+          ? "MDP"
           : scheduleType.charAt(0).toUpperCase() + scheduleType.slice(1);
 
       switch (searchCategory) {
-        case 'title':
+        case "title":
           return schedule.title?.toLowerCase().includes(searchValue);
-        case 'venue':
+        case "venue":
           return schedule.venue?.toLowerCase().includes(searchValue);
-        case 'type':
+        case "type":
           return typeName.toLowerCase().includes(searchValue);
-        case 'chapter':
-          return schedule.chapters?.some(chapter => 
+        case "chapter":
+          return schedule.chapters?.some((chapter) =>
             chapter.chapter_name.toLowerCase().includes(searchValue)
           );
-        case 'all':
+        case "all":
         default:
           return (
             schedule.title?.toLowerCase().includes(searchValue) ||
             schedule.venue?.toLowerCase().includes(searchValue) ||
             typeName.toLowerCase().includes(searchValue) ||
-            schedule.chapters?.some(chapter => 
+            schedule.chapters?.some((chapter) =>
               chapter.chapter_name.toLowerCase().includes(searchValue)
             )
           );
@@ -198,7 +205,7 @@ const ScheduleMeetings = () => {
 
   // Add a useEffect to clear search when changing type
   useEffect(() => {
-    setSearchTerm('');
+    setSearchTerm("");
   }, [selectedType]);
 
   const getTypeColor = (type) => {
@@ -269,20 +276,25 @@ const ScheduleMeetings = () => {
     setDeleteModalState({
       isOpen: true,
       type,
-      id
+      id,
     });
   };
 
   const handleDeleteConfirm = async () => {
     const { type, id } = deleteModalState;
     try {
-      const response = await axios.delete(`${api}/schedules/${type}/${id}`);
+      const response = await api.delete(`/schedules/${type}/${id}`);
 
       if (response.data.success) {
-        setSchedules(schedules.filter((schedule) => {
-          const scheduleId = getScheduleId(schedule);
-          return !(scheduleId === id && (schedule.type === type || getScheduleType(schedule) === type));
-        }));
+        setSchedules(
+          schedules.filter((schedule) => {
+            const scheduleId = getScheduleId(schedule);
+            return !(
+              scheduleId === id &&
+              (schedule.type === type || getScheduleType(schedule) === type)
+            );
+          })
+        );
 
         showToast({
           title: "Success",
@@ -311,7 +323,9 @@ const ScheduleMeetings = () => {
   const showAttendanceInfo = (type) => {
     showToast({
       title: "Cannot Delete",
-      message: `This ${getTypeName(type)} cannot be deleted because attendance or venue fee records exist.`,
+      message: `This ${getTypeName(
+        type
+      )} cannot be deleted because attendance or venue fee records exist.`,
       icon: "info",
       status: "warning",
     });
@@ -431,17 +445,17 @@ const ScheduleMeetings = () => {
                   <span
                     key={chapter.chapter_id}
                     className={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full ${
-                      getTypeColor(schedule.type) === 'blue'
-                        ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
-                        : getTypeColor(schedule.type) === 'amber'
-                        ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                        : getTypeColor(schedule.type) === 'purple'
-                        ? 'bg-purple-500/10 text-purple-400 border-purple-500/20'
-                        : 'bg-orange-500/10 text-orange-400 border-orange-500/20'
+                      getTypeColor(schedule.type) === "blue"
+                        ? "bg-blue-500/10 text-blue-400 border-blue-500/20"
+                        : getTypeColor(schedule.type) === "amber"
+                        ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                        : getTypeColor(schedule.type) === "purple"
+                        ? "bg-purple-500/10 text-purple-400 border-purple-500/20"
+                        : "bg-orange-500/10 text-orange-400 border-orange-500/20"
                     } border`}
                   >
                     {chapter.chapter_name}
-                    {idx < schedule.chapters.length - 1 ? ', ' : ''}
+                    {idx < schedule.chapters.length - 1 ? ", " : ""}
                   </span>
                 ))
               ) : (
@@ -585,7 +599,9 @@ const ScheduleMeetings = () => {
           </select>
           <input
             type="text"
-            placeholder={`Search ${searchCategory === 'all' ? 'schedules' : searchCategory}...`}
+            placeholder={`Search ${
+              searchCategory === "all" ? "schedules" : searchCategory
+            }...`}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="flex-1 bg-gray-800/40 text-white p-3 rounded-xl border border-gray-700 focus:border-amber-500 focus:ring-0 placeholder-gray-400"
@@ -803,7 +819,7 @@ const ScheduleMeetings = () => {
                       const dateA = new Date(`${a.date} ${a.time}`);
                       const dateB = new Date(`${b.date} ${b.time}`);
                       if (dateA !== dateB) return dateB - dateA;
-                      
+
                       // If dates are equal, sort by ID
                       const idA = getScheduleUniqueId(a);
                       const idB = getScheduleUniqueId(b);
@@ -826,15 +842,9 @@ const ScheduleMeetings = () => {
               {filteredSchedules.length}
             </span>{" "}
             of{" "}
-            <span className="font-medium text-white">
-              {schedules.length}
-            </span>{" "}
+            <span className="font-medium text-white">{schedules.length}</span>{" "}
             results
-            {searchTerm && (
-              <span className="ml-1">
-                for "{searchTerm}"
-              </span>
-            )}
+            {searchTerm && <span className="ml-1">for "{searchTerm}"</span>}
           </div>
           <div className="flex items-center gap-2">
             <button className="px-4 py-2 text-sm text-gray-400 bg-gray-900/50 rounded-lg border border-gray-700 hover:bg-gray-700 transition-all duration-300">
@@ -851,7 +861,11 @@ const ScheduleMeetings = () => {
         isOpen={deleteModalState.isOpen}
         onClose={handleDeleteCancel}
         onDelete={handleDeleteConfirm}
-        itemName={deleteModalState.type ? getTypeName(deleteModalState.type) : "Schedule"}
+        itemName={
+          deleteModalState.type
+            ? getTypeName(deleteModalState.type)
+            : "Schedule"
+        }
       />
     </div>
   );
