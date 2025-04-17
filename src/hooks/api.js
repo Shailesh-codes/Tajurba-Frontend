@@ -8,13 +8,23 @@ const api = axios.create({
   },
 });
 
-// Add request interceptor to add token
+// Add request interceptor to include token from both sources
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
+    // Try to get token from cookie first
+    const cookies = document.cookie.split(';');
+    const tokenCookie = cookies.find(cookie => cookie.trim().startsWith('token='));
+    let token = tokenCookie ? tokenCookie.split('=')[1] : null;
+
+    // Fallback to localStorage if no cookie token
+    if (!token) {
+      token = localStorage.getItem("token");
+    }
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
     return config;
   },
   (error) => {
@@ -22,13 +32,14 @@ api.interceptors.request.use(
   }
 );
 
-// Add response interceptor to handle token expiration
+// Add response interceptor to handle 401/403 errors
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      localStorage.clear();
-      window.location.href = "/?session=expired";
+    // Don't automatically logout on auth errors
+    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+      console.warn('Auth error but maintaining session:', error);
+      return Promise.reject(error);
     }
     return Promise.reject(error);
   }

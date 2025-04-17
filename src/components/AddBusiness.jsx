@@ -95,6 +95,7 @@ const AddBusiness = () => {
 
     // Format the data properly
     const businessData = {
+      given_by_memberId: auth.user?.id,
       receiver_memberId: parseInt(formData.receiver_memberId),
       memberName: formData.memberName,
       chapter: formData.chapter,

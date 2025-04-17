@@ -11,6 +11,7 @@ import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../hooks/api";
 import DeleteModal from "../layout/DeleteModal";
+import { useAuth } from "../contexts/AuthContext";
 
 // Table headers
 const tableHeaders = [
@@ -32,15 +33,38 @@ const BusinessReceived = () => {
   const [resultsPerPage] = useState(10);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [businessToDelete, setBusinessToDelete] = useState(null);
+  const { auth } = useAuth();
 
-  // Fetch business received data
   const fetchBusinessData = async () => {
     try {
       setLoading(true);
       const response = await api.get(`/business-received`);
+      
       if (response.data) {
-        setBusinessData(response.data);
-        setTotalPages(Math.ceil(response.data.length / resultsPerPage));
+        let filteredData = response.data;
+
+        // Apply search filter
+        if (search) {
+          filteredData = filteredData.filter((business) =>
+            business.GivenByMember?.name?.toLowerCase().includes(search.toLowerCase()) ||
+            business.memberName?.toLowerCase().includes(search.toLowerCase()) ||
+            business.chapter?.toLowerCase().includes(search.toLowerCase())
+          );
+        }
+
+        // Calculate pagination
+        const totalItems = filteredData.length;
+        const calculatedTotalPages = Math.ceil(totalItems / resultsPerPage);
+        setTotalPages(calculatedTotalPages);
+
+        // Apply pagination
+        const startIndex = (currentPage - 1) * resultsPerPage;
+        const paginatedData = filteredData.slice(
+          startIndex,
+          startIndex + resultsPerPage
+        );
+
+        setBusinessData(paginatedData);
       }
     } catch (error) {
       console.error("Error fetching business data:", error);
@@ -83,20 +107,11 @@ const BusinessReceived = () => {
     }
   };
 
-  // Filter data based on search
-  const filteredData = businessData.filter((business) => {
-    const searchLower = search.toLowerCase();
-    return (
-      business.memberName?.toLowerCase().includes(searchLower) ||
-      business.chapter?.toLowerCase().includes(searchLower)
-    );
-  });
-
   // Get paginated data
   const getPaginatedData = () => {
     const startIndex = (currentPage - 1) * resultsPerPage;
     const endIndex = startIndex + resultsPerPage;
-    return filteredData.slice(startIndex, endIndex);
+    return businessData.slice(startIndex, endIndex);
   };
 
   // Format date for display

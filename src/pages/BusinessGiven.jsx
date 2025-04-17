@@ -12,6 +12,7 @@ import { Link, useNavigate } from "react-router-dom";
 import DeleteModal from "../layout/DeleteModal";
 import api from "../hooks/api";
 import { format } from "date-fns";
+import { useAuth } from "../contexts/AuthContext";
 import {
   Search,
   Bell,
@@ -53,11 +54,16 @@ const BusinessGiven = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [businessToDelete, setBusinessToDelete] = useState(null);
   const [chapters, setChapters] = useState([]);
+  const { auth } = useAuth();
 
   const fetchBusinesses = async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/business`);
+      const [response, chaptersResponse] = await Promise.all([
+        api.get(`/business`),
+        api.get(`/chapters`),
+      ]);
+
       let filteredData = response.data;
 
       // Apply search filter
@@ -406,8 +412,9 @@ const BusinessGiven = () => {
                           {(currentPage - 1) * resultsPerPage + index + 1}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
-                        <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
+                      <td className="flex flex-col px-6 py-4">
+                      <span className="text-xs text-gray-300">Given to:</span>
+                        <span className="text-sm text-white group-hover:text-white transition-colors">
                           {business.memberName}
                         </span>
                       </td>

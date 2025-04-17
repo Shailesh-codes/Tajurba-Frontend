@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { IoSettingsOutline } from "react-icons/io5";
 import { FiLogOut, FiMenu } from "react-icons/fi";
 import { MdOutlinePrivacyTip } from "react-icons/md";
@@ -6,9 +6,10 @@ import { BiBell } from "react-icons/bi";
 import { useNavigate } from "react-router-dom";
 import reward from "../assets/sidebar-icon/reward.svg";
 import info from "../assets/sidebar-icon/info.svg";
-
 import api from "../hooks/api";
 import Swal from "sweetalert2";
+import useClickOutside from "../hooks/useClickOutside";
+import { useAuth } from "../contexts/AuthContext";
 
 const Header = ({ setIsSidebarOpen, isSidebarOpen }) => {
   const [showDropdown, setShowDropdown] = useState(false);
@@ -16,7 +17,13 @@ const Header = ({ setIsSidebarOpen, isSidebarOpen }) => {
   const [isVisible, setIsVisible] = useState(true);
   const [isCompact, setIsCompact] = useState(false);
   const [broadcasts, setBroadcasts] = useState([]);
+  const { auth } = useAuth();
   const navigate = useNavigate();
+
+  // Add ref for dropdown container
+  const dropdownRef = useClickOutside(() => {
+    setShowDropdown(false);
+  });
 
   // Fetch broadcasts
   const fetchBroadcasts = async () => {
@@ -25,8 +32,9 @@ const Header = ({ setIsSidebarOpen, isSidebarOpen }) => {
       if (response.data.success) {
         // Only show active broadcasts in header
         const validBroadcasts = response.data.data.filter((broadcast) => {
-          const isActive = broadcast.status === 'active';
-          const isNotExpired = !broadcast.end_date || new Date(broadcast.end_date) > new Date();
+          const isActive = broadcast.status === "active";
+          const isNotExpired =
+            !broadcast.end_date || new Date(broadcast.end_date) > new Date();
           return isActive && isNotExpired;
         });
         setBroadcasts(validBroadcasts);
@@ -51,11 +59,11 @@ const Header = ({ setIsSidebarOpen, isSidebarOpen }) => {
     };
 
     // Listen for the custom event
-    window.addEventListener('broadcastUpdated', handleBroadcastUpdate);
+    window.addEventListener("broadcastUpdated", handleBroadcastUpdate);
 
     // Cleanup
     return () => {
-      window.removeEventListener('broadcastUpdated', handleBroadcastUpdate);
+      window.removeEventListener("broadcastUpdated", handleBroadcastUpdate);
     };
   }, []);
 
@@ -249,37 +257,91 @@ const Header = ({ setIsSidebarOpen, isSidebarOpen }) => {
           </div>
 
           {/* Profile Section */}
-          <div className="relative ml-2">
+          <div className="relative ml-2" ref={dropdownRef}>
             <button
               onClick={() => setShowDropdown(!showDropdown)}
               className="flex items-center gap-3 p-2 rounded-lg hover:bg-[#1E293B]"
             >
               <img
-                src="https://ui-avatars.com/api/?name=Shailesh+Bhosale"
+                src={`https://ui-avatars.com/api/?name=${auth.user?.name}`}
                 alt="Profile"
                 className="w-8 h-8 rounded-full border-2 border-gray-700"
               />
             </button>
 
-            {/* Dropdown Menu */}
+            {/* Enhanced Dropdown Menu */}
             {showDropdown && (
-              <div className="absolute right-0 mt-2 w-56 bg-[#0F172A] rounded-lg shadow-lg py-1 border border-gray-700/50">
-                <div className="px-4 py-3 border-b border-gray-700/50">
-                  <p className="text-sm font-medium text-gray-300">John Doe</p>
-                  <p className="text-sm text-gray-400">john@example.com</p>
+              <div className="absolute right-0 mt-2 w-64 bg-[#0F172A] rounded-xl shadow-2xl py-1 border border-amber-500/20 transform transition-all duration-300 ease-in-out">
+                {/* Profile Section */}
+                <div className="px-4 py-4 border-b border-gray-700/50">
+                  <div className="flex items-center gap-4">
+                    <img
+                      src={`https://ui-avatars.com/api/?name=${auth.user?.name}`}
+                      alt="Profile" 
+                      className="w-12 h-12 rounded-full border-2 border-amber-500/20"
+                    />
+                    <div>
+                      <p className="text-sm font-medium text-amber-500">
+                        {auth.user?.name}
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        {auth.user?.email}
+                      </p>
+                      <span className="inline-block px-2 py-1 mt-1 text-[10px] font-medium bg-amber-500/10 text-amber-500 rounded-full border border-amber-500/20">
+                        {auth.user?.role}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div className="py-1">
-                  <button className="w-full px-4 py-2 text-left text-sm hover:bg-[#1E293B] flex items-center text-gray-300">
-                    <MdOutlinePrivacyTip className="mr-3 text-gray-400" />
-                    <span>Privacy Policy</span>
+
+                {/* Menu Items */}
+                <div className="py-2 px-1">
+                  {/* Settings */}
+                  <button className="w-full px-4 py-3 text-left text-sm hover:bg-[#1E293B] group flex items-center text-gray-300 rounded-lg transition-all duration-200">
+                    <div className="mr-3 p-2 rounded-lg bg-amber-500/10 group-hover:bg-amber-500/20 transition-colors">
+                      <IoSettingsOutline className="w-5 h-5 text-amber-500" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-medium group-hover:text-amber-500 transition-colors">
+                        Settings
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        Manage your account
+                      </span>
+                    </div>
                   </button>
-                  <button className="w-full px-4 py-2 text-left text-sm hover:bg-[#1E293B] flex items-center text-gray-300">
-                    <IoSettingsOutline className="mr-3 text-gray-400" />
-                    <span>Settings</span>
+
+                  {/* Privacy Policy */}
+                  <button className="w-full px-4 py-3 text-left text-sm hover:bg-[#1E293B] group flex items-center text-gray-300 rounded-lg transition-all duration-200">
+                    <div className="mr-3 p-2 rounded-lg bg-amber-500/10 group-hover:bg-amber-500/20 transition-colors">
+                      <MdOutlinePrivacyTip className="w-5 h-5 text-amber-500" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-medium group-hover:text-amber-500 transition-colors">
+                        Privacy Policy
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        View our policies
+                      </span>
+                    </div>
                   </button>
-                  <button className="w-full px-4 py-2 text-left text-sm hover:bg-[#1E293B] flex items-center text-red-400">
-                    <FiLogOut className="mr-3" />
-                    <span>Sign out</span>
+
+                  {/* Divider */}
+                  <div className="my-2 border-t border-gray-700/50"></div>
+
+                  {/* Logout */}
+                  <button className="w-full px-4 py-3 text-left text-sm hover:bg-red-500/10 group flex items-center text-gray-300 rounded-lg transition-all duration-200">
+                    <div className="mr-3 p-2 rounded-lg bg-red-500/10 group-hover:bg-red-500/20 transition-colors">
+                      <FiLogOut className="w-5 h-5 text-red-400" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-medium group-hover:text-red-400 transition-colors">
+                        Sign out
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        Exit your account
+                      </span>
+                    </div>
                   </button>
                 </div>
               </div>

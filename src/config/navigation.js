@@ -152,6 +152,7 @@ export const navigationConfig = {
           icon: "ChapterListIcon",
           label: "Chapters List",
         },
+        { path: "/settings", icon: "IoSettingsOutline", label: "Settings" },
       ],
     },
   ],

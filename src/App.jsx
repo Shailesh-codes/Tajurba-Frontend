@@ -61,26 +61,27 @@ function App() {
         <Route path="/" element={<SignIn />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
 
-        {/* Protected Admin Routes */}
+        {/* Protected Routes for All Roles */}
         <Route
           element={
             <ProtectedRoute
-              allowedRoles={[
-                "Super Admin",
-                "Admin",
-                "Regional Director",
-                "Member",
-              ]}
+              allowedRoles={["Super Admin", "Admin", "Regional Director", "Member"]}
             >
               <Layout />
             </ProtectedRoute>
           }
         >
+          {/* Regional Director Accessible Routes */}
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/member-list" element={<MemberList />} />
+          <Route path="/chapters-list" element={<ChaptersList />} />
+          <Route path="/member-view/:id" element={<MemberView />} />
+          <Route path="/settings" element={<Setting />} />
+          {/* <Route path="/privacy-policy" element={<PrivacyPolicy />} /> */}
+
           <Route path="/add-member" element={<AddMember />} />
           <Route path="/assign-certificates" element={<AssignCertificate />} />
           <Route path="/broadcast" element={<Broadcast />} />
-          <Route path="/chapters-list" element={<ChaptersList />} />
           <Route path="/creative-list" element={<CreativeList />} />
           <Route path="/certificate-list" element={<CertificateLists />} />
           <Route path="/mark-attendance" element={<MarkAttendance />} />
@@ -89,9 +90,7 @@ function App() {
             element={<AttendanceVenueFee />}
           />
           <Route path="/mark-venue-fee" element={<MarkvenueFee />} />
-          <Route path="/member-list" element={<MemberList />} />
           <Route path="/edit-member/:id" element={<EditMemberModal />} />
-          <Route path="/member-view/:id" element={<MemberView />} />
           <Route path="/meetings" element={<ScheduleMeetings />} />
           <Route path="/edit-schedule/:id" element={<EditScheduleMeeting />} />
           <Route
@@ -149,14 +148,12 @@ function App() {
           <Route path="add-visitor" element={<VisitorInviteAddEdit />} />
           <Route path="edit-visitor/:id" element={<VisitorInviteAddEdit />} />
           <Route path="view-visitor/:id" element={<ViewMemberVisitor />} />
-          <Route path="settings" element={<Setting />} />
-          {/* <Route path="privacy-policy" element={<PrivacyPolicy />} /> */}
         </Route>
 
         {/* Protected Member Routes */}
         <Route
           element={
-            <ProtectedRoute allowedRoles={["Member"]}>
+            <ProtectedRoute allowedRoles={["Super Admin ", "Member"]}>
               <Layout />
             </ProtectedRoute>
           }

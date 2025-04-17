@@ -1,5 +1,6 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { User } from "lucide-react";
 
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   const { auth } = useAuth();
@@ -13,6 +14,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
       </div>
     );
   }
+  console.log(auth.user)
 
   // Check authentication
   if (!auth.isAuthenticated) {
@@ -85,17 +87,47 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     }
   }
 
-  // Admin and Super Admin specific routes check
-  if (auth.role === "Admin" || auth.role === "Super Admin") {
+  // Add Regional Director specific routes check
+  if (auth.role === "Regional Director") {
+    const regionalDirectorAllowedPaths = [
+      '/dashboard',
+      '/member-list',
+      '/chapters-list',
+      '/member-view', // Add this to allow viewing member details
+      '/settings',
+      '/privacy-policy'
+    ];
+
+    const isPathAllowed = regionalDirectorAllowedPaths.some(path => {
+      // Exact match
+      if (location.pathname === path) return true;
+      
+      // Check for dynamic routes (paths with IDs)
+      if (location.pathname.startsWith(path + '/')) return true;
+      
+      // Handle special cases for view routes
+      if (location.pathname.startsWith('/member-view/')) return true;
+      
+      return false;
+    });
+
+    if (!isPathAllowed) {
+      console.log(`Access denied to ${location.pathname} for Regional Director role`);
+      return <Navigate to="/unauthorized" replace />;
+    }
+  }
+
+  // Admin specific routes check
+  if (auth.role === "Admin") {
     const adminAllowedPaths = [
       '/dashboard',
-      '/add-member',
+      '/add-member', 
       '/edit-member',
       '/member-view',
       '/assign-certificates',
       '/broadcast',
       '/chapters-list',
-      '/creative-list',
+      '/creative-list', 
       '/certificate-list',
       '/mark-attendance',
       '/attendance-venue-fee',
@@ -103,7 +135,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
       '/member-list',
       '/meetings',
       '/edit-schedule',
-      '/view-schedule',
+      '/view-schedule', 
       '/add-schedule',
       '/visitor-list',
       '/monthly-reward',
@@ -118,7 +150,72 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     });
 
     if (!isPathAllowed) {
-      console.log(`Access denied to ${location.pathname} for ${auth.role} role`);
+      console.log(`Access denied to ${location.pathname} for Admin role`);
+      return <Navigate to="/unauthorized" replace />;
+    }
+  }
+
+  // Super Admin has access to both Admin and Member routes
+  if (auth.role === "Super Admin") {
+    const superAdminAllowedPaths = [
+      // Admin paths
+      '/dashboard',
+      '/add-member',
+      '/edit-member', 
+      '/member-view',
+      '/assign-certificates',
+      '/broadcast',
+      '/chapters-list',
+      '/creative-list',
+      '/certificate-list', 
+      '/mark-attendance',
+      '/attendance-venue-fee',
+      '/mark-venue-fee',
+      '/member-list',
+      '/meetings',
+      '/edit-schedule',
+      '/view-schedule',
+      '/add-schedule',
+      '/visitor-list',
+      '/monthly-reward',
+      '/settings',
+      '/privacy-policy',
+      // Member paths
+      '/member-dashboard',
+      '/bdm',
+      '/add-bdm',
+      '/edit-bdm',
+      '/view-bdm',
+      '/business-given',
+      '/add-business',
+      '/view-business',
+      '/business-received', 
+      '/view-res-business',
+      '/add-res-business',
+      '/member-certificate',
+      '/chapter-members',
+      '/view-chapter-member',
+      '/meetings-mdp-socials',
+      '/members-mdp-events',
+      '/member-monthly-reward',
+      '/ref-given',
+      '/view-ref-given',
+      '/add-edit-ref-given',
+      '/request-received',
+      '/visitors-invited',
+      '/add-visitor',
+      '/edit-visitor',
+      '/view-visitor'
+    ];
+
+    const isPathAllowed = superAdminAllowedPaths.some(path => {
+      if (location.pathname === path) return true;
+      if (location.pathname.startsWith(path + '/')) return true;
+      return false;
+    });
+
+    if (!isPathAllowed) {
+      console.log(`Access denied to ${location.pathname} for Super Admin role`);
       return <Navigate to="/unauthorized" replace />;
     }
   }
