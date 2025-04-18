@@ -4,7 +4,9 @@ export const navigationConfig = {
       title: "Main Menu",
       items: [
         { path: "/dashboard", icon: "DashboardIcon", label: "Dashboard" },
-        { path: "/add-member", icon: "AddMemberIcon", label: "Add Member" },
+        { path: "/add-user", icon: "AddMemberIcon", label: "Add Users" },
+        { path: "/add-member", icon: "AddMemberIcon", label: "Add Members" },
+
         {
           path: "/assign-certificates",
           icon: "AssignCertificateIcon",
@@ -98,7 +100,8 @@ export const navigationConfig = {
       title: "Main Menu",
       items: [
         { path: "/dashboard", icon: "DashboardIcon", label: "Dashboard" },
-        { path: "/add-member", icon: "AddMemberIcon", label: "Add Member" },
+        { path: "/add-user", icon: "AddMemberIcon", label: "Add Users" },
+        { path: "/add-member", icon: "AddMemberIcon", label: "Add Members" },
         {
           path: "/assign-certificates",
           icon: "AssignCertificateIcon",
@@ -137,7 +140,11 @@ export const navigationConfig = {
           icon: "MonthlyRewardIcon",
           label: "Monthly Reward",
         },
-        { path: "/settings", icon: "IoSettingsOutline", label: "Settings" },
+        {
+          path: "/admin-settings",
+          icon: "IoSettingsOutline",
+          label: "Settings",
+        },
       ],
     },
   ],
@@ -147,11 +154,8 @@ export const navigationConfig = {
       items: [
         { path: "/dashboard", icon: "DashboardIcon", label: "Dashboard" },
         { path: "/member-list", icon: "UserListIcon", label: "Member List" },
-        {
-          path: "/chapters-list",
-          icon: "ChapterListIcon",
-          label: "Chapters List",
-        },
+        { path: "/add-user", icon: "AddMemberIcon", label: "Add Users" },
+        { path: "/add-member", icon: "AddMemberIcon", label: "Add Members" },
         { path: "/settings", icon: "IoSettingsOutline", label: "Settings" },
       ],
     },

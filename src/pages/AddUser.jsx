@@ -1,62 +1,39 @@
 import React, { useState, useEffect } from "react";
+import { useAuth } from "../contexts/AuthContext";
 import member from "../assets/images/icons/member.svg";
-import calendarIcon from "../assets/images/icons/calender-icon.svg";
 import api from "../hooks/api";
 import Swal from "sweetalert2";
-import { useAuth } from "../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
-const AddMember = () => {
+const AddUser = () => {
+  const { auth } = useAuth();
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     name: "",
     mobile: "",
     email: "",
-    chapter: "",
-    company: "",
-    business_category: "",
-    date: "",
     role: "",
   });
-
-  const [chapters, setChapters] = useState([]);
-  const [role, setRole] = useState(false);
-  const { auth } = useAuth();
-
-  useEffect(() => {
-    const fetchChapters = async () => {
-      try {
-        const response = await api.get("/chapters");
-        if (response.data.status === "success") {
-          setChapters(response.data.data);
-        }
-      } catch (error) {
-        console.error("Error fetching chapters:", error);
-      }
-    };
-    fetchChapters();
-  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const memberData = {
+      const userData = {
         name: formData.name,
         mobile: formData.mobile,
         email: formData.email,
-        chapter: formData.chapter,
-        company: formData.company,
-        business_category: formData.business_category,
-        joiningDate: formData.date,
-        status: "active",
         role: formData.role,
+        status: "active",
       };
 
-      const response = await api.post(`/members/add-member`, memberData);
+      const response = await api.post(`/members/add-member`, userData);
 
       if (response.data.success) {
         Swal.fire({
           icon: "success",
           title: "Success!",
-          text: "Member added successfully",
+          text: "User added successfully",
           background: "#111827",
           color: "#fff",
           toast: true,
@@ -72,20 +49,16 @@ const AddMember = () => {
           name: "",
           mobile: "",
           email: "",
-          chapter: "",
-          company: "",
-          business_category: "",
-          date: "",
           role: "",
         });
       }
     } catch (error) {
-      console.error("Error adding member:", error);
+      console.error("Error adding user:", error);
 
       Swal.fire({
         icon: "error",
         title: "Error!",
-        text: error.response?.data?.message || "Failed to add member",
+        text: error.response?.data?.message || "Failed to add user",
         background: "#111827",
         color: "#fff",
         toast: true,
@@ -112,12 +85,12 @@ const AddMember = () => {
             />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-white">Add New Member</h2>
-            <p className="text-sm text-gray-400">Create new member profile</p>
+            <h2 className="text-2xl font-bold text-white">Add New User</h2>
+            <p className="text-sm text-gray-400">Create new user account</p>
           </div>
         </div>
         <button
-          onClick={() => window.history.back()}
+          onClick={() => navigate(-1)}
           className="group flex items-center gap-2.5 px-5 py-2.5 bg-gray-800 text-gray-300 hover:text-amber-500 rounded-xl transition-all duration-300 border border-gray-700"
         >
           <svg
@@ -144,19 +117,19 @@ const AddMember = () => {
       <div className="p-6 rounded-2xl bg-gray-800 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-700">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {/* Member Name */}
+            {/* User Name */}
             <div className="flex flex-col gap-2">
               <label
                 htmlFor="name"
                 className="text-sm font-medium text-gray-300"
               >
-                Member Name <span className="text-red-500 text-lg">*</span>
+                User Name <span className="text-red-500 text-lg">*</span>
               </label>
               <input
                 type="text"
                 id="name"
                 required
-                placeholder="Enter member name"
+                placeholder="Enter user name"
                 className="w-full p-3 bg-gray-700 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-0 text-white placeholder-gray-400"
                 value={formData.name}
                 onChange={(e) =>
@@ -208,105 +181,42 @@ const AddMember = () => {
               />
             </div>
 
-            {/* Chapter Name */}
+            {/* Role Selection */}
             <div className="flex flex-col gap-2">
               <label
-                htmlFor="chapter"
+                htmlFor="role"
                 className="text-sm font-medium text-gray-300"
               >
-                Chapter Name <span className="text-red-500 text-lg">*</span>
+                Role <span className="text-red-500 text-lg">*</span>
               </label>
               <select
-                id="chapter"
+                id="role"
                 required
                 className="w-full p-3 bg-gray-700 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-0 text-white"
-                value={formData.chapter}
+                value={formData.role}
                 onChange={(e) =>
-                  setFormData({ ...formData, chapter: e.target.value })
+                  setFormData({ ...formData, role: e.target.value })
                 }
               >
-                <option value="">Select Chapter</option>
-                {chapters.map((chapter) => (
-                  <option key={chapter.chapter_id} value={chapter.chapter_id}>
-                    {chapter.chapter_name}
-                  </option>
-                ))}
+                <option value="">Select Role</option>
+                {auth.user?.role === "Super Admin" && (
+                  <>
+                    <option value="Admin">Admin</option>
+                    <option value="Regional Director">Regional Director</option>
+                    <option value="Member">Member</option>
+                  </>
+                )}
+                {auth.user?.role === "Admin" && (
+                  <>
+                    <option value="Regional Director">Regional Director</option>
+                    <option value="Member">Member</option>
+                  </>
+                )}
+                {auth.user?.role === "Regional Director" && (
+                  <option value="Member">Member</option>
+                )}
               </select>
             </div>
-
-            {/* Company Name */}
-            <div className="flex flex-col gap-2">
-              <label
-                htmlFor="company"
-                className="text-sm font-medium text-gray-300"
-              >
-                Company Name <span className="text-red-500 text-lg">*</span>
-              </label>
-              <input
-                type="text"
-                id="company"
-                required
-                placeholder="Enter company name"
-                className="w-full p-3 bg-gray-700 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-0 text-white placeholder-gray-400"
-                value={formData.company}
-                onChange={(e) =>
-                  setFormData({ ...formData, company: e.target.value })
-                }
-              />
-            </div>
-
-            {/* Business Category */}
-            <div className="flex flex-col gap-2">
-              <label
-                htmlFor="business_category"
-                className="text-sm font-medium text-gray-300"
-              >
-                Business Category{" "}
-                <span className="text-red-500 text-lg">*</span>
-              </label>
-              <input
-                type="text"
-                id="business_category"
-                required
-                placeholder="Enter business category"
-                className="w-full p-3 bg-gray-700 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-0 text-white placeholder-gray-400"
-                value={formData.business_category}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    business_category: e.target.value,
-                  })
-                }
-              />
-            </div>
-
-            {/* Joining Date */}
-            <div className="flex flex-col gap-2">
-              <label
-                htmlFor="date"
-                className="text-sm font-medium text-gray-300"
-              >
-                Joining Date <span className="text-red-500 text-lg">*</span>
-              </label>
-              <div className="relative">
-                <input
-                  type="date"
-                  id="date"
-                  required
-                  className="w-full p-3 bg-gray-700 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-0 text-white [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full"
-                  value={formData.date}
-                  onChange={(e) =>
-                    setFormData({ ...formData, date: e.target.value })
-                  }
-                />
-                <img
-                  src={calendarIcon}
-                  alt="calendar"
-                  className="absolute right-4 top-[50%] -translate-y-[50%] w-6 h-6 pointer-events-none"
-                />
-              </div>
-            </div>
-          
           </div>
 
           {/* Submit and Reset Buttons */}
@@ -318,10 +228,7 @@ const AddMember = () => {
                   name: "",
                   mobile: "",
                   email: "",
-                  chapter: "",
-                  company: "",
-                  business_category: "",
-                  date: "",
+                  role: "",
                 })
               }
               className="px-6 py-2.5 rounded-xl border border-gray-700 text-gray-300 hover:bg-gray-700"
@@ -332,7 +239,7 @@ const AddMember = () => {
               type="submit"
               className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-700 hover:from-amber-600 hover:to-amber-800a hover:to-amber-950 text-white font-semibold shadow-lg hover:shadow-xl hover:shadow-amber-900/30 hover:-translate-y-0.5 transition-all duration-300"
             >
-              Add Member
+              Add User
             </button>
           </div>
         </form>
@@ -341,4 +248,4 @@ const AddMember = () => {
   );
 };
 
-export default AddMember;
+export default AddUser;

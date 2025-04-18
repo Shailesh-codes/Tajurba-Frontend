@@ -17,7 +17,6 @@ import MemberView from "./components/MemberView";
 import ScheduleMeetings from "./pages/ScheduleMeetings";
 import EditScheduleMeeting from "./components/EditScheduleMeeting";
 import ViewScheduleMeeting from "./components/ViewScheduleMeeting";
-import AddScheduleMeeting from "./pages/AddMeetings";
 import VisitorList from "./pages/VisitorList";
 import MonthlyReward from "./pages/MonthlyReward";
 import MemberStatistics from "./components/MemberStatistics";
@@ -46,6 +45,7 @@ import VisitorInviteAddEdit from "./components/VisitorInviteAddEdit";
 import ViewMemberVisitor from "./components/ViewMemberVisitor";
 import MemberDashboard from "./pages/MemberDashboard";
 import Setting from "./pages/Settings";
+import AdminSettings from "./pages/AdminSettings";
 // import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Calendar from "./pages/Calendar";
 import LogoutModal from "./authentications/LogoutModal";
@@ -53,6 +53,8 @@ import PageTitle from "./layout/PageTitile";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Unauthorized from "./pages/Unauthorized";
+import AddMeetings from "./pages/AddMeetings";
+import AddUser from "./pages/AddUser";
 
 function App() {
   return (
@@ -65,7 +67,12 @@ function App() {
         <Route
           element={
             <ProtectedRoute
-              allowedRoles={["Super Admin", "Admin", "Regional Director", "Member"]}
+              allowedRoles={[
+                "Super Admin",
+                "Admin",
+                "Regional Director",
+                "Member",
+              ]}
             >
               <Layout />
             </ProtectedRoute>
@@ -77,6 +84,7 @@ function App() {
           <Route path="/chapters-list" element={<ChaptersList />} />
           <Route path="/member-view/:id" element={<MemberView />} />
           <Route path="/settings" element={<Setting />} />
+          <Route path="/add-user" element={<AddUser />} />
           {/* <Route path="/privacy-policy" element={<PrivacyPolicy />} /> */}
 
           <Route path="/add-member" element={<AddMember />} />
@@ -102,7 +110,7 @@ function App() {
             path="/view-schedule/:type/:id"
             element={<ViewScheduleMeeting />}
           />
-          <Route path="/add-schedule" element={<AddScheduleMeeting />} />
+          <Route path="/add-schedule" element={<AddMeetings />} />
           <Route path="/visitor-list" element={<VisitorList />} />
           <Route path="/monthly-reward" element={<MonthlyReward />} />
           <Route path="/member-levels" element={<MemberStatistics />} />
@@ -148,6 +156,7 @@ function App() {
           <Route path="add-visitor" element={<VisitorInviteAddEdit />} />
           <Route path="edit-visitor/:id" element={<VisitorInviteAddEdit />} />
           <Route path="view-visitor/:id" element={<ViewMemberVisitor />} />
+          <Route path="admin-settings" element={<AdminSettings />} />
         </Route>
 
         {/* Protected Member Routes */}

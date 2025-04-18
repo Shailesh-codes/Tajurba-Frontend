@@ -25,6 +25,8 @@ const EditScheduleMeeting = () => {
     default_payment_id: "",
     chapters: [],
   });
+  const [qrPreview, setQrPreview] = useState(null);
+  const [defaultPaymentInfo, setDefaultPaymentInfo] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -34,6 +36,8 @@ const EditScheduleMeeting = () => {
         const scheduleResponse = await api.get(`/schedules/${type}/${id}`);
         // Fetch chapters data
         const chaptersResponse = await api.get(`/chapters`);
+        // Fetch default payment info
+        const paymentResponse = await api.get('/admin-settings/payment-info');
 
         if (
           scheduleResponse.data.success &&
@@ -63,7 +67,21 @@ const EditScheduleMeeting = () => {
             chapters: parsedChapters,
           });
 
+          // Set initial QR preview based on payment method
+          if (scheduleData.payment_method === 'custom' && scheduleData.qr_code) {
+            setQrPreview(`data:image/png;base64,${scheduleData.qr_code}`);
+          }
+
           setAllChapters(chaptersResponse.data.data);
+        }
+
+        // Set default payment info
+        if (paymentResponse.data.success) {
+          setDefaultPaymentInfo(paymentResponse.data.data);
+          // If payment method is default, set the QR preview to default QR
+          if (formData.payment_method === 'default') {
+            setQrPreview(paymentResponse.data.data.qrCodeUrl);
+          }
         }
       } catch (error) {
         console.error("Error loading data:", error);
@@ -91,13 +109,54 @@ const EditScheduleMeeting = () => {
     }));
   };
 
+  const handlePaymentMethodChange = (e) => {
+    const method = e.target.value;
+    setFormData(prev => ({
+      ...prev,
+      payment_method: method,
+      default_payment_id: method === 'default' ? defaultPaymentInfo?.id || '' : '',
+      upi_id: method === 'default' ? '' : prev.upi_id
+    }));
+    
+    // Update QR preview based on payment method
+    if (method === 'default' && defaultPaymentInfo?.qrCodeUrl) {
+      setQrPreview(defaultPaymentInfo.qrCodeUrl);
+    } else if (method === 'custom' && formData.qr_code) {
+      // If switching to custom and there's an existing QR code
+      setQrPreview(
+        formData.qr_code instanceof File 
+          ? URL.createObjectURL(formData.qr_code)
+          : `data:image/png;base64,${formData.qr_code}`
+      );
+    } else {
+      setQrPreview(null);
+    }
+  };
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Clean up previous preview URL if it exists
-      if (formData.qr_code instanceof File) {
-        URL.revokeObjectURL(getQRCodePreview());
+      if (file.size > 200 * 1024) {
+        showToast({
+          title: "Error",
+          message: "File size must be less than 200KB",
+          icon: "error",
+          status: "error",
+        });
+        return;
       }
+
+      // Clean up previous preview URL if it exists
+      if (qrPreview && qrPreview.startsWith('blob:')) {
+        URL.revokeObjectURL(qrPreview);
+      }
+
+      // Create preview URL for the selected file
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setQrPreview(e.target.result);
+      };
+      reader.readAsDataURL(file);
 
       setFormData((prev) => ({
         ...prev,
@@ -166,32 +225,14 @@ const EditScheduleMeeting = () => {
     }
   };
 
-  // Add this function to handle QR code preview
-  const getQRCodePreview = () => {
-    if (!formData.qr_code) return null;
-
-    // If it's a File object (new upload)
-    if (formData.qr_code instanceof File) {
-      return URL.createObjectURL(formData.qr_code);
-    }
-
-    // If it's a base64 string (existing QR code)
-    if (typeof formData.qr_code === "string") {
-      return `data:image/png;base64,${formData.qr_code}`;
-    }
-
-    return null;
-  };
-
-  // Add cleanup for URL objects when component unmounts
+  // Add cleanup effect for QR preview URL
   useEffect(() => {
     return () => {
-      // Cleanup any created URLs when component unmounts
-      if (formData.qr_code instanceof File) {
-        URL.revokeObjectURL(getQRCodePreview());
+      if (qrPreview && qrPreview.startsWith('blob:')) {
+        URL.revokeObjectURL(qrPreview);
       }
     };
-  }, []);
+  }, [qrPreview]);
 
   if (loading) {
     return (
@@ -474,7 +515,7 @@ const EditScheduleMeeting = () => {
                       name="payment_method"
                       value="default"
                       checked={formData.payment_method === "default"}
-                      onChange={handleInputChange}
+                      onChange={handlePaymentMethodChange}
                       className="text-amber-500 bg-gray-700 border-gray-600 focus:ring-amber-500 focus:ring-offset-gray-800"
                     />
                     <span className="text-gray-300">Default Payment</span>
@@ -485,7 +526,7 @@ const EditScheduleMeeting = () => {
                       name="payment_method"
                       value="custom"
                       checked={formData.payment_method === "custom"}
-                      onChange={handleInputChange}
+                      onChange={handlePaymentMethodChange}
                       className="text-amber-500 bg-gray-700 border-gray-600 focus:ring-amber-500 focus:ring-offset-gray-800"
                     />
                     <span className="text-gray-300">Custom Payment</span>
@@ -493,11 +534,19 @@ const EditScheduleMeeting = () => {
                 </div>
               </div>
 
+              {/* Show default payment info when default is selected */}
+              {formData.payment_method === "default" && defaultPaymentInfo && (
+                <div className="mt-4 p-4 bg-gray-700/30 rounded-xl">
+                  <p className="text-sm text-gray-300">Default Payment ID: {defaultPaymentInfo.id}</p>
+                  <p className="text-sm text-gray-300 mt-1">Default UPI ID: {defaultPaymentInfo.upiId}</p>
+                </div>
+              )}
+
               {/* Custom Payment Fields */}
               {formData.payment_method === "custom" && (
                 <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-300">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
                       UPI ID
                     </label>
                     <input
@@ -505,44 +554,44 @@ const EditScheduleMeeting = () => {
                       name="upi_id"
                       value={formData.upi_id}
                       onChange={handleInputChange}
-                      className="w-full bg-gray-700 text-white p-3 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-0"
-                      placeholder="Enter UPI ID"
+                      className="w-full bg-gray-700/50 text-white p-3 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-0 placeholder-gray-400"
+                      placeholder="Enter UPI ID (e.g., username@bankname)"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-300">
-                      QR Code
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      UPI QR Code
                     </label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileChange}
-                      className="hidden"
-                      id="qr-upload"
-                    />
-                    <label
-                      htmlFor="qr-upload"
-                      className="block px-4 py-2 bg-gray-700 text-gray-300 rounded-xl border border-gray-600 cursor-pointer hover:bg-gray-600 transition-colors"
-                    >
-                      {formData.qr_code ? "Change QR Code" : "Choose File"}
-                    </label>
-                    {formData.qr_code instanceof File && (
-                      <p className="text-sm text-gray-400">
-                        Selected: {formData.qr_code.name}
-                      </p>
-                    )}
+                    <div className="flex items-center gap-2">
+                      <label className="px-4 py-2 bg-gray-700/50 rounded-xl border border-gray-600 text-gray-300 cursor-pointer hover:bg-gray-700/70 transition-colors">
+                        {formData.qr_code ? "Change QR Code" : "Choose File"}
+                        <input
+                          type="file"
+                          className="hidden"
+                          accept="image/*"
+                          onChange={handleFileChange}
+                        />
+                      </label>
+                      <span className="text-sm text-gray-400">
+                        {formData.qr_code instanceof File 
+                          ? formData.qr_code.name 
+                          : formData.qr_code 
+                            ? "Current QR Code" 
+                            : "No file chosen"}
+                      </span>
+                    </div>
                   </div>
                 </div>
               )}
             </div>
           </div>
 
-          {/* QR Preview */}
-          <div className="p-6 rounded-2xl bg-gray-800 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-700">
+          {/* QR Code Preview */}
+          <div className="bg-gray-800/40 backdrop-blur-xl rounded-2xl border border-gray-700 p-6 shadow-xl">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-2 bg-purple-500/20 rounded-lg">
                 <svg
-                  className="w-5 h-5 text-purple-300"
+                  className="w-5 h-5 text-purple-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -555,34 +604,26 @@ const EditScheduleMeeting = () => {
                   />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-white">
+              <h3 className="text-lg font-semibold text-gray-100">
                 QR Code Preview
               </h3>
             </div>
 
-            <div className="p-4 bg-gray-700/50 rounded-xl border border-gray-600">
-              <div className="flex flex-col items-center justify-center">
-                {formData.qr_code ? (
-                  <img
-                    src={getQRCodePreview()}
-                    alt="QR Code"
-                    className="max-w-[200px] rounded-lg"
-                    onError={(e) => {
-                      console.error("Error loading QR code image");
-                      e.target.style.display = "none";
-                    }}
-                  />
-                ) : (
-                  <div className="text-gray-400 text-sm">
-                    No QR code uploaded
-                  </div>
-                )}
-                {formData.upi_id && (
-                  <p className="mt-3 text-sm text-gray-400">
-                    UPI ID: {formData.upi_id}
-                  </p>
-                )}
-              </div>
+            <div className="flex items-center justify-center h-[200px] bg-gray-700/50 rounded-xl border border-gray-600">
+              {qrPreview ? (
+                <img
+                  src={qrPreview}
+                  alt="QR Code"
+                  className="max-h-full max-w-full object-contain rounded-lg"
+                  onError={(e) => {
+                    console.error("Error loading QR code image");
+                    e.target.style.display = "none";
+                    setQrPreview(null);
+                  }}
+                />
+              ) : (
+                <span className="text-gray-400">No QR code selected</span>
+              )}
             </div>
           </div>
         </motion.div>

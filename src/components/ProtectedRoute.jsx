@@ -14,7 +14,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
       </div>
     );
   }
-  console.log(auth.user)
+  console.log(auth.user);
 
   // Check authentication
   if (!auth.isAuthenticated) {
@@ -33,51 +33,54 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   // Member specific routes check
   if (auth.role === "Member") {
     const memberAllowedPaths = [
-      '/member-dashboard',
-      '/bdm',
-      '/add-bdm',
-      '/edit-bdm',
-      '/view-bdm',
-      '/business-given',
-      '/add-business',
-      '/view-business',
-      '/business-received',
-      '/view-res-business',
-      '/add-res-business',
-      '/member-certificate',
-      '/chapter-members',
-      '/view-chapter-member',
-      '/meetings-mdp-socials',
-      '/members-mdp-events',
-      '/member-monthly-reward',
-      '/ref-given',
-      '/view-ref-given',
-      '/add-edit-ref-given',
-      '/request-received',
-      '/visitors-invited',
-      '/add-visitor',
-      '/edit-visitor',
-      '/view-visitor',
-      '/settings',
-      '/calendar',
-      '/privacy-policy'
+      "/member-dashboard",
+      "/bdm",
+      "/add-bdm",
+      "/edit-bdm",
+      "/view-bdm",
+      "/business-given",
+      "/add-business",
+      "/view-business",
+      "/business-received",
+      "/view-res-business",
+      "/add-res-business",
+      "/member-certificate",
+      "/chapter-members",
+      "/view-chapter-member",
+      "/meetings-mdp-socials",
+      "/members-mdp-events",
+      "/member-monthly-reward",
+      "/ref-given",
+      "/view-ref-given",
+      "/add-edit-ref-given",
+      "/request-received",
+      "/visitors-invited",
+      "/add-visitor",
+      "/edit-visitor",
+      "/view-visitor",
+      "/settings",
+      "/calendar",
+      "/privacy-policy",
     ];
 
     // Check if current path starts with any allowed path
-    const isPathAllowed = memberAllowedPaths.some(path => {
+    const isPathAllowed = memberAllowedPaths.some((path) => {
       // Exact match
       if (location.pathname === path) return true;
-      
+
       // Check for dynamic routes (paths with IDs)
-      if (location.pathname.startsWith(path + '/')) return true;
-      
+      if (location.pathname.startsWith(path + "/")) return true;
+
       // Handle special cases for edit/view routes
-      const specialPaths = ['/edit-', '/view-'];
-      return specialPaths.some(specialPath => 
-        location.pathname.includes(specialPath) && 
-        memberAllowedPaths.some(allowedPath => 
-          location.pathname.startsWith(allowedPath.replace(specialPath, specialPath))
-        )
+      const specialPaths = ["/edit-", "/view-"];
+      return specialPaths.some(
+        (specialPath) =>
+          location.pathname.includes(specialPath) &&
+          memberAllowedPaths.some((allowedPath) =>
+            location.pathname.startsWith(
+              allowedPath.replace(specialPath, specialPath)
+            )
+          )
       );
     });
 
@@ -90,29 +93,32 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   // Add Regional Director specific routes check
   if (auth.role === "Regional Director") {
     const regionalDirectorAllowedPaths = [
-      '/dashboard',
-      '/member-list',
-      '/chapters-list',
-      '/member-view', // Add this to allow viewing member details
-      '/settings',
-      '/privacy-policy'
+      "/dashboard",
+      "/member-list",
+      "/add-user",
+      "/add-member",
+      "/member-view",
+      "/settings",
+      "/privacy-policy",
     ];
 
-    const isPathAllowed = regionalDirectorAllowedPaths.some(path => {
+    const isPathAllowed = regionalDirectorAllowedPaths.some((path) => {
       // Exact match
       if (location.pathname === path) return true;
-      
+
       // Check for dynamic routes (paths with IDs)
-      if (location.pathname.startsWith(path + '/')) return true;
-      
+      if (location.pathname.startsWith(path + "/")) return true;
+
       // Handle special cases for view routes
-      if (location.pathname.startsWith('/member-view/')) return true;
-      
+      if (location.pathname.startsWith("/member-view/")) return true;
+
       return false;
     });
 
     if (!isPathAllowed) {
-      console.log(`Access denied to ${location.pathname} for Regional Director role`);
+      console.log(
+        `Access denied to ${location.pathname} for Regional Director role`
+      );
       return <Navigate to="/unauthorized" replace />;
     }
   }
@@ -120,32 +126,33 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   // Admin specific routes check
   if (auth.role === "Admin") {
     const adminAllowedPaths = [
-      '/dashboard',
-      '/add-member', 
-      '/edit-member',
-      '/member-view',
-      '/assign-certificates',
-      '/broadcast',
-      '/chapters-list',
-      '/creative-list', 
-      '/certificate-list',
-      '/mark-attendance',
-      '/attendance-venue-fee',
-      '/mark-venue-fee',
-      '/member-list',
-      '/meetings',
-      '/edit-schedule',
-      '/view-schedule', 
-      '/add-schedule',
-      '/visitor-list',
-      '/monthly-reward',
-      '/settings',
-      '/privacy-policy'
+      "/dashboard",
+      "/add-user",
+      "/add-member",
+      "/edit-member",
+      "/member-view",
+      "/assign-certificates",
+      "/broadcast",
+      "/chapters-list",
+      "/creative-list",
+      "/certificate-list",
+      "/mark-attendance",
+      "/attendance-venue-fee",
+      "/mark-venue-fee",
+      "/member-list",
+      "/meetings",
+      "/edit-schedule",
+      "/view-schedule",
+      "/add-schedule",
+      "/visitor-list",
+      "/monthly-reward",
+      "/admin-settings",
+      "/privacy-policy",
     ];
 
-    const isPathAllowed = adminAllowedPaths.some(path => {
+    const isPathAllowed = adminAllowedPaths.some((path) => {
       if (location.pathname === path) return true;
-      if (location.pathname.startsWith(path + '/')) return true;
+      if (location.pathname.startsWith(path + "/")) return true;
       return false;
     });
 
@@ -159,58 +166,59 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   if (auth.role === "Super Admin") {
     const superAdminAllowedPaths = [
       // Admin paths
-      '/dashboard',
-      '/add-member',
-      '/edit-member', 
-      '/member-view',
-      '/assign-certificates',
-      '/broadcast',
-      '/chapters-list',
-      '/creative-list',
-      '/certificate-list', 
-      '/mark-attendance',
-      '/attendance-venue-fee',
-      '/mark-venue-fee',
-      '/member-list',
-      '/meetings',
-      '/edit-schedule',
-      '/view-schedule',
-      '/add-schedule',
-      '/visitor-list',
-      '/monthly-reward',
-      '/settings',
-      '/privacy-policy',
+      "/dashboard",
+      "/add-user",
+      "/add-member",
+      "/edit-member",
+      "/member-view",
+      "/assign-certificates",
+      "/broadcast",
+      "/chapters-list",
+      "/creative-list",
+      "/certificate-list",
+      "/mark-attendance",
+      "/attendance-venue-fee",
+      "/mark-venue-fee",
+      "/member-list",
+      "/meetings",
+      "/edit-schedule",
+      "/view-schedule",
+      "/add-schedule",
+      "/visitor-list",
+      "/monthly-reward",
+      "/settings",
+      "/privacy-policy",
       // Member paths
-      '/member-dashboard',
-      '/bdm',
-      '/add-bdm',
-      '/edit-bdm',
-      '/view-bdm',
-      '/business-given',
-      '/add-business',
-      '/view-business',
-      '/business-received', 
-      '/view-res-business',
-      '/add-res-business',
-      '/member-certificate',
-      '/chapter-members',
-      '/view-chapter-member',
-      '/meetings-mdp-socials',
-      '/members-mdp-events',
-      '/member-monthly-reward',
-      '/ref-given',
-      '/view-ref-given',
-      '/add-edit-ref-given',
-      '/request-received',
-      '/visitors-invited',
-      '/add-visitor',
-      '/edit-visitor',
-      '/view-visitor'
+      "/member-dashboard",
+      "/bdm",
+      "/add-bdm",
+      "/edit-bdm",
+      "/view-bdm",
+      "/business-given",
+      "/add-business",
+      "/view-business",
+      "/business-received",
+      "/view-res-business",
+      "/add-res-business",
+      "/member-certificate",
+      "/chapter-members",
+      "/view-chapter-member",
+      "/meetings-mdp-socials",
+      "/members-mdp-events",
+      "/member-monthly-reward",
+      "/ref-given",
+      "/view-ref-given",
+      "/add-edit-ref-given",
+      "/request-received",
+      "/visitors-invited",
+      "/add-visitor",
+      "/edit-visitor",
+      "/view-visitor",
     ];
 
-    const isPathAllowed = superAdminAllowedPaths.some(path => {
+    const isPathAllowed = superAdminAllowedPaths.some((path) => {
       if (location.pathname === path) return true;
-      if (location.pathname.startsWith(path + '/')) return true;
+      if (location.pathname.startsWith(path + "/")) return true;
       return false;
     });
 

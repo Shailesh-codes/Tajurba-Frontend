@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Camera,
   Settings,
@@ -15,28 +15,42 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import settingsIcon from "../assets/images/icons/setting.svg";
+import api from "../hooks/api";
+import { useAuth } from "../contexts/AuthContext";
+import { showToast } from "../utils/toast";
+import { useNavigate } from "react-router-dom";
+
+const toast = {
+  success: (message) => showToast({ status: "success", message }),
+  error: (message) => showToast({ status: "error", message }),
+  warning: (message) => showToast({ status: "warning", message }),
+  info: (message) => showToast({ status: "info", message }),
+};
 
 const Setting = () => {
+  const navigate = useNavigate();
+  const { auth } = useAuth();
   const [formData, setFormData] = useState({
     // Personal Info
-    fullName: "Manish",
-    email: "manishs@g.i",
-    mobile: "1234567890",
-    address: "abc",
+    fullName: "",
+    email: "",
+    mobile: "",
+    address: "",
 
     // Business Info
-    chapterName: "Chapter",
-    joiningDate: "2024-11-01",
-    companyName: "abc company",
-    businessCategory: "xyz category",
-    gstNumber: "22AAAAA0000A1Z5",
+    chapterName: "",
+    joiningDate: "",
+    companyName: "",
+    businessCategory: "",
+    gstNumber: "",
 
     // Social Media
     facebook: "",
     instagram: "",
     twitter: "",
     linkedin: "",
-    website: "https://aplakaan.com/",
+    website: "",
+    whatsapp: "",
 
     // Password
     currentPassword: "",
@@ -44,9 +58,54 @@ const Setting = () => {
     confirmPassword: "",
   });
 
-  // Add new state for profile picture
   const [profilePicture, setProfilePicture] = useState(null);
+  const [profilePictureUrl, setProfilePictureUrl] = useState(
+    "https://avatar.iran.liara.run/public"
+  );
   const fileInputRef = useRef(null);
+
+  // Fetch user data on component mount
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        if (!auth.user?.id) return;
+
+        const response = await api.get(`/members/members/${auth.user.id}`);
+        const userData = response.data.data;
+
+        if (userData) {
+          setFormData((prev) => ({
+            ...prev,
+            fullName: userData.name || "",
+            email: userData.email || "",
+            mobile: userData.mobile || "",
+            address: userData.address || "",
+            chapterName: userData.chapter_name || "",
+            joiningDate: userData.joiningDate || "",
+            companyName: userData.company || "",
+            businessCategory: userData.business_category || "",
+            facebook: userData.facebook || "",
+            instagram: userData.instagram || "",
+            twitter: userData.twitter || "",
+            linkedin: userData.linkedin || "",
+            website: userData.website || "",
+            whatsapp: userData.whatsapp || "",
+            gstNumber: userData.gstNumber || "",
+          }));
+
+          // Set profile picture if available
+          if (userData.profilePicture) {
+            setProfilePictureUrl(userData.profilePicture);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        toast.error("Failed to load user data");
+      }
+    };
+
+    fetchUserData();
+  }, [auth.user?.id]);
 
   // Handle input changes
   const handleInputChange = (e) => {
@@ -57,59 +116,36 @@ const Setting = () => {
     }));
   };
 
-  const handleGSTUpdate = () => {
-    console.log("Updating GST number:", formData.gstNumber);
-  };
-  // Personal Information Form
-  const handleSavePersonalInfo = () => {
-    // Implementation of handleSavePersonalInfo
-  };
-
-  // Business Information Form
-  const handleSaveBusinessInfo = () => {
-    // Implementation of handleSaveBusinessInfo
-  };
-
-  // Social Media Form
-  const handleSaveSocialMedia = () => {
-    // Implementation of handleSaveSocialMedia
-  };
-
-  // Change Password Form
-  const handleChangePassword = () => {
-    // Implementation of handleChangePassword
-  };
-
   // Handle profile picture change
   const handleProfilePictureChange = (event) => {
     const file = event.target.files[0];
     if (file) {
       // Check file size (200KB = 200 * 1024 bytes)
       if (file.size > 200 * 1024) {
-        alert("File size must be less than 200KB");
+        toast.error("File size must be less than 200KB");
         return;
       }
 
       // Check file type
       if (!file.type.startsWith("image/")) {
-        alert("Please upload an image file");
+        toast.error("Please upload an image file");
         return;
       }
 
       setProfilePicture(file);
-      // You can also show a preview
+      // Show preview
       const reader = new FileReader();
       reader.onloadend = () => {
-        document.querySelector("#profilePreview").src = reader.result;
+        setProfilePictureUrl(reader.result);
       };
       reader.readAsDataURL(file);
     }
   };
 
-  // Update the handleUpdateProfilePicture function
+  // Update profile picture
   const handleUpdateProfilePicture = async () => {
     if (!profilePicture) {
-      alert("Please select an image first");
+      toast.error("Please select an image first");
       return;
     }
 
@@ -117,20 +153,151 @@ const Setting = () => {
       const formData = new FormData();
       formData.append("profilePicture", profilePicture);
 
-      // Replace with your API endpoint
-      const response = await fetch("/api/update-profile-picture", {
-        method: "POST",
-        body: formData,
-      });
+      const response = await api.put(
+        "/members/settings/profile-picture",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
-      if (response.ok) {
-        alert("Profile picture updated successfully!");
-      } else {
-        throw new Error("Failed to update profile picture");
+      if (response.data.success) {
+        toast.success("Profile picture updated successfully!");
+        setProfilePictureUrl(response.data.data.profilePicture);
       }
     } catch (error) {
       console.error("Error updating profile picture:", error);
-      alert("Failed to update profile picture");
+      toast.error("Failed to update profile picture");
+    }
+  };
+
+  // Add validation functions
+  const isValidGSTNumber = (gst) => {
+    if (!gst) return true; // Allow empty GST
+    const gstRegex =
+      /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+    return gstRegex.test(gst);
+  };
+
+  const isValidWhatsAppNumber = (number) => {
+    if (!number) return true; // Allow empty WhatsApp number
+    const phoneRegex = /^\d{10}$/;
+    return phoneRegex.test(number);
+  };
+
+  // Update handleSaveSocialMedia to include validation
+  const handleSaveSocialMedia = async () => {
+    try {
+      // Validate WhatsApp number if provided
+      if (formData.whatsapp && !isValidWhatsAppNumber(formData.whatsapp)) {
+        toast.error("Please enter a valid 10-digit WhatsApp number");
+        return;
+      }
+
+      const response = await api.put("/members/settings/social-media", {
+        facebook: formData.facebook,
+        instagram: formData.instagram,
+        twitter: formData.twitter,
+        linkedin: formData.linkedin,
+        website: formData.website,
+        whatsapp: formData.whatsapp,
+      });
+
+      if (response.data.success) {
+        toast.success("Social media information updated successfully!");
+      }
+    } catch (error) {
+      console.error("Error updating social media:", error);
+      toast.error(
+        error.response?.data?.message || "Failed to update information"
+      );
+    }
+  };
+
+  // Update handleSavePersonalInfo to show success/error messages
+  const handleSavePersonalInfo = async () => {
+    try {
+      const response = await api.put("/members/settings/personal-info", {
+        fullName: formData.fullName,
+        email: formData.email,
+        mobile: formData.mobile,
+        address: formData.address,
+        company: formData.companyName,
+        business_category: formData.businessCategory,
+      });
+
+      if (response.data.success) {
+        toast.success("Personal information updated successfully!");
+      }
+    } catch (error) {
+      console.error("Error updating personal info:", error);
+      toast.error(
+        error.response?.data?.message || "Failed to update personal information"
+      );
+    }
+  };
+
+  // Update handleGSTUpdate to use the correct endpoint
+  const handleGSTUpdate = async () => {
+    try {
+      if (formData.gstNumber && !isValidGSTNumber(formData.gstNumber)) {
+        toast.error("Please enter a valid GST number");
+        return;
+      }
+
+      const response = await api.put("/members/settings/social-media", {
+        gstNumber: formData.gstNumber,
+      });
+
+      if (response.data.success) {
+        toast.success("GST number updated successfully!");
+      }
+    } catch (error) {
+      console.error("Error updating GST number:", error);
+      toast.error(
+        error.response?.data?.message || "Failed to update GST number"
+      );
+    }
+  };
+
+  // Handle password change
+  const handleChangePassword = async () => {
+    // Validate passwords
+    if (formData.newPassword !== formData.confirmPassword) {
+      toast.error("New passwords don't match");
+      return;
+    }
+
+    if (formData.newPassword.length < 6) {
+      toast.error("New password must be at least 6 characters long");
+      return;
+    }
+
+    try {
+      const response = await api.put("/members/settings/password", {
+        currentPassword: formData.currentPassword,
+        newPassword: formData.newPassword,
+      });
+
+      if (response.data.success) {
+        toast.success("Password updated successfully!");
+        // Clear password fields
+        setFormData((prev) => ({
+          ...prev,
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        }));
+      }
+    } catch (error) {
+      console.error("Error updating password:", error);
+      if (error.response?.status === 401) {
+        toast.error("Current password is incorrect");
+      } else {
+        toast.error("Failed to update password");
+      }
     }
   };
 
@@ -212,7 +379,7 @@ const Setting = () => {
                 <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-amber-500/20 group-hover:border-amber-500/40 transition-all duration-300">
                   <img
                     id="profilePreview"
-                    src="https://avatar.iran.liara.run/public"
+                    src={profilePictureUrl}
                     alt="Profile"
                     className="w-full h-full object-cover"
                   />
@@ -532,18 +699,7 @@ const Setting = () => {
                   className="w-full p-3 bg-gray-700/50 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 text-white transition-all duration-300"
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">
-                  Contact Number
-                </label>
-                <input
-                  type="text"
-                  name="mobile"
-                  value={formData.mobile}
-                  onChange={handleInputChange}
-                  className="w-full p-3 bg-gray-700/50 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 text-white transition-all duration-300"
-                />
-              </div>
+
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-300">
                   Website
@@ -553,6 +709,19 @@ const Setting = () => {
                   name="website"
                   value={formData.website}
                   onChange={handleInputChange}
+                  className="w-full p-3 bg-gray-700/50 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 text-white transition-all duration-300"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">
+                  WhatsApp Number
+                </label>
+                <input
+                  type="text"
+                  name="whatsapp"
+                  value={formData.whatsapp}
+                  onChange={handleInputChange}
+                  placeholder="10-digit WhatsApp number"
                   className="w-full p-3 bg-gray-700/50 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 text-white transition-all duration-300"
                 />
               </div>
@@ -568,8 +737,6 @@ const Setting = () => {
               </button>
             </div>
           </motion.div>
-
-          {/* Change Password Form */}
         </div>
       </div>
     </motion.div>

@@ -24,9 +24,35 @@ const AddMeetings = () => {
   const [chapters, setChapters] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [defaultPaymentInfo, setDefaultPaymentInfo] = useState(null);
+  const [qrPreview, setQrPreview] = useState(null);
 
   useEffect(() => {
     loadChapters();
+    const fetchPaymentSettings = async () => {
+      try {
+        const response = await api.get("/admin-settings/payment-info");
+        if (response.data.success) {
+          setDefaultPaymentInfo(response.data.data);
+          if (formData.payment_method === "default") {
+            setFormData((prev) => ({
+              ...prev,
+              default_payment_id: response.data.data.id,
+            }));
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching payment settings:", error);
+        showToast({
+          title: "Error",
+          message: "Failed to load payment settings",
+          icon: "error",
+          status: "error",
+        });
+      }
+    };
+
+    fetchPaymentSettings();
   }, []);
 
   const loadChapters = async () => {
@@ -105,6 +131,47 @@ const AddMeetings = () => {
       },
     });
   };
+
+  const handlePaymentMethodChange = (e) => {
+    const method = e.target.value;
+    setFormData((prev) => ({
+      ...prev,
+      payment_method: method,
+      default_payment_id:
+        method === "default" ? defaultPaymentInfo?.id || "" : "",
+      upi_id: method === "default" ? "" : prev.upi_id,
+    }));
+
+    if (method === "default" && defaultPaymentInfo?.qrCodeUrl) {
+      setQrPreview(defaultPaymentInfo.qrCodeUrl);
+    } else {
+      setQrPreview(null);
+    }
+  };
+
+  const handleQrCodeChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 200 * 1024) {
+        showAlert("error", "File size must be less than 200KB");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setQrPreview(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (qrPreview && qrPreview.startsWith("blob:")) {
+        URL.revokeObjectURL(qrPreview);
+      }
+    };
+  }, [qrPreview]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -650,12 +717,7 @@ const AddMeetings = () => {
                           name="payment_method"
                           value="default"
                           checked={formData.payment_method === "default"}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              payment_method: e.target.value,
-                            })
-                          }
+                          onChange={handlePaymentMethodChange}
                           className="w-4 h-4 text-blue-500 bg-gray-700 border-gray-600 focus:ring-blue-500 focus:ring-offset-gray-800"
                         />
                         <span className="ml-2 text-gray-300 group-hover:text-gray-100">
@@ -668,12 +730,7 @@ const AddMeetings = () => {
                           name="payment_method"
                           value="custom"
                           checked={formData.payment_method === "custom"}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              payment_method: e.target.value,
-                            })
-                          }
+                          onChange={handlePaymentMethodChange}
                           className="w-4 h-4 text-blue-500 bg-gray-700 border-gray-600 focus:ring-blue-500 focus:ring-offset-gray-800"
                         />
                         <span className="ml-2 text-gray-300 group-hover:text-gray-100">
@@ -682,6 +739,19 @@ const AddMeetings = () => {
                       </label>
                     </div>
                   </div>
+
+                  {/* Show default payment info when default is selected */}
+                  {formData.payment_method === "default" &&
+                    defaultPaymentInfo && (
+                      <div className="mt-4 p-4 bg-gray-700/30 rounded-xl">
+                        <p className="text-sm text-gray-300">
+                          Default Payment ID: {defaultPaymentInfo.id}
+                        </p>
+                        <p className="text-sm text-gray-300 mt-1">
+                          Default UPI ID: {defaultPaymentInfo.upiId}
+                        </p>
+                      </div>
+                    )}
 
                   {/* Custom Payment Fields */}
                   {formData.payment_method === "custom" && (
@@ -711,22 +781,7 @@ const AddMeetings = () => {
                               type="file"
                               className="hidden"
                               accept="image/*"
-                              onChange={(e) => {
-                                const file = e.target.files[0];
-                                if (file) {
-                                  // You can add preview functionality here if needed
-                                  const reader = new FileReader();
-                                  reader.onload = (e) => {
-                                    // Update QR code preview
-                                    const previewElement =
-                                      document.querySelector(".qr-preview");
-                                    if (previewElement) {
-                                      previewElement.innerHTML = `<img src="${e.target.result}" alt="QR Code" class="max-h-full max-w-full object-contain" />`;
-                                    }
-                                  };
-                                  reader.readAsDataURL(file);
-                                }
-                              }}
+                              onChange={handleQrCodeChange}
                             />
                           </label>
                           <span className="text-sm text-gray-400">
@@ -763,8 +818,21 @@ const AddMeetings = () => {
                   </h3>
                 </div>
 
-                <div className="flex items-center justify-center h-[200px] bg-gray-700/50 rounded-xl border border-gray-600 qr-preview">
-                  <span className="text-gray-400">No QR code selected</span>
+                <div className="flex items-center justify-center h-[200px] bg-gray-700/50 rounded-xl border border-gray-600">
+                  {qrPreview ? (
+                    <img
+                      src={qrPreview}
+                      alt="QR Code"
+                      className="max-h-full max-w-full object-contain rounded-lg"
+                      onError={(e) => {
+                        console.error("Error loading QR code image");
+                        e.target.style.display = "none";
+                        setQrPreview(null);
+                      }}
+                    />
+                  ) : (
+                    <span className="text-gray-400">No QR code selected</span>
+                  )}
                 </div>
               </div>
             </div>
