@@ -14,7 +14,24 @@ const AddUser = () => {
     mobile: "",
     email: "",
     role: "",
+    chapter: "",
   });
+
+  const [chapters, setChapters] = useState([]);
+
+  useEffect(() => {
+    const fetchChapters = async () => {
+      try {
+        const response = await api.get("/chapters");
+        if (response.data.status === "success") {
+          setChapters(response.data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching chapters:", error);
+      }
+    };
+    fetchChapters();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -27,7 +44,25 @@ const AddUser = () => {
         status: "active",
       };
 
-      const response = await api.post(`/members/add-member`, userData);
+      if (formData.role === "Member") {
+        if (!formData.chapter) {
+          Swal.fire({
+            icon: "error",
+            title: "Error!",
+            text: "Chapter is required for members",
+            background: "#111827",
+            color: "#fff",
+            toast: true,
+            position: "top-end",
+            showConfirmButton: false,
+            timer: 3000,
+          });
+          return;
+        }
+        userData.chapter = formData.chapter;
+      }
+
+      const response = await api.post(`/members/create-user`, userData);
 
       if (response.data.success) {
         Swal.fire({
@@ -50,6 +85,7 @@ const AddUser = () => {
           mobile: "",
           email: "",
           role: "",
+          chapter: "",
         });
       }
     } catch (error) {
@@ -217,6 +253,34 @@ const AddUser = () => {
                 )}
               </select>
             </div>
+
+            {/* Chapter Selection */}
+            {formData.role === "Member" && (
+              <div className="flex flex-col gap-2">
+                <label
+                  htmlFor="chapter"
+                  className="text-sm font-medium text-gray-300"
+                >
+                  Chapter <span className="text-red-500 text-lg">*</span>
+                </label>
+                <select
+                  id="chapter"
+                  required
+                  className="w-full p-3 bg-gray-700 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-0 text-white"
+                  value={formData.chapter}
+                  onChange={(e) =>
+                    setFormData({ ...formData, chapter: e.target.value })
+                  }
+                >
+                  <option value="">Select Chapter</option>
+                  {chapters.map((chapter) => (
+                    <option key={chapter.chapter_id} value={chapter.chapter_id}>
+                      {chapter.chapter_name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
 
           {/* Submit and Reset Buttons */}
@@ -229,6 +293,7 @@ const AddUser = () => {
                   mobile: "",
                   email: "",
                   role: "",
+                  chapter: "",
                 })
               }
               className="px-6 py-2.5 rounded-xl border border-gray-700 text-gray-300 hover:bg-gray-700"

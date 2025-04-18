@@ -42,12 +42,12 @@ const AddMember = () => {
         name: formData.name,
         mobile: formData.mobile,
         email: formData.email,
+        role: "Member",
         chapter: formData.chapter,
         company: formData.company,
         business_category: formData.business_category,
         joiningDate: formData.date,
-        status: "active",
-        role: formData.role,
+        status: "active"
       };
 
       const response = await api.post(`/members/add-member`, memberData);
