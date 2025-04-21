@@ -17,7 +17,7 @@ const Header = ({ setIsSidebarOpen, isSidebarOpen }) => {
   const [isVisible, setIsVisible] = useState(true);
   const [isCompact, setIsCompact] = useState(false);
   const [broadcasts, setBroadcasts] = useState([]);
-  const { auth } = useAuth();
+  const { auth, logout } = useAuth();
   const navigate = useNavigate();
 
   // Add ref for dropdown container
@@ -146,6 +146,26 @@ const Header = ({ setIsSidebarOpen, isSidebarOpen }) => {
     }
 
     return broadcasts.map((b) => `📢 ${b.announcement_text}`).join("   ●   ");
+  };
+
+  // Add logout handler
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate("/");
+      setShowDropdown(false); // Close the dropdown after logout
+    } catch (error) {
+      console.error("Logout failed:", error);
+      // Optionally show an error message to the user
+      Swal.fire({
+        title: "Logout Failed",
+        text: "There was an error logging out. Please try again.",
+        icon: "error",
+        background: "#111827",
+        color: "#fff",
+        confirmButtonColor: "#D97706",
+      });
+    }
   };
 
   return (
@@ -277,7 +297,7 @@ const Header = ({ setIsSidebarOpen, isSidebarOpen }) => {
                   <div className="flex items-center gap-4">
                     <img
                       src={`https://ui-avatars.com/api/?name=${auth.user?.name}`}
-                      alt="Profile" 
+                      alt="Profile"
                       className="w-12 h-12 rounded-full border-2 border-amber-500/20"
                     />
                     <div>
@@ -296,21 +316,6 @@ const Header = ({ setIsSidebarOpen, isSidebarOpen }) => {
 
                 {/* Menu Items */}
                 <div className="py-2 px-1">
-                  {/* Settings */}
-                  <button className="w-full px-4 py-3 text-left text-sm hover:bg-[#1E293B] group flex items-center text-gray-300 rounded-lg transition-all duration-200">
-                    <div className="mr-3 p-2 rounded-lg bg-amber-500/10 group-hover:bg-amber-500/20 transition-colors">
-                      <IoSettingsOutline className="w-5 h-5 text-amber-500" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="font-medium group-hover:text-amber-500 transition-colors">
-                        Settings
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        Manage your account
-                      </span>
-                    </div>
-                  </button>
-
                   {/* Privacy Policy */}
                   <button className="w-full px-4 py-3 text-left text-sm hover:bg-[#1E293B] group flex items-center text-gray-300 rounded-lg transition-all duration-200">
                     <div className="mr-3 p-2 rounded-lg bg-amber-500/10 group-hover:bg-amber-500/20 transition-colors">
@@ -329,8 +334,11 @@ const Header = ({ setIsSidebarOpen, isSidebarOpen }) => {
                   {/* Divider */}
                   <div className="my-2 border-t border-gray-700/50"></div>
 
-                  {/* Logout */}
-                  <button className="w-full px-4 py-3 text-left text-sm hover:bg-red-500/10 group flex items-center text-gray-300 rounded-lg transition-all duration-200">
+                  {/* Updated Logout button */}
+                  <button
+                    onClick={handleLogout}
+                    className="w-full px-4 py-3 text-left text-sm hover:bg-red-500/10 group flex items-center text-gray-300 rounded-lg transition-all duration-200"
+                  >
                     <div className="mr-3 p-2 rounded-lg bg-red-500/10 group-hover:bg-red-500/20 transition-colors">
                       <FiLogOut className="w-5 h-5 text-red-400" />
                     </div>

@@ -195,7 +195,7 @@ const BusinessGiven = () => {
         </div>
         <button
           onClick={() => history.back()}
-          className="w-full sm:w-auto group flex items-center justify-center sm:justify-start gap-2.5 px-5 py-2.5 bg-gray-800 text-gray-300 hover:text-green-500 rounded-xl transition-all duration-300 border border-gray-700"
+          className="w-full sm:w-auto group flex items-center justify-center sm:justify-start gap-2.5 px-5 py-2.5 bg-gray-800 text-gray-300 hover:text-amber-500 rounded-xl transition-all duration-300 border border-gray-700"
         >
           <svg
             width="18"
@@ -413,7 +413,7 @@ const BusinessGiven = () => {
                         </span>
                       </td>
                       <td className="flex flex-col px-6 py-4">
-                      <span className="text-xs text-gray-300">Given to:</span>
+                        <span className="text-xs text-gray-300">Given to:</span>
                         <span className="text-sm text-white group-hover:text-white transition-colors">
                           {business.memberName}
                         </span>

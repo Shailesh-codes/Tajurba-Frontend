@@ -34,7 +34,6 @@ import MemberCertificate from "./pages/MemberCertificate";
 import ChapterMembers from "./pages/ChapterMembers";
 import MeetingsMDP from "./pages/MeetingsMDP";
 import MembersMDPEvents from "./components/MembersMDPEvents";
-import MemberMonthlyReward from "./pages/MemberMonthlyReward";
 import MemberReferGiven from "./pages/MemberReferGiven";
 import MemberReferView from "./components/MemberReferView";
 import MemberReferEditAdd from "./components/MemberReferEditAdd";
@@ -55,6 +54,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Unauthorized from "./pages/Unauthorized";
 import AddMeetings from "./pages/AddMeetings";
 import AddUser from "./pages/AddUser";
+import UsersList from "./pages/UsersList";
+import SuperAdminUsers from "./pages/SuperAdminUsers";
 
 function App() {
   return (
@@ -87,7 +88,9 @@ function App() {
           <Route path="/add-user" element={<AddUser />} />
           {/* <Route path="/privacy-policy" element={<PrivacyPolicy />} /> */}
 
+          <Route path="/active-users" element={<SuperAdminUsers />} />
           <Route path="/add-member" element={<AddMember />} />
+          <Route path="/users-list" element={<UsersList />} />
           <Route path="/assign-certificates" element={<AssignCertificate />} />
           <Route path="/broadcast" element={<Broadcast />} />
           <Route path="/creative-list" element={<CreativeList />} />
@@ -140,10 +143,7 @@ function App() {
           />
           <Route path="meetings-mdp-socials" element={<MeetingsMDP />} />
           <Route path="members-mdp-events" element={<MembersMDPEvents />} />
-          <Route
-            path="member-monthly-reward"
-            element={<MemberMonthlyReward />}
-          />
+          <Route path="monthly-reward" element={<MonthlyReward />} />
           <Route path="ref-given" element={<MemberReferGiven />} />
           <Route path="view-ref-given/:id" element={<MemberReferView />} />
           <Route path="add-edit-ref-given" element={<MemberReferEditAdd />} />
@@ -194,10 +194,7 @@ function App() {
           />
           <Route path="/meetings-mdp-socials" element={<MeetingsMDP />} />
           <Route path="/members-mdp-events" element={<MembersMDPEvents />} />
-          <Route
-            path="/member-monthly-reward"
-            element={<MemberMonthlyReward />}
-          />
+          <Route path="/monthly-reward" element={<MonthlyReward />} />
           <Route path="/ref-given" element={<MemberReferGiven />} />
           <Route path="/view-ref-given/:id" element={<MemberReferView />} />
           <Route path="/add-edit-ref-given" element={<MemberReferEditAdd />} />

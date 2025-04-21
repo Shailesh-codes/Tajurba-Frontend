@@ -239,13 +239,11 @@ const AddUser = () => {
                   <>
                     <option value="Admin">Admin</option>
                     <option value="Regional Director">Regional Director</option>
-                    <option value="Member">Member</option>
                   </>
                 )}
                 {auth.user?.role === "Admin" && (
                   <>
                     <option value="Regional Director">Regional Director</option>
-                    <option value="Member">Member</option>
                   </>
                 )}
                 {auth.user?.role === "Regional Director" && (

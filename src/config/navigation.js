@@ -33,6 +33,7 @@ export const navigationConfig = {
           icon: "MarkAttandance",
           label: "Mark Attendance & Venue Fees",
         },
+        { path: "/active-users", icon: "UserListIcon", label: "Users List" },
         { path: "/member-list", icon: "UserListIcon", label: "Member List" },
         {
           path: "/meetings",
@@ -128,6 +129,11 @@ export const navigationConfig = {
           icon: "MarkAttandance",
           label: "Mark Attendance & Venue Fees",
         },
+        {
+          path: "/users-list",
+          icon: "UserListIcon",
+          label: "Active Regional Directors",
+        },
         { path: "/member-list", icon: "UserListIcon", label: "Member List" },
         {
           path: "/meetings",
@@ -196,9 +202,9 @@ export const navigationConfig = {
           label: "Meetings / MDP / Socials",
         },
         {
-          path: "/member-monthly-reward",
+          path: "/monthly-reward",
           icon: "MonthlyRewardIcon",
-          label: "Member Monthly Reward",
+          label: "Monthly Reward",
         },
         { path: "/ref-given", icon: "ReferralIcon", label: "Referral Given" },
         {

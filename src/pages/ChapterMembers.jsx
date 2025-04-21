@@ -12,12 +12,15 @@ const ChapterMembers = () => {
   const [members, setMembers] = useState([]);
   const [chapters, setChapters] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // Fetch members
+        setError(null);
+
+        // Fetch members (this will now only get users with role "Member")
         const membersResponse = await api.get(`/members/members`);
         setMembers(membersResponse.data.data);
 
@@ -26,6 +29,7 @@ const ChapterMembers = () => {
         setChapters(chaptersResponse.data.data);
       } catch (error) {
         console.error("Error fetching data:", error);
+        setError("Failed to load members. Please try again later.");
       } finally {
         setLoading(false);
       }

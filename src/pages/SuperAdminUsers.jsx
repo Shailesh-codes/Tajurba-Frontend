@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import memberListIcon from "../assets/images/icons/users.svg";
@@ -6,135 +6,102 @@ import addIcon from "../assets/images/icons/add.svg";
 import viewIcon from "../assets/images/icons/view.svg";
 import editIcon from "../assets/images/icons/edit.svg";
 import settingsIcon from "../assets/images/icons/setting.svg";
-import EditMemberModal from "../components/EditMemberModal";
-import Swal from "sweetalert2";
+import deleteIcon from "../assets/images/icons/delete.svg";
+import { useState, useEffect } from "react";
 import api from "../hooks/api";
 import { showToast } from "../utils/toast";
+import DeleteModal from "../layout/DeleteModal";
+import Swal from "sweetalert2";
 
-const MemberList = () => {
+const SuperAdminUsers = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [selectedMember, setSelectedMember] = useState(null);
-  const [members, setMembers] = useState([]);
-  const [chapters, setChapters] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
 
   useEffect(() => {
-    const fetchMembers = async () => {
+    const fetchUsers = async () => {
       try {
-        const response = await api.get("/members/members", {
-          params: {
-            role: "Member",
-          },
-        });
-        // Fetch chapters data
-        const chaptersResponse = await api.get(`chapters`);
-        if (chaptersResponse.data.status === "success") {
-          setChapters(chaptersResponse.data.data);
-        }
+        const response = await api.get("/members/active-users");
 
         if (response.data.success) {
-          setMembers(
-            response.data.data.filter((user) => user.role === "Member")
-          );
+          setUsers(response.data.data);
         }
         setLoading(false);
       } catch (error) {
-        console.error("Error fetching members:", error);
+        console.error("Error fetching users:", error);
         showToast({
           title: "Error",
-          message: "Failed to load members",
+          message: "Failed to load users",
           status: "error",
         });
         setLoading(false);
       }
     };
 
-    fetchMembers();
+    fetchUsers();
   }, []);
 
-  const filteredMembers = members.filter(
-    (member) =>
-      member.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.mobile?.includes(searchTerm) ||
-      member.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.chapter_name?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredUsers = users.filter(
+    (user) =>
+      user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.mobile?.includes(searchTerm) ||
+      user.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleEditSubmit = async (formData) => {
+  const handleDeleteClick = (user) => {
+    setSelectedUser(user);
+    setDeleteModalOpen(true);
+  };
+
+  const handleDelete = async () => {
     try {
-      const response = await api.put(`/members/members/${selectedMember.id}`, {
-        name: formData.name,
-        mobile: formData.mobile,
-        email: formData.email,
-        chapter: formData.chapter,
-        company: formData.company,
-        business_category: formData.business_category,
-        joiningDate: formData.date,
-      });
+      const response = await api.delete(`/members/members/${selectedUser.id}`);
 
       if (response.data.success) {
-        const membersResponse = await api.get(`/members/members`);
-        if (membersResponse.data.success) {
-          setMembers(membersResponse.data.data);
-        }
-
-        setEditModalOpen(false);
+        // Remove the deleted user from the state
+        setUsers(users.filter((user) => user.id !== selectedUser.id));
 
         showToast({
-          title: "Profile Updated",
-          message: "Member profile has been successfully updated",
-          icon: "success",
+          title: "Success",
+          message: `${selectedUser.role} deleted successfully`,
           status: "success",
         });
+
+        // Close the modal
+        setDeleteModalOpen(false);
+        setSelectedUser(null);
       }
     } catch (error) {
-      console.error("Error updating member:", error);
+      console.error("Error deleting user:", error);
 
+      // Show error message from the server or a default message
       showToast({
-        title: "Update Failed",
-        message:
-          error.response?.data?.message ||
-          "Failed to update member profile. Please try again.",
-        icon: "error",
+        title: "Error",
+        message: error.response?.data?.message || "Failed to delete user",
         status: "error",
       });
     }
   };
 
-  const handleEditClick = (member) => {
-    // Find the corresponding chapter object from the chapters state
-    const chapter = chapters.find(chap => chap.chapter_name === member.chapter_name);
-
-    // Create a new member object that includes the chapter_id
-    const memberWithId = {
-      ...member,
-      chapter_id: chapter ? chapter.chapter_id : null // Add chapter_id, handle case where chapter might not be found
-    };
-
-    console.log("Member object passed to modal:", memberWithId); // Log the object being passed
-    setSelectedMember(memberWithId); // Pass the updated object
-    setEditModalOpen(true);
-  };
-
-  const toggleMemberStatus = async (member) => {
-    if (!member || !member.id) {
+  const toggleUserStatus = async (user) => {
+    if (!user || !user.id) {
       showToast({
         title: "Error",
-        message: "Invalid member data",
-        icon: "error",
+        message: "Invalid user data",
         status: "error",
       });
       return;
     }
 
-    const isActive = member.status === "active";
+    const isActive = user.status === "active";
 
     const result = await Swal.fire({
-      title: isActive
-        ? '<span class="text-gray-300 text-2xl">Deactivate Member?</span>'
-        : '<span class="text-white text-2xl">Activate Member?</span>',
+      title: `<span class="text-gray-300 text-2xl">${
+        isActive ? "Deactivate" : "Activate"
+      } Regional Director?</span>`,
       html: `
         <div class="text-left space-y-6">
           <div class="flex items-center gap-4 p-6 ${
@@ -152,98 +119,59 @@ const MemberList = () => {
             <div>
               <h3 class="font-semibold text-lg ${
                 isActive ? "text-red-400" : "text-green-400"
-              }">${member.name}</h3>
-              <p class="text-sm text-gray-400">
-                ${
-                  isActive
-                    ? "Currently Active Member"
-                    : "Currently Inactive Member"
-                }
-              </p>
+              }">${user.name}</h3>
+              <p class="text-sm text-gray-400">${
+                isActive ? "Currently Active" : "Currently Inactive"
+              } Regional Director</p>
             </div>
           </div>
-          
-          <div class="p-4 bg-gray-700/30 rounded-xl border border-gray-600/30">
-            <p class="text-sm text-gray-300">
-              ${
-                isActive
-                  ? "This action will deactivate the member's account. They won't be able to access their account until reactivated."
-                  : "This action will reactivate the member's account. They will regain access to their account immediately."
-              }
-            </p>
-          </div>
-        </div>
-      `,
-      showCancelButton: true,
-      confirmButtonText: `
-        <div class="flex items-center gap-2">
-          <i class="fas ${isActive ? "fa-user-slash" : "fa-user-check"}"></i>
-          <span>${isActive ? "Yes, Deactivate" : "Yes, Activate"}</span>
-        </div>
-      `,
-      cancelButtonText: `
-        <div class="flex items-center gap-2">
-          <i class="fas fa-times"></i>
-          <span>Cancel</span>
         </div>
       `,
       background: "#1F2937",
+      showCancelButton: true,
+      confirmButtonText: isActive ? "Yes, Deactivate" : "Yes, Activate",
+      cancelButtonText: "Cancel",
       customClass: {
         popup: "bg-gray-800 rounded-2xl border border-gray-700 shadow-2xl",
-        title: "text-2xl font-bold text-white mb-4",
-        htmlContainer: "text-gray-300",
-        actions: "border-t border-gray-700 mt-6 py-4",
-        confirmButton: `
-          ${
-            isActive
-              ? "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700"
-              : "bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700"
-          } text-white font-semibold rounded-xl px-6 py-3 transition-all duration-300 hover:shadow-lg hover:shadow-${
-          isActive ? "red" : "amber"
-        }-500/20 hover:-translate-y-0.5
-        `,
+        confirmButton: `${
+          isActive
+            ? "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700"
+            : "bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700"
+        } text-white px-4 py-2 rounded-lg`,
         cancelButton:
-          "bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white font-semibold rounded-xl px-6 py-3 transition-all duration-300 hover:shadow-lg hover:shadow-gray-500/20 hover:-translate-y-0.5",
+          "bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700",
       },
     });
 
     if (result.isConfirmed) {
       try {
-        const requestUrl = `/members/members/${member.id}/status`;
-        const requestData = {
+        const response = await api.patch(`/members/members/${user.id}/status`, {
           status: isActive ? "inactive" : "active",
-        };
-
-        const response = await api.patch(requestUrl, requestData);
+        });
 
         if (response.data.success) {
-          const updatedMembers = members.map((m) =>
-            m.id === member.id
-              ? { ...m, status: isActive ? "inactive" : "active" }
-              : m
+          const updatedUsers = users.map((u) =>
+            u.id === user.id
+              ? { ...u, status: isActive ? "inactive" : "active" }
+              : u
           );
-          setMembers(updatedMembers);
+          setUsers(updatedUsers);
 
           showToast({
-            title: isActive ? "Member Deactivated" : "Member Activated",
-            message: isActive
-              ? "The member has been successfully deactivated"
-              : "The member has been successfully activated",
-            icon: "success",
+            title: "Status Updated",
+            message: `Regional Director ${
+              isActive ? "deactivated" : "activated"
+            } successfully`,
             status: "success",
           });
         }
       } catch (error) {
         showToast({
           title: "Error",
-          message:
-            error.response?.data?.message || "Failed to update member status",
-          icon: "error",
+          message: error.response?.data?.message || "Failed to update status",
           status: "error",
         });
       }
-    } else {
-      console.log("Status update cancelled by user");
     }
   };
 
@@ -257,11 +185,13 @@ const MemberList = () => {
       >
         <div className="flex items-center gap-4">
           <div className="p-3 bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] rounded-xl">
-            <img src={memberListIcon} alt="Members" className="w-6 h-6" />
+            <img src={memberListIcon} alt="Users" className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-white">Members List</h2>
-            <p className="text-sm text-gray-400">View and manage members</p>
+            <h2 className="text-2xl font-bold text-white">Users List</h2>
+            <p className="text-sm text-gray-400">
+              View and manage Admin & Regional Directors
+            </p>
           </div>
         </div>
         <button
@@ -298,7 +228,7 @@ const MemberList = () => {
           <div className="relative">
             <input
               type="text"
-              placeholder="Search by member name, mobile or chapter..."
+              placeholder="Search by name, mobile or email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full sm:w-[400px] lg:w-[500px] bg-gray-700 text-white pl-11 pr-4 py-3 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-0"
@@ -321,16 +251,16 @@ const MemberList = () => {
 
         <div className="order-1 sm:order-2 sm:ml-auto">
           <button
-            onClick={() => navigate("/add-member")}
+            onClick={() => navigate("/add-user")}
             className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-amber-600 to-amber-900 hover:from-amber-700 hover:to-amber-950 text-white/90 hover:text-white rounded-xl flex items-center justify-center gap-2 h-[56px] transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-amber-900/30 hover:-translate-y-0.5"
           >
             <img src={addIcon} alt="Add" className="w-5 h-5" />
-            Add New Member
+            Add Users
           </button>
         </div>
       </motion.div>
 
-      {/* Members Table */}
+      {/* Users Table */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -350,7 +280,12 @@ const MemberList = () => {
                   </th>
                   <th className="px-6 py-4 text-left border-b border-gray-700">
                     <span className="text-sm font-semibold text-gray-300">
-                      Member Name
+                      Name
+                    </span>
+                  </th>
+                  <th className="px-6 py-4 text-left border-b border-gray-700">
+                    <span className="text-sm font-semibold text-gray-300">
+                      Member Type
                     </span>
                   </th>
                   <th className="px-6 py-4 text-left border-b border-gray-700">
@@ -361,11 +296,6 @@ const MemberList = () => {
                   <th className="px-6 py-4 text-left border-b border-gray-700">
                     <span className="text-sm font-semibold text-gray-300">
                       Email
-                    </span>
-                  </th>
-                  <th className="px-6 py-4 text-left border-b border-gray-700">
-                    <span className="text-sm font-semibold text-gray-300">
-                      Chapter
                     </span>
                   </th>
                   <th className="px-6 py-4 text-left border-b border-gray-700">
@@ -387,25 +317,25 @@ const MemberList = () => {
                       colSpan="7"
                       className="px-6 py-8 text-center text-gray-400"
                     >
-                      Loading members...
+                      Loading Users...
                     </td>
                   </tr>
-                ) : filteredMembers.length === 0 ? (
+                ) : filteredUsers.length === 0 ? (
                   <tr>
                     <td
                       colSpan="7"
                       className="px-6 py-8 text-center text-gray-400"
                     >
-                      No members found
+                      No user found
                     </td>
                   </tr>
                 ) : (
-                  filteredMembers.map((member, index) => (
+                  filteredUsers.map((user, index) => (
                     <motion.tr
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      key={member.id}
+                      key={user.id}
                       className="group hover:bg-gradient-to-r hover:from-gray-700/30 hover:via-gray-700/40 hover:to-gray-700/30 transition-all duration-300"
                     >
                       <td className="py-5 px-6">
@@ -415,67 +345,49 @@ const MemberList = () => {
                         <div className="flex items-center gap-2">
                           <span
                             className={`px-2 py-1 text-xs font-medium rounded-full ${
-                              member.status === "active"
+                              user.status === "active"
                                 ? "bg-green-500/20 text-green-500"
                                 : "bg-red-500/20 text-red-500"
                             }`}
                           >
-                            {member.status === "active" ? "Active" : "Inactive"}
+                            {user.status === "active" ? "Active" : "Inactive"}
                           </span>
-                          <span className="text-gray-400" title={member.name}>
-                            {member.name}
-                          </span>
+                          <span className="text-gray-400">{user.name}</span>
                         </div>
                       </td>
                       <td className="py-5 px-6">
-                        <span className="text-gray-400">{member.mobile}</span>
+                        <span className="text-gray-400">{user.role}</span>
                       </td>
                       <td className="py-5 px-6">
-                        <span className="text-gray-400">{member.email}</span>
+                        <span className="text-gray-400">{user.mobile}</span>
+                      </td>
+                      <td className="py-5 px-6">
+                        <span className="text-gray-400">{user.email}</span>
                       </td>
                       <td className="py-5 px-6">
                         <span className="text-gray-400">
-                          {member.chapter_name || "No Chapter Assigned"}
-                        </span>
-                      </td>
-                      <td className="py-5 px-6">
-                        <span className="text-gray-400">
-                          {new Date(member.joiningDate).toLocaleDateString()}
+                          {new Date(user.joiningDate).toLocaleDateString()}
                         </span>
                       </td>
                       <td className="py-5 px-6">
                         <div className="flex items-center gap-2">
                           <button
-                            onClick={() =>
-                              navigate(`/member-view/${member.id}`)
-                            }
-                            className="group flex items-center justify-center w-8 h-8 bg-gradient-to-r from-blue-600 to-blue-900 hover:from-blue-700 hover:to-blue-950 text-white/90 hover:text-white rounded-xl transition-all duration-300 shadow hover:shadow-lg hover:shadow-blue-900/30 hover:-translate-y-0.5"
-                          >
-                            <img
-                              src={viewIcon}
-                              alt="View"
-                              className="w-5 h-5 opacity-70 group-hover:opacity-100"
-                            />
-                          </button>
-                          {member.status === "active" && (
-                            <button
-                              onClick={() => handleEditClick(member)}
-                              className="group flex items-center justify-center w-8 h-8 bg-gradient-to-r from-amber-600 to-amber-900 hover:from-amber-700 hover:to-amber-950 text-white/90 hover:text-white rounded-xl transition-all duration-300 shadow hover:shadow-lg hover:shadow-amber-900/30 hover:-translate-y-0.5"
-                            >
-                              <img
-                                src={editIcon}
-                                alt="Edit"
-                                className="w-5 h-5 opacity-70 group-hover:opacity-100"
-                              />
-                            </button>
-                          )}
-                          <button
-                            onClick={() => toggleMemberStatus(member)}
+                            onClick={() => toggleUserStatus(user)}
                             className="group flex items-center justify-center w-8 h-8 bg-gradient-to-r from-yellow-600 to-yellow-900 hover:from-yellow-700 hover:to-yellow-950 text-white/90 hover:text-white rounded-xl transition-all duration-300 shadow hover:shadow-lg hover:shadow-yellow-900/30 hover:-translate-y-0.5"
                           >
                             <img
                               src={settingsIcon}
                               alt="Settings"
+                              className="w-5 h-5 opacity-70 group-hover:opacity-100"
+                            />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteClick(user)}
+                            className="group flex items-center justify-center w-8 h-8 bg-gradient-to-r from-red-600 to-red-900 hover:from-red-700 hover:to-red-950 text-white/90 hover:text-white rounded-xl transition-all duration-300 shadow hover:shadow-lg hover:shadow-red-900/30 hover:-translate-y-0.5"
+                          >
+                            <img
+                              src={deleteIcon}
+                              alt="Delete"
                               className="w-5 h-5 opacity-70 group-hover:opacity-100"
                             />
                           </button>
@@ -490,16 +402,18 @@ const MemberList = () => {
         </div>
       </motion.div>
 
-      {editModalOpen && (
-        <EditMemberModal
-          member={selectedMember}
-          chapters={chapters}
-          onClose={() => setEditModalOpen(false)}
-          onSubmit={handleEditSubmit}
-        />
-      )}
+      {/* Delete Modal */}
+      <DeleteModal
+        isOpen={deleteModalOpen}
+        onClose={() => {
+          setDeleteModalOpen(false);
+          setSelectedUser(null);
+        }}
+        onDelete={handleDelete}
+        itemName={selectedUser?.role || "User"}
+      />
     </div>
   );
 };
 
-export default MemberList;
+export default SuperAdminUsers;
