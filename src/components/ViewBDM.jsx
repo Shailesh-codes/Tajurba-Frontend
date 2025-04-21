@@ -15,10 +15,12 @@ import { CheckCircle, UserCheck, XCircle, Clock } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../hooks/api";
 import { format } from "date-fns";
+import { useAuth } from "../contexts/AuthContext";
 
 const ViewBDM = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { auth } = useAuth();
   const [loading, setLoading] = useState(true);
   const [bdmData, setBdmData] = useState({
     memberName: "",
@@ -42,6 +44,8 @@ const ViewBDM = () => {
     verified_date: "",
     rejected_date: "",
     created_at: "",
+    isGiver: false,
+    role: "",
   });
 
   // Status badge styles based on status
@@ -60,47 +64,39 @@ const ViewBDM = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [bdmResponse, chaptersResponse] = await Promise.all([
-          api.get(`/bdm/${id}`),
-          api.get(`/chapters`),
-        ]);
-
+        const bdmResponse = await api.get(`/bdm/${id}`);
         const bdmInfo = bdmResponse.data;
 
-        const chapterData = chaptersResponse.data.data.find(
-          (ch) => ch.chapter_id.toString() === bdmInfo.chapter?.toString()
-        );
+        // The backend now sends us isGiver flag and the correct member to display
+        const displayMember = bdmInfo.displayMember;
+        const isGiver = bdmInfo.isGiver;
 
-        // Fetch member details
-        const memberResponse = await api.get(`/members/members`);
-        const member = memberResponse.data.data.find(
-          (m) => m.id === bdmInfo.received_MemberId
-        );
-
-        // Combine BDM and member data
         setBdmData({
-          ...bdmData,
-          memberName: bdmInfo.memberName,
-          chapter: chapterData?.chapter_name || "N/A",
+          memberName: displayMember?.name || "Unknown",
+          chapter: displayMember?.chapter || "N/A",
           status: bdmInfo.status,
           bdmDate: bdmInfo.bdmDate,
-          email: member?.email || "",
-          mobile: member?.mobile || "",
-          website: "www.example.com", // Keep default or remove if not needed
-          company: member?.company || "",
-          businessCategory: member?.business_category || "",
+          email: displayMember?.email || "",
+          mobile: displayMember?.mobile || "",
+          website: displayMember?.website || "N/A",
+          company: displayMember?.company || "",
+          businessCategory: displayMember?.business_category || "",
           description: bdmInfo.description || "",
-          profileImage: "https://avatar.iran.liara.run/public", // Keep default avatar
+          profileImage:
+            displayMember?.profilePicture ||
+            "https://avatar.iran.liara.run/public",
           socialMedia: {
-            facebook: "https://facebook.com",
-            twitter: "https://twitter.com",
-            linkedin: "https://linkedin.com",
-            instagram: "https://instagram.com",
+            facebook: displayMember?.facebook || "https://facebook.com",
+            twitter: displayMember?.twitter || "https://twitter.com",
+            linkedin: displayMember?.linkedin || "https://linkedin.com",
+            instagram: displayMember?.instagram || "https://instagram.com",
           },
           verifyStatus: bdmInfo.status,
           verified_date: bdmInfo.verified_date,
           rejected_date: bdmInfo.rejected_date,
           created_at: bdmInfo.created_at,
+          isGiver: isGiver,
+          // role: isGiver ? "Given To" : "Received From"
         });
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -110,7 +106,7 @@ const ViewBDM = () => {
     };
 
     fetchData();
-  }, [id]);
+  }, [id, auth.user?.id]);
 
   const formatDate = (dateString) => {
     try {
@@ -221,6 +217,9 @@ const ViewBDM = () => {
             <h3 className="text-2xl font-bold text-white mb-2">
               {bdmData.memberName}
             </h3>
+            <span className="px-3 py-1 bg-amber-500/20 text-amber-400 rounded-full text-sm font-medium mb-2">
+              {bdmData.role}
+            </span>
             <span className="px-3 py-1 bg-amber-500/20 text-amber-400 rounded-full text-sm font-medium mb-4">
               {bdmData.chapter}
             </span>

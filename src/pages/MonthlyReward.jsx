@@ -16,6 +16,7 @@ import {
   Briefcase,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
+import api from "../hooks/api";
 
 // MetricCard component from MemberMonthlyReward
 const MetricCard = ({
@@ -25,6 +26,7 @@ const MetricCard = ({
   subtitle,
   maxValue,
   icon: Icon,
+  details,
 }) => {
   const percentage = Math.min((value / maxValue) * 100, 100);
   return (
@@ -46,6 +48,7 @@ const MetricCard = ({
         />
       </div>
       {subtitle && <p className="text-xs text-gray-400 mt-3">{subtitle}</p>}
+      {details && <div className="mt-2 text-xs text-gray-400">{details}</div>}
     </div>
   );
 };
@@ -72,11 +75,17 @@ const MonthlyReward = () => {
       subtitle: "2 more meetings needed",
     },
     bdm: {
-      given: 0,
-      received: 0,
+      value: 0,
       points: 0,
       maxValue: 4,
       subtitle: "4 more BDMs needed",
+      breakdown: {
+        given: 0,
+        received: 0,
+        total: 0,
+        pointsEarned: 0,
+        nextTierNeeded: 0,
+      },
     },
     business: {
       value: 0,
@@ -179,6 +188,30 @@ const MonthlyReward = () => {
     )}`;
   }
 
+  // Add a function to calculate BDM points
+  const calculateBDMPoints = (count) => {
+    if (count >= 4) return 20;
+    const pointsMap = {
+      0: 0,
+      1: 5,
+      2: 10,
+      3: 15,
+    };
+    return pointsMap[count] || 0;
+  };
+
+  // Add a function to get next tier BDMs needed
+  const getNextTierBDMs = (currentCount) => {
+    if (currentCount >= 4) return 0;
+    const tiers = [1, 2, 3, 4];
+    for (const tier of tiers) {
+      if (tier > currentCount) {
+        return tier - currentCount;
+      }
+    }
+    return 0;
+  };
+
   useEffect(() => {
     setLoading(true);
     // Simulate API call
@@ -190,6 +223,66 @@ const MonthlyReward = () => {
       setLoading(false);
     }, 1500);
   }, [selectedMonth, selectedChapter]);
+
+  // Update the useEffect to fetch and calculate BDM data
+  useEffect(() => {
+    const fetchUserBDMs = async () => {
+      try {
+        const response = await api.get("/bdm");
+        const bdms = response.data;
+
+        // Count verified BDMs for the current month
+        const currentDate = new Date();
+        const currentMonth = currentDate.getMonth() + 1;
+        const currentYear = currentDate.getFullYear();
+
+        const monthlyBDMs = bdms.filter((bdm) => {
+          const bdmDate = new Date(bdm.bdmDate);
+          return (
+            bdmDate.getMonth() + 1 === currentMonth &&
+            bdmDate.getFullYear() === currentYear &&
+            bdm.status === "verified"
+          );
+        });
+
+        const givenBDMs = monthlyBDMs.filter(
+          (bdm) => bdm.givenBy_MemberId === auth.user.id
+        ).length;
+        const receivedBDMs = monthlyBDMs.filter(
+          (bdm) => bdm.received_MemberId === auth.user.id
+        ).length;
+        const totalBDMs = givenBDMs + receivedBDMs;
+        const pointsEarned = calculateBDMPoints(totalBDMs);
+        const nextTierNeeded = getNextTierBDMs(totalBDMs);
+
+        setUserData((prev) => ({
+          ...prev,
+          bdm: {
+            value: totalBDMs,
+            points: pointsEarned,
+            maxValue: 4,
+            subtitle:
+              nextTierNeeded > 0
+                ? `${nextTierNeeded} more BDM${
+                    nextTierNeeded > 1 ? "s" : ""
+                  } needed for next tier`
+                : "Maximum tier achieved",
+            breakdown: {
+              given: givenBDMs,
+              received: receivedBDMs,
+              total: totalBDMs,
+              pointsEarned,
+              nextTierNeeded,
+            },
+          },
+        }));
+      } catch (error) {
+        console.error("Error fetching BDM data:", error);
+      }
+    };
+
+    fetchUserBDMs();
+  }, [auth.user.id]);
 
   const LoadingCard = () => (
     <div className="p-4 rounded-xl bg-gray-800/50 border border-gray-700 backdrop-blur-xl">
@@ -336,11 +429,18 @@ const MonthlyReward = () => {
 
                 <MetricCard
                   title="BDM"
-                  value={`${userData.bdm.given}/${userData.bdm.received}`}
+                  value={`${userData.bdm.breakdown.given}/${userData.bdm.breakdown.received}`}
                   points={userData.bdm.points}
                   subtitle={userData.bdm.subtitle}
                   maxValue={userData.bdm.maxValue}
                   icon={Handshake}
+                  details={
+                    <div className="mt-2 text-xs text-gray-400">
+                      <p>Given: {userData.bdm.breakdown.given}</p>
+                      <p>Received: {userData.bdm.breakdown.received}</p>
+                      <p>Total Points: {userData.bdm.points}/20</p>
+                    </div>
+                  }
                 />
 
                 <MetricCard

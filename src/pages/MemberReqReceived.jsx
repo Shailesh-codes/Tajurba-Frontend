@@ -39,8 +39,11 @@ const MemberReqReceived = () => {
       const formattedBdms = bdms.map((bdm) => ({
         ...bdm,
         id: bdm.bdm_id,
+        givenByName: bdm.givenByName || "Unknown",
+        receiverName: bdm.receiverName || "Unknown",
         request_type: bdm.request_type || "BDM",
         date: bdm.bdmDate || bdm.created_at,
+        chapter: bdm.chapter || "N/A",
       }));
 
       // Rest of your filtering logic
@@ -545,7 +548,7 @@ const MemberReqReceived = () => {
         ))
       );
     } else {
-      // Return existing BDM table content
+      // BDM table content
       return requests_data.length === 0 ? (
         <tr>
           <td colSpan={6} className="text-center py-8 text-gray-400">
@@ -562,9 +565,11 @@ const MemberReqReceived = () => {
             className="group hover:bg-gradient-to-r hover:from-gray-700/30 hover:via-gray-700/40 hover:to-gray-700/30 transition-all duration-300"
           >
             <td className="px-6 py-4">
-              <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
-                {request.memberName || "N/A"}
-              </span>
+              <div className="flex flex-col">
+                <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
+                  {request.givenByName}
+                </span>
+              </div>
             </td>
             <td className="px-6 py-4">
               <span className="text-sm text-gray-300">
