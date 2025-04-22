@@ -13,6 +13,7 @@ import {
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../hooks/api";
 import { format } from "date-fns";
+import { useAuth } from "../contexts/AuthContext";
 
 const ViewBusiness = () => {
   const navigate = useNavigate();
@@ -42,8 +43,16 @@ const ViewBusiness = () => {
     created_at: "",
     joiningDate: "",
     memberStatus: "active",
+    GivenByMember: {
+      name: "",
+    },
+    ReceivedByMember: {
+      name: "",
+    }
   });
   const [loading, setLoading] = useState(true);
+  const [isGiver, setIsGiver] = useState(false);
+  const { auth } = useAuth();
 
   // Status badge styles based on status
   const getStatusBadgeStyle = (status) => {
@@ -61,43 +70,53 @@ const ViewBusiness = () => {
     const fetchBusinessData = async () => {
       try {
         setLoading(true);
-        // Fetch business data
         const businessResponse = await api.get(`/business/${id}`);
         const businessData = businessResponse.data;
 
-        // Fetch member details using receiver_memberId
-        const memberResponse = await api.get(`/members/members`);
-        const member = memberResponse.data.data.find(
-          (m) => m.id === businessData.receiver_memberId
-        );
+        // Determine if current user is giver or receiver
+        const currentUserIsGiver = businessData.given_by_memberId === auth.user.id;
+        setIsGiver(currentUserIsGiver);
 
-        // Combine business and member data
+        // Get the ID of the member whose details we need to display
+        const targetMemberId = currentUserIsGiver 
+          ? businessData.receiver_memberId 
+          : businessData.given_by_memberId;
+
+        // Fetch member details
+        const memberResponse = await api.get(`/members/members`);
+        const targetMember = memberResponse.data.data.find(m => m.id === targetMemberId);
+
         setBusinessData({
           memberName: businessData.memberName,
           chapter: businessData.chapter,
           amount: businessData.amount,
           businessDate: businessData.businessDate,
-          email: member?.email || "",
-          mobile: member?.mobile || "",
-          website: member?.website || "",
-          company: member?.company || "",
-          businessCategory: member?.business_category || "",
+          email: targetMember?.email || "",
+          mobile: targetMember?.mobile || "",
+          website: targetMember?.website || "",
+          company: targetMember?.company || "",
+          businessCategory: targetMember?.business_category || "",
           description: businessData.description || "",
-          profileImage:
-            member?.profile_image || "https://avatar.iran.liara.run/public",
-          joiningDate: member?.joiningDate || "",
-          memberStatus: member?.status || "active",
+          profileImage: targetMember?.profile_image || "https://avatar.iran.liara.run/public",
+          joiningDate: targetMember?.joiningDate || "",
+          memberStatus: targetMember?.status || "active",
           socialMedia: {
-            facebook: member?.facebook || "",
-            twitter: member?.twitter || "",
-            linkedin: member?.linkedin || "",
-            instagram: member?.instagram || "",
-            whatsapp: member?.whatsapp || "",
+            facebook: targetMember?.facebook || "",
+            twitter: targetMember?.twitter || "",
+            linkedin: targetMember?.linkedin || "",
+            instagram: targetMember?.instagram || "",
+            whatsapp: targetMember?.whatsapp || "",
           },
           status: businessData.status,
           verifiedDate: businessData.updated_at,
           verifiedBy: businessData.verifiedBy,
           created_at: businessData.created_at,
+          GivenByMember: {
+            name: currentUserIsGiver ? auth.user.name : targetMember?.name || "",
+          },
+          ReceivedByMember: {
+            name: currentUserIsGiver ? targetMember?.name : auth.user.name || "",
+          }
         });
       } catch (err) {
         console.error("Error fetching data:", err);
@@ -176,7 +195,9 @@ const ViewBusiness = () => {
           </div>
           <div>
             <h2 className="text-2xl font-bold text-white">Business Details</h2>
-            <p className="text-sm text-gray-400">View business information</p>
+            <p className="text-sm text-gray-400">
+              {isGiver ? "Business Given To" : "Business Received From"}
+            </p>
           </div>
         </div>
 
@@ -252,7 +273,7 @@ const ViewBusiness = () => {
             </div>
 
             <h3 className="text-2xl font-bold text-white mb-2">
-              {businessData.memberName}
+              {isGiver ? businessData.ReceivedByMember?.name : businessData.GivenByMember?.name}
             </h3>
             <span className="px-3 py-1 bg-amber-500/20 text-amber-400 rounded-full text-sm font-medium mb-4">
               {businessData.chapter}
@@ -320,12 +341,12 @@ const ViewBusiness = () => {
             <div className="grid md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-400">
-                  Member Name
+                  {isGiver ? "Given To" : "Received From"}
                 </label>
                 <div className="flex items-center gap-3 p-3 bg-gray-700/50 rounded-xl">
                   <FiUsers className="w-5 h-5 text-amber-500" />
                   <p className="font-medium text-white">
-                    {businessData.memberName}
+                    {isGiver ? businessData.ReceivedByMember?.name : businessData.GivenByMember?.name}
                   </p>
                 </div>
               </div>

@@ -22,7 +22,6 @@ import {
   Plus,
 } from "lucide-react";
 
-// Update table headers to match business data
 const tableHeaders = [
   "SR No.",
   "Member Name",
@@ -64,12 +63,19 @@ const BusinessGiven = () => {
         api.get(`/chapters`),
       ]);
 
-      let filteredData = response.data;
+      let filteredData = response.data.map((business) => {
+        const isGiver = business.given_by_memberId === auth.user.id;
+        return {
+          ...business,
+          displayName: isGiver ? business.receiverName : business.giverName,
+          role: isGiver ? "Given To" : "Received From",
+        };
+      });
 
       // Apply search filter
       if (search) {
         filteredData = filteredData.filter((business) =>
-          business.memberName.toLowerCase().includes(search.toLowerCase())
+          business.displayName.toLowerCase().includes(search.toLowerCase())
         );
       }
 
@@ -413,9 +419,11 @@ const BusinessGiven = () => {
                         </span>
                       </td>
                       <td className="flex flex-col px-6 py-4">
-                        <span className="text-xs text-gray-300">Given to:</span>
+                        <span className="text-xs text-gray-300">
+                          {business.role}
+                        </span>
                         <span className="text-sm text-white group-hover:text-white transition-colors">
-                          {business.memberName}
+                          {business.displayName}
                         </span>
                       </td>
                       <td className="px-6 py-4">

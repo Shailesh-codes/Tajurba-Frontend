@@ -33,15 +33,14 @@ const MemberReqReceived = () => {
   const fetchRequests = async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/bdm`);
+      const response = await api.get(`/bdm/request-bdms`);
       const bdms = response.data || [];
 
       const formattedBdms = bdms.map((bdm) => ({
         ...bdm,
         id: bdm.bdm_id,
         givenByName: bdm.givenByName || "Unknown",
-        receiverName: bdm.receiverName || "Unknown",
-        request_type: bdm.request_type || "BDM",
+        request_type: "BDM",
         date: bdm.bdmDate || bdm.created_at,
         chapter: bdm.chapter || "N/A",
       }));
@@ -164,10 +163,10 @@ const MemberReqReceived = () => {
           referralResponse,
           businessResponse,
         ] = await Promise.all([
-          api.get(`/bdm`),
+          api.get(`/bdm/request-bdms`),
           api.get(`/chapters`),
           api.get(`/referrals`),
-          api.get(`/business`),
+          api.get(`/business/reqs`),
         ]);
 
         const chapters = chaptersResponse.data.data || [];
@@ -211,13 +210,16 @@ const MemberReqReceived = () => {
         }));
 
         const formattedBusinesses = businesses.map((business) => ({
+          ...business,
           id: business.business_id,
-          givenByName: business.Member?.name || "N/A",
-          memberName: business.memberName,
-          chapter: business.chapter, // This already works correctly
-          amount: business.amount,
-          status: business.status,
-          date: business.businessDate,
+          givenByName: business.GivenByMember?.name || business.givenByName || "Unknown",
+          receiverName: business.ReceivedByMember?.name || business.memberName || "Unknown",
+          memberName: business.memberName || "Unknown",
+          chapter: business.chapter || "N/A",
+          amount: parseFloat(business.amount) || 0,
+          status: business.status || "pending",
+          date: business.businessDate || business.created_at,
+          businessDate: business.businessDate || business.created_at,
           verified_date: business.verified_date,
           rejected_date: business.rejected_date,
         }));
@@ -471,11 +473,12 @@ const MemberReqReceived = () => {
           >
             <td className="px-6 py-4">
               <div className="flex flex-col">
-                <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
-                  {business.givenByName}
+                <span className="text-xs text-gray-200 group-hover:text-white transition-colors">
+                  <span className="text-xs text-gray-400">Given By:</span>{" "}
+                  {business.givenByName || business.GivenByMember?.name || "Unknown"}
                 </span>
                 <span className="text-xs text-gray-400 mt-1">
-                  Amount: ₹{business.amount.toLocaleString("en-IN")}
+                  Amount: ₹{business.amount?.toLocaleString("en-IN") || "0"}
                 </span>
               </div>
             </td>
@@ -489,7 +492,7 @@ const MemberReqReceived = () => {
             </td>
             <td className="px-6 py-4">
               <span className="text-sm text-gray-300">
-                {formatDate(business.date)}
+                {formatDate(business.businessDate || business.created_at)}
               </span>
             </td>
             <td className="px-6 py-4">
@@ -502,8 +505,9 @@ const MemberReqReceived = () => {
                   business.status
                 )}`}
               >
-                {business.status.charAt(0).toUpperCase() +
-                  business.status.slice(1)}
+                {business.status
+                  ? business.status.charAt(0).toUpperCase() + business.status.slice(1)
+                  : "Pending"}
               </motion.span>
             </td>
             <td className="px-6 py-4">
@@ -568,6 +572,9 @@ const MemberReqReceived = () => {
               <div className="flex flex-col">
                 <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
                   {request.givenByName}
+                </span>
+                <span className="text-xs text-gray-400 mt-1">
+                  Sent you a BDM request
                 </span>
               </div>
             </td>
