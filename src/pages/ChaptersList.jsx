@@ -7,8 +7,10 @@ import api from "../hooks/api";
 import { format } from "date-fns";
 import deleteIcon from "../assets/images/icons/delete.svg";
 import DeleteModal from "../layout/DeleteModal";
+import { useAuth } from "../contexts/AuthContext";
 
 const ChaptersList = () => {
+  const { auth } = useAuth();
   const navigate = useNavigate();
   const [chapters, setChapters] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -132,6 +134,10 @@ const ChaptersList = () => {
     chapter.chapter_name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const hasAdminPrivileges = () => {
+    return auth.role === "Admin" || auth.role === "Super Admin";
+  };
+
   return (
     <div className="mt-32 p-1 lg:p-6">
       {/* Page Header */}
@@ -198,27 +204,29 @@ const ChaptersList = () => {
             </div>
           </div>
 
-          <div className="order-1 sm:order-2 sm:ml-auto">
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-amber-600 to-amber-900 hover:from-amber-700 hover:to-amber-950 text-white/90 hover:text-white rounded-xl flex items-center justify-center gap-2 h-[48px] transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-amber-900/30 hover:-translate-y-0.5"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+          {hasAdminPrivileges() && (
+            <div className="order-1 sm:order-2 sm:ml-auto">
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-amber-600 to-amber-900 hover:from-amber-700 hover:to-amber-950 text-white/90 hover:text-white rounded-xl flex items-center justify-center gap-2 h-[48px] transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-amber-900/30 hover:-translate-y-0.5"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                />
-              </svg>
-              Add New Chapter
-            </button>
-          </div>
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                  />
+                </svg>
+                Add New Chapter
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Table Section */}
@@ -254,18 +262,20 @@ const ChaptersList = () => {
                         Updated Date
                       </span>
                     </th>
-                    <th className="px-6 py-4 text-left border-b border-gray-700">
-                      <span className="text-sm font-semibold text-gray-300">
-                        Actions
-                      </span>
-                    </th>
+                    {hasAdminPrivileges() && (
+                      <th className="px-6 py-4 text-left border-b border-gray-700">
+                        <span className="text-sm font-semibold text-gray-300">
+                          Actions
+                        </span>
+                      </th>
+                    )}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-700/50">
                   {filteredChapters.length === 0 ? (
                     <tr>
                       <td
-                        colSpan="5"
+                        colSpan={hasAdminPrivileges() ? "5" : "4"}
                         className="px-6 py-8 text-center text-gray-400"
                       >
                         {searchTerm
@@ -302,48 +312,50 @@ const ChaptersList = () => {
                             {formatDateTime(chapter.updated_at)}
                           </span>
                         </td>
-                        <td className="px-6 py-4">
-                          <div className="flex gap-2 items-center justify-center">
-                            <button
-                              onClick={() => {
-                                setEditChapter({
-                                  id: chapter.chapter_id,
-                                  name: chapter.chapter_name,
-                                });
-                                setShowEditModal(true);
-                              }}
-                              className="relative group/btn flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-r from-amber-600/90 to-amber-800/90 hover:from-amber-600 hover:to-amber-800 transition-all duration-300 shadow-lg hover:shadow-amber-900/30"
-                            >
-                              <div className="absolute inset-0 rounded-xl bg-amber-600 opacity-0 group-hover/btn:opacity-20 blur-lg transition-opacity" />
-                              <svg
-                                className="w-4 h-4 text-white/90 group-hover/btn:text-white transition-colors relative z-10"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
+                        {hasAdminPrivileges() && (
+                          <td className="px-6 py-4">
+                            <div className="flex gap-2 items-center justify-center">
+                              <button
+                                onClick={() => {
+                                  setEditChapter({
+                                    id: chapter.chapter_id,
+                                    name: chapter.chapter_name,
+                                  });
+                                  setShowEditModal(true);
+                                }}
+                                className="relative group/btn flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-r from-amber-600/90 to-amber-800/90 hover:from-amber-600 hover:to-amber-800 transition-all duration-300 shadow-lg hover:shadow-amber-900/30"
                               >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth="2"
-                                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                <div className="absolute inset-0 rounded-xl bg-amber-600 opacity-0 group-hover/btn:opacity-20 blur-lg transition-opacity" />
+                                <svg
+                                  className="w-4 h-4 text-white/90 group-hover/btn:text-white transition-colors relative z-10"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                  />
+                                </svg>
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setChapterToDelete(chapter);
+                                  setShowDeleteModal(true);
+                                }}
+                                className="flex items-center justify-center w-9 h-9 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white rounded-xl transition-all duration-300 shadow-lg hover:shadow-red-500/25"
+                              >
+                                <img
+                                  src={deleteIcon}
+                                  alt="Delete"
+                                  className="w-4 h-4 transition-transform hover:scale-110"
                                 />
-                              </svg>
-                            </button>
-                            <button
-                              onClick={() => {
-                                setChapterToDelete(chapter);
-                                setShowDeleteModal(true);
-                              }}
-                              className="flex items-center justify-center w-9 h-9 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white rounded-xl transition-all duration-300 shadow-lg hover:shadow-red-500/25"
-                            >
-                              <img
-                                src={deleteIcon}
-                                alt="Delete"
-                                className="w-4 h-4 transition-transform hover:scale-110"
-                              />
-                            </button>
-                          </div>
-                        </td>
+                              </button>
+                            </div>
+                          </td>
+                        )}
                       </motion.tr>
                     ))
                   )}
@@ -354,142 +366,145 @@ const ChaptersList = () => {
         </motion.div>
       </div>
 
-      {/* Add Chapter Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div
-            className="fixed inset-0 bg-black/50"
-            onClick={() => setShowAddModal(false)}
-          ></div>
-          <div className="relative z-50 bg-gray-800/95 p-6 rounded-2xl border border-gray-700 w-full max-w-md shadow-xl">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-white">Add New Chapter</h2>
-              <button
+      {hasAdminPrivileges() && (
+        <>
+          {showAddModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center">
+              <div
+                className="fixed inset-0 bg-black/50"
                 onClick={() => setShowAddModal(false)}
-                className="text-gray-400 hover:text-white transition-colors duration-300"
-              >
-                <svg
-                  className="w-5 h-5"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
+              ></div>
+              <div className="relative z-50 bg-gray-800/95 p-6 rounded-2xl border border-gray-700 w-full max-w-md shadow-xl">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-xl font-bold text-white">Add New Chapter</h2>
+                  <button
+                    onClick={() => setShowAddModal(false)}
+                    className="text-gray-400 hover:text-white transition-colors duration-300"
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
+                <form onSubmit={handleAddChapter}>
+                  <div className="mb-6">
+                    <label className="block text-gray-300 text-sm font-medium mb-2">
+                      Chapter Name <span className="text-red-500 text-lg">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={newChapterName}
+                      onChange={(e) => setNewChapterName(e.target.value)}
+                      required
+                      className="w-full p-3 bg-gray-700/50 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-0 text-white placeholder-gray-400"
+                      placeholder="Enter chapter name"
+                    />
+                  </div>
+                  <div className="flex justify-end gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowAddModal(false)}
+                      className="px-4 py-2.5 border border-gray-700 text-gray-300 hover:bg-gray-700/50 rounded-xl transition-all duration-300"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 to-amber-900 hover:from-amber-700 hover:to-amber-950 text-white font-semibold shadow-lg hover:shadow-xl hover:shadow-amber-900/30 hover:-translate-y-0.5 transition-all duration-300"
+                    >
+                      Add Chapter
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
-            <form onSubmit={handleAddChapter}>
-              <div className="mb-6">
-                <label className="block text-gray-300 text-sm font-medium mb-2">
-                  Chapter Name <span className="text-red-500 text-lg">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={newChapterName}
-                  onChange={(e) => setNewChapterName(e.target.value)}
-                  required
-                  className="w-full p-3 bg-gray-700/50 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-0 text-white placeholder-gray-400"
-                  placeholder="Enter chapter name"
-                />
-              </div>
-              <div className="flex justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2.5 border border-gray-700 text-gray-300 hover:bg-gray-700/50 rounded-xl transition-all duration-300"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 to-amber-900 hover:from-amber-700 hover:to-amber-950 text-white font-semibold shadow-lg hover:shadow-xl hover:shadow-amber-900/30 hover:-translate-y-0.5 transition-all duration-300"
-                >
-                  Add Chapter
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+          )}
 
-      {/* Edit Chapter Modal */}
-      {showEditModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div
-            className="fixed inset-0 bg-black/50"
-            onClick={() => setShowEditModal(false)}
-          ></div>
-          <div className="relative z-50 bg-gray-900/95 p-6 rounded-2xl border border-gray-700 w-full max-w-md shadow-xl">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-white">Edit Chapter</h2>
-              <button
+          {showEditModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center">
+              <div
+                className="fixed inset-0 bg-black/50"
                 onClick={() => setShowEditModal(false)}
-                className="text-gray-400 hover:text-white transition-colors duration-300"
-              >
-                <svg
-                  className="w-5 h-5"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
+              ></div>
+              <div className="relative z-50 bg-gray-900/95 p-6 rounded-2xl border border-gray-700 w-full max-w-md shadow-xl">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-xl font-bold text-white">Edit Chapter</h2>
+                  <button
+                    onClick={() => setShowEditModal(false)}
+                    className="text-gray-400 hover:text-white transition-colors duration-300"
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
+                <form onSubmit={handleEditChapter}>
+                  <div className="mb-6">
+                    <label className="block text-gray-300 text-sm font-medium mb-2">
+                      Chapter Name <span className="text-red-500 text-lg">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={editChapter.name}
+                      onChange={(e) =>
+                        setEditChapter({ ...editChapter, name: e.target.value })
+                      }
+                      required
+                      className="w-full p-3 bg-gray-700/50 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-0 text-white placeholder-gray-400"
+                      placeholder="Enter chapter name"
+                    />
+                  </div>
+                  <div className="flex justify-end gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowEditModal(false)}
+                      className="px-4 py-2.5 border border-gray-700 text-gray-300 hover:bg-gray-700/50 rounded-xl transition-all duration-300"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 to-amber-900 hover:from-amber-700 hover:to-amber-950 text-white font-semibold shadow-lg hover:shadow-xl hover:shadow-amber-900/30 hover:-translate-y-0.5 transition-all duration-300"
+                    >
+                      Update Chapter
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
-            <form onSubmit={handleEditChapter}>
-              <div className="mb-6">
-                <label className="block text-gray-300 text-sm font-medium mb-2">
-                  Chapter Name <span className="text-red-500 text-lg">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={editChapter.name}
-                  onChange={(e) =>
-                    setEditChapter({ ...editChapter, name: e.target.value })
-                  }
-                  required
-                  className="w-full p-3 bg-gray-700/50 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-0 text-white placeholder-gray-400"
-                  placeholder="Enter chapter name"
-                />
-              </div>
-              <div className="flex justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowEditModal(false)}
-                  className="px-4 py-2.5 border border-gray-700 text-gray-300 hover:bg-gray-700/50 rounded-xl transition-all duration-300"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 to-amber-900 hover:from-amber-700 hover:to-amber-950 text-white font-semibold shadow-lg hover:shadow-xl hover:shadow-amber-900/30 hover:-translate-y-0.5 transition-all duration-300"
-                >
-                  Update Chapter
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+          )}
+
+          <DeleteModal
+            isOpen={showDeleteModal}
+            onClose={() => {
+              setShowDeleteModal(false);
+              setChapterToDelete(null);
+            }}
+            onDelete={handleDeleteChapter}
+            itemName={`Chapter "${chapterToDelete?.chapter_name}"`}
+          />
+        </>
       )}
-      <DeleteModal
-        isOpen={showDeleteModal}
-        onClose={() => {
-          setShowDeleteModal(false);
-          setChapterToDelete(null);
-        }}
-        onDelete={handleDeleteChapter}
-        itemName={`Chapter  "${chapterToDelete?.chapter_name}"`}
-      />
     </div>
   );
 };

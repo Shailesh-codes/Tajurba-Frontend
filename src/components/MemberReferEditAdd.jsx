@@ -12,6 +12,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import referralIcon from "../assets/images/icons/ref-given.svg";
 import api from "../hooks/api";
 import Swal from "sweetalert2";
+import { useAuth } from "../contexts/AuthContext";
 
 const MemberReferEditAdd = () => {
   const navigate = useNavigate();
@@ -19,7 +20,9 @@ const MemberReferEditAdd = () => {
   const [loading, setLoading] = useState(false);
   const [chapters, setChapters] = useState([]);
   const [members, setMembers] = useState([]);
+  const { auth } = useAuth();
   const [formData, setFormData] = useState({
+    given_by_member_id: "",
     chapter: "",
     member: "",
     referralFor: "",
@@ -159,6 +162,7 @@ const MemberReferEditAdd = () => {
     try {
       setLoading(true);
       const referralData = {
+        given_by_member_id: auth?.user.id,
         received_member_id: parseInt(formData.member),
         refer_name: formData.referralFor,
         mobile: formData.mobile,

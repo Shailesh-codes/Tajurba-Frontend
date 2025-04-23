@@ -15,6 +15,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import api from "../hooks/api";
 import Swal from "sweetalert2";
 import { format } from "date-fns";
+import { useAuth } from "../contexts/AuthContext";
 
 const MemberReferView = () => {
   const navigate = useNavigate();
@@ -45,7 +46,7 @@ const MemberReferView = () => {
       whatsapp: "",
     },
   });
-  const [memberData, setMemberData] = useState(null);
+  const { auth } = useAuth();
 
   const formatDate = (dateString) => {
     try {
@@ -59,56 +60,49 @@ const MemberReferView = () => {
     const fetchMemberData = async () => {
       try {
         setLoading(true);
-        // First fetch referral data to get member IDs
         const referralResponse = await api.get(`/referrals/${id}`);
 
         if (referralResponse.data.success) {
-          const referralData = referralResponse.data.data;
+          const referral = referralResponse.data.data;
+          const isGiver = referral.given_by_member_id === auth.user.id;
 
-          const membersResponse = await api.get(`/members/members`);
-          if (membersResponse.data.success) {
-            const allMembers = membersResponse.data.data;
+          // Determine which member's data to display based on referral direction
+          const displayMember = isGiver ? referral.receivedByMember : referral.givenByMember;
+          const otherMember = isGiver ? referral.givenByMember : referral.receivedByMember;
 
-            const givenByMember = allMembers.find(
-              (m) => m.id === referralData.given_by_member_id
-            );
-            const receivedByMember = allMembers.find(
-              (m) => m.id === referralData.received_member_id
-            );
+          setReferralData({
+            referral_id: referral.referral_id,
+            isGiver: isGiver,
+            referralType: isGiver ? "Given To" : "Received From",
+            
+            // Main display member details
+            displayMemberName: displayMember?.name || "N/A",
+            displayMemberEmail: displayMember?.email || "N/A",
+            displayMemberMobile: displayMember?.mobile || "N/A",
+            displayMemberCompany: displayMember?.company || "N/A",
+            displayMemberCategory: displayMember?.business_category || "N/A",
+            displayMemberChapter: displayMember?.Chapter?.chapter_name || "N/A",
 
-            setReferralData((prevData) => ({
-              ...prevData,
+            // Referral specific details
+            refer_name: referral.refer_name || "N/A",
+            referralDate: referral.referral_date || new Date().toISOString(),
+            description: referral.description || "No description provided",
+            verifyStatus: referral.verify_status || "pending",
+            verifiedDate: referral.verified_date || "",
+            rejectedDate: referral.rejected_date || "",
+            created_at: referral.created_at || "",
+            mobile: referral.mobile || "N/A",
 
-              refer_name: referralData.refer_name || "N/A",
-              referralDate:
-                referralData.referral_date || new Date().toISOString(),
-              description:
-                referralData.description || "No description provided",
-              verifyStatus: referralData.verify_status || "pending",
-              verifiedDate: referralData.verified_date || "",
-              rejectedDate: referralData.rejected_date || "",
-              created_at: referralData.created_at || "",
-              receivedMobile: referralData.mobile || "N/A",
-              givenByMember: givenByMember || null,
-              receivedByMember: receivedByMember || null,
-              receivedMemberName: receivedByMember?.name || "N/A",
-              receivedChapter: receivedByMember?.chapter_name || "N/A",
-              email: receivedByMember?.email || "N/A",
-              company: receivedByMember?.company_name || "N/A",
-              business_category: receivedByMember?.business_category || "N/A",
+            // Keep track of both members
+            givenByMember: referral.givenByMember,
+            receivedByMember: referral.receivedByMember,
 
-              // Social Media
-              socialMedia: {
-                ...prevData.socialMedia,
-                whatsapp: referralData.mobile
-                  ? `https://wa.me/${referralData.mobile.replace(
-                      /[^0-9]/g,
-                      ""
-                    )}`
-                  : "",
-              },
-            }));
-          }
+            profileImage: "https://avatar.iran.liara.run/public",
+            socialMedia: {
+              whatsapp: referral.mobile ? `https://wa.me/${referral.mobile.replace(/[^0-9]/g, "")}` : "",
+              // ... other social media remains same
+            },
+          });
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -128,7 +122,7 @@ const MemberReferView = () => {
     if (id) {
       fetchMemberData();
     }
-  }, [id]);
+  }, [id, auth.user.id]);
 
   if (loading) {
     return (
@@ -158,7 +152,9 @@ const MemberReferView = () => {
           </div>
           <div>
             <h2 className="text-2xl font-bold text-white">Referral Details</h2>
-            <p className="text-sm text-gray-400">View referral information</p>
+            <p className="text-sm text-gray-400">
+              {referralData.referralType} Referral
+            </p>
           </div>
         </div>
 
@@ -288,10 +284,19 @@ const MemberReferView = () => {
             </div>
 
             <h3 className="text-2xl font-bold text-white mb-2">
-              {referralData.receivedMemberName}
+              {referralData.displayMemberName}
             </h3>
             <span className="px-3 py-1 bg-amber-500/20 text-amber-400 rounded-full text-sm font-medium mb-4">
-              {referralData.receivedChapter}
+              {referralData.displayMemberChapter}
+            </span>
+
+            {/* Referral Type Badge */}
+            <span className={`px-3 py-1 rounded-full text-sm font-medium mb-4 ${
+              referralData.isGiver 
+                ? "bg-green-500/20 text-green-400"
+                : "bg-blue-500/20 text-blue-400"
+            }`}>
+              {referralData.referralType}
             </span>
 
             <div className="w-full border-t border-gray-700 pt-4">
@@ -343,34 +348,33 @@ const MemberReferView = () => {
               {[
                 {
                   icon: Users,
-                  label: "Referred To Member",
-                  value: referralData.receivedMemberName,
+                  label: referralData.isGiver ? "Referred To" : "Referred By",
+                  value: referralData.displayMemberName,
                 },
                 {
                   icon: Users,
-                  label: "Refer To",
+                  label: "Refer Name",
                   value: referralData.refer_name,
                 },
                 {
                   icon: Mail,
                   label: "Email",
-                  value: referralData.receivedByMember?.email || "N/A",
+                  value: referralData.displayMemberEmail,
                 },
                 {
                   icon: Phone,
-                  label: "Referred Mobile ",
-                  value: referralData.receivedMobile,
+                  label: "Mobile",
+                  value: referralData.displayMemberMobile,
                 },
                 {
                   icon: Briefcase,
                   label: "Company",
-                  value: referralData.receivedByMember?.company || "N/A",
+                  value: referralData.displayMemberCompany,
                 },
                 {
                   icon: Folder,
                   label: "Business Category",
-                  value:
-                    referralData.receivedByMember?.business_category || "N/A",
+                  value: referralData.displayMemberCategory,
                 },
               ].map((item, index) => (
                 <div key={index} className="space-y-2">

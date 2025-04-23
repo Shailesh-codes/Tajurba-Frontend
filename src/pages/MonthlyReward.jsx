@@ -212,6 +212,38 @@ const MonthlyReward = () => {
     return 0;
   };
 
+  const calculateBusinessPoints = (amount) => {
+    // Convert amount to number if it's a string
+    const businessAmount = parseFloat(amount) || 0;
+    
+    // Business given points based on amount ranges (in INR)
+    if (businessAmount === 0) {
+      return {
+        points: 0,
+        tier: 'No business given',
+        nextTierAmount: 1
+      };
+    } else if (businessAmount <= 50000) {
+      return {
+        points: 5,
+        tier: 'Tier 1',
+        nextTierAmount: 50001 - businessAmount
+      };
+    } else if (businessAmount <= 500000) {
+      return {
+        points: 10,
+        tier: 'Tier 2',
+        nextTierAmount: 500001 - businessAmount
+      };
+    } else {
+      return {
+        points: 15,
+        tier: 'Tier 3 (Maximum)',
+        nextTierAmount: 0
+      };
+    }
+  };
+
   useEffect(() => {
     setLoading(true);
     // Simulate API call
@@ -282,6 +314,119 @@ const MonthlyReward = () => {
     };
 
     fetchUserBDMs();
+  }, [auth.user.id]);
+
+  useEffect(() => {
+    const fetchBusinessData = async () => {
+      try {
+        const response = await api.get('/business');
+        const businesses = response.data;
+        
+        // Filter for verified businesses in current month
+        const currentDate = new Date();
+        const currentMonth = currentDate.getMonth() + 1;
+        const currentYear = currentDate.getFullYear();
+        
+        const monthlyBusinesses = businesses.filter(business => {
+          const businessDate = new Date(business.businessDate);
+          return (
+            businessDate.getMonth() + 1 === currentMonth &&
+            businessDate.getFullYear() === currentYear &&
+            business.status === 'verified'
+          );
+        });
+        
+        // Calculate total business amount
+        const totalAmount = monthlyBusinesses.reduce((sum, business) => {
+          return sum + parseFloat(business.amount);
+        }, 0);
+        
+        // Calculate points and next tier info
+        const { points, tier, nextTierAmount } = calculateBusinessPoints(totalAmount);
+        
+        setUserData(prev => ({
+          ...prev,
+          business: {
+            value: totalAmount,
+            points: points,
+            maxValue: 500000,
+            subtitle: nextTierAmount > 0 
+              ? `₹${nextTierAmount.toLocaleString()} more needed for next tier`
+              : 'Maximum tier achieved',
+            tier: tier
+          }
+        }));
+        
+      } catch (error) {
+        console.error('Error fetching business data:', error);
+      }
+    };
+
+    fetchBusinessData();
+  }, [auth.user.id]);
+
+  useEffect(() => {
+    const fetchReferralData = async () => {
+      try {
+        const response = await api.get('/referrals');
+        if (response.data.success) {
+          const { stats } = response.data;
+          
+          setUserData(prev => ({
+            ...prev,
+            referrals: {
+              value: stats.totalReferrals,
+              points: stats.points,
+              maxValue: 5,
+              subtitle: stats.nextTierNeeded > 0
+                ? `${stats.nextTierNeeded} more referral${stats.nextTierNeeded > 1 ? 's' : ''} needed for ${stats.nextTierPoints} points`
+                : "Maximum tier achieved",
+              details: `
+                • 1-2 referrals: 5 points
+                • 3-4 referrals: 10 points
+                • 5+ referrals: 15 points (max)
+              `
+            }
+          }));
+        }
+      } catch (error) {
+        console.error('Error fetching referral data:', error);
+      }
+    };
+
+    fetchReferralData();
+  }, [auth.user.id]);
+
+  useEffect(() => {
+    const fetchVisitorData = async () => {
+      try {
+        const response = await api.get('/visitors/stats');
+        if (response.data.success) {
+          const { stats } = response.data.data;
+          
+          setUserData(prev => ({
+            ...prev,
+            visitors: {
+              value: stats.totalVisitors,
+              points: stats.points,
+              maxValue: 3,
+              subtitle: stats.nextTierNeeded > 0
+                ? `${stats.nextTierNeeded} more visitor${stats.nextTierNeeded > 1 ? 's' : ''} needed for ${stats.nextTierPoints} points`
+                : "Maximum tier achieved",
+              details: `
+                • 1 visitor: 5 points
+                • 2 visitors: 10 points
+                • 3+ visitors: 15 points (max)
+              `
+            }
+          }));
+        }
+      } catch (error) {
+        console.error('Error fetching visitor data:', error);
+      }
+    };
+
+    fetchVisitorData();
   }, [auth.user.id]);
 
   const LoadingCard = () => (
@@ -459,6 +604,14 @@ const MonthlyReward = () => {
                   subtitle={userData.referrals.subtitle}
                   maxValue={userData.referrals.maxValue}
                   icon={Share2}
+                  details={
+                    <div className="mt-2 text-xs text-gray-400">
+                      <p>Current Points: {userData.referrals.points}/15</p>
+                      <pre className="whitespace-pre-wrap font-sans">
+                        {userData.referrals.details}
+                      </pre>
+                    </div>
+                  }
                 />
 
                 <MetricCard

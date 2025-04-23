@@ -13,11 +13,18 @@ const MemberReferGiven = () => {
   const [selectedStatus, setSelectedStatus] = useState("");
   const [referrals, setReferrals] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [referralStats, setReferralStats] = useState({
+    totalReferrals: 0,
+    points: 0,
+    nextTierNeeded: 0,
+    nextTierPoints: 0
+  });
 
   // Table headers
   const tableHeaders = [
     "SR No.",
-    "Referred To",
+    "Referral Type",
+    "Member Name",
     "Mobile Number",
     "Chapter",
     "Status",
@@ -35,6 +42,7 @@ const MemberReferGiven = () => {
 
         if (response.data.success) {
           setReferrals(response.data.data);
+          setReferralStats(response.data.stats);
         } else {
           throw new Error(response.data.message || "Failed to fetch referrals");
         }
@@ -171,6 +179,35 @@ const MemberReferGiven = () => {
         </div>
       </div>
 
+      {/* Points Summary Section */}
+      <div className="mb-6">
+        <div className="bg-gray-800/40 rounded-xl p-4 border border-gray-700">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-white">Monthly Points Summary</h3>
+              <p className="text-sm text-gray-400">
+                Current Points: {referralStats.points}/15
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-gray-400">
+                Total Referrals: {referralStats.totalReferrals}
+              </p>
+              {referralStats.nextTierNeeded > 0 && (
+                <p className="text-sm text-amber-500">
+                  {referralStats.nextTierNeeded} more for {referralStats.nextTierPoints} points
+                </p>
+              )}
+            </div>
+          </div>
+          <div className="mt-3 text-xs text-gray-400">
+            <p>• 1-2 referrals: 5 points</p>
+            <p>• 3-4 referrals: 10 points</p>
+            <p>• 5+ referrals: 15 points (max)</p>
+          </div>
+        </div>
+      </div>
+
       {/* Table Section */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -199,7 +236,7 @@ const MemberReferGiven = () => {
               <tbody className="divide-y divide-gray-700/50">
                 {loading ? (
                   <tr>
-                    <td colSpan={8} className="px-6 py-8 text-center">
+                    <td colSpan={9} className="px-6 py-8 text-center">
                       <div className="flex flex-col items-center gap-3">
                         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-500"></div>
                         <div className="text-gray-400 text-sm">
@@ -223,51 +260,60 @@ const MemberReferGiven = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
-                          {referral.refer_name}
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          referral.isGiver 
+                            ? "bg-green-500/10 text-green-500"
+                            : "bg-blue-500/10 text-blue-500"
+                        }`}>
+                          {referral.isGiver ? "Given To" : "Received From"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col">
+                          <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
+                            {referral.displayName || referral.refer_name}
+                          </span>
+                          {referral.refer_name && (
+                            <span className="text-xs text-gray-400">
+                              Referred: {referral.refer_name}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm text-gray-300">
+                          {referral.mobile || "N/A"}
                         </span>
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-sm text-gray-300">
-                          {referral.mobile}
+                          {referral.chapter || "N/A"}
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="text-sm text-gray-300">
-                          {referral.receivedByMember?.Chapter?.chapter_name ||
-                            "N/A"}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            referral.verify_status === "pending"
-                              ? "bg-yellow-500/10 text-yellow-500"
-                              : referral.verify_status === "verified"
-                              ? "bg-green-500/10 text-green-500"
-                              : "bg-red-500/10 text-red-500"
-                          }`}
-                        >
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          referral.verify_status === "pending"
+                            ? "bg-yellow-500/10 text-yellow-500"
+                            : referral.verify_status === "verified"
+                            ? "bg-green-500/10 text-green-500"
+                            : "bg-red-500/10 text-red-500"
+                        }`}>
                           {referral.verify_status.charAt(0).toUpperCase() +
                             referral.verify_status.slice(1)}
                         </span>
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-sm text-gray-400">
-                          {referral.verify_status === "verified" &&
-                          referral.verified_date
+                          {referral.verify_status === "verified"
                             ? formatDate(referral.verified_date)
-                            : referral.verify_status === "rejected" &&
-                              referral.rejected_date
+                            : referral.verify_status === "rejected"
                             ? formatDate(referral.rejected_date)
                             : "-"}
                         </span>
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-sm text-gray-400">
-                          {new Date(
-                            referral.referral_date
-                          ).toLocaleDateString()}
+                          {formatDate(referral.referral_date)}
                         </span>
                       </td>
                       <td className="px-6 py-4">
@@ -289,7 +335,7 @@ const MemberReferGiven = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={8} className="px-6 py-8 text-center">
+                    <td colSpan={9} className="px-6 py-8 text-center">
                       <div className="flex flex-col items-center gap-3">
                         <svg
                           className="w-12 h-12 text-gray-500"

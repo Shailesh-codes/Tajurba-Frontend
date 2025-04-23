@@ -80,7 +80,7 @@ const MemberReqReceived = () => {
   const fetchReferrals = async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/referrals`);
+      const response = await api.get(`/referrals/reqs`);
       console.log("API Response:", response);
 
       if (response.data.success) {
@@ -165,7 +165,7 @@ const MemberReqReceived = () => {
         ] = await Promise.all([
           api.get(`/bdm/request-bdms`),
           api.get(`/chapters`),
-          api.get(`/referrals`),
+          api.get(`/referrals/reqs`),
           api.get(`/business/reqs`),
         ]);
 
@@ -212,8 +212,10 @@ const MemberReqReceived = () => {
         const formattedBusinesses = businesses.map((business) => ({
           ...business,
           id: business.business_id,
-          givenByName: business.GivenByMember?.name || business.givenByName || "Unknown",
-          receiverName: business.ReceivedByMember?.name || business.memberName || "Unknown",
+          givenByName:
+            business.GivenByMember?.name || business.givenByName || "Unknown",
+          receiverName:
+            business.ReceivedByMember?.name || business.memberName || "Unknown",
           memberName: business.memberName || "Unknown",
           chapter: business.chapter || "N/A",
           amount: parseFloat(business.amount) || 0,
@@ -386,12 +388,19 @@ const MemberReqReceived = () => {
             >
               <td className="px-6 py-4">
                 <div className="flex flex-col">
-                  <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
-                    {referral.givenByName || "N/A"}
-                  </span>
-                  <span className="text-xs text-gray-400 mt-1">
-                    For: {referral.refer_name || "N/A"}
-                  </span>
+                  {" "}
+                  <div>
+                    <span className="text-xs text-gray-400">Given By:</span>{" "}
+                    <span className="text-sm text-gray-100 group-hover:text-white transition-colors">
+                      {referral.givenByName || "N/A"}
+                    </span>
+                  </div>
+                  <div>
+                    {" "}
+                    <span className="text-xs text-gray-400 mt-1">
+                      For: {referral.refer_name || "N/A"}
+                    </span>
+                  </div>
                 </div>
               </td>
               <td className="px-6 py-4">
@@ -475,7 +484,9 @@ const MemberReqReceived = () => {
               <div className="flex flex-col">
                 <span className="text-xs text-gray-200 group-hover:text-white transition-colors">
                   <span className="text-xs text-gray-400">Given By:</span>{" "}
-                  {business.givenByName || business.GivenByMember?.name || "Unknown"}
+                  {business.givenByName ||
+                    business.GivenByMember?.name ||
+                    "Unknown"}
                 </span>
                 <span className="text-xs text-gray-400 mt-1">
                   Amount: ₹{business.amount?.toLocaleString("en-IN") || "0"}
@@ -506,7 +517,8 @@ const MemberReqReceived = () => {
                 )}`}
               >
                 {business.status
-                  ? business.status.charAt(0).toUpperCase() + business.status.slice(1)
+                  ? business.status.charAt(0).toUpperCase() +
+                    business.status.slice(1)
                   : "Pending"}
               </motion.span>
             </td>

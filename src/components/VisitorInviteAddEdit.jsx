@@ -4,11 +4,13 @@ import api from "../hooks/api";
 import { BsPersonPlus } from "react-icons/bs";
 import { motion } from "framer-motion";
 import { showToast } from "../utils/toast";
+import { useAuth } from "../contexts/AuthContext";
 
 const VisitorInviteAddEdit = () => {
   const navigate = useNavigate();
   const { id } = useParams(); // Get visitor ID from URL if editing
   const [loading, setLoading] = useState(false);
+  const { auth } = useAuth();
   const [formData, setFormData] = useState({
     visitor_name: "",
     visitor_email: "",
@@ -18,6 +20,18 @@ const VisitorInviteAddEdit = () => {
     invite_date: new Date().toISOString().split("T")[0],
     description: "",
   });
+
+  // Check authentication on component mount
+  useEffect(() => {
+    if (!auth.isAuthenticated) {
+      showToast({
+        message: "Please login to create visitor invites",
+        status: "error",
+        icon: "error",
+      });
+      navigate("/");
+    }
+  }, [auth.isAuthenticated, navigate]);
 
   // Fetch visitor data if editing
   useEffect(() => {
@@ -236,6 +250,8 @@ const VisitorInviteAddEdit = () => {
                 name="mobile"
                 value={formData.mobile}
                 onChange={handleChange}
+                pattern="[0-9]{10}"
+                maxLength="10"
                 required
                 className="w-full p-3 bg-gray-700/50 rounded-xl border border-gray-600 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 text-white transition-all duration-300"
                 placeholder="Enter mobile number"

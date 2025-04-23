@@ -96,6 +96,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
       "/dashboard",
       "/member-list",
       "/add-user",
+      "/chapters-list",
       "/add-member",
       "/member-view",
       "/settings",
