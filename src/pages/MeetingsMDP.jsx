@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { motion } from "framer-motion";
 import meetings from "../assets/images/icons/meeting.svg";
 import { FiEye } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import api from "../hooks/api";
+import { useAuth } from "../contexts/AuthContext";
 
 const MeetingsMDP = () => {
   const navigate = useNavigate();
+  const { auth } = useAuth();
   const [selectedType, setSelectedType] = useState("meetings");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedVenueFee, setSelectedVenueFee] = useState("all");
@@ -16,89 +18,258 @@ const MeetingsMDP = () => {
     mdp: { total: 0, present: 0, late: 0, absent: 0 },
     social: { total: 0, present: 0, late: 0, absent: 0 },
   });
-  const [meetings_data, setMeetingsData] = useState([]);
+  const [scheduleData, setScheduleData] = useState({
+    meetings: [],
+    mdp: [],
+    socialTraining: [],
+  });
 
-  // Fetch meetings data
-  const fetchMeetingsData = async () => {
+  // Helper function to get the correct ID field based on schedule type
+  const getScheduleId = (schedule, type) => {
+    switch (type) {
+      case "meeting":
+        return schedule.meeting_id;
+      case "mdp":
+        return schedule.mdp_id;
+      case "socialTraining":
+        return schedule.social_training_id;
+      default:
+        return null;
+    }
+  };
+
+  // Helper function to check if schedule is relevant for the user
+  const isScheduleRelevantForUser = (schedule) => {
+    // If user is Admin or Regional Director, show all schedules
+    if (
+      auth.role === "Admin" ||
+      auth.role === "Regional Director" ||
+      auth.role === "Super Admin"
+    ) {
+      return true;
+    }
+
+    // For regular members, check if the schedule is for their chapter
+    if (schedule.chapters && Array.isArray(schedule.chapters)) {
+      return schedule.chapters.some(
+        (chapter) => chapter.chapter_id === auth.chapter
+      );
+    }
+
+    // If no chapters specified, check if schedule.chapter matches auth's chapter
+    return schedule.chapter === auth.chapter;
+  };
+
+  // Updated processScheduleData function
+  const processScheduleData = async (schedules, type) => {
+    try {
+      return await Promise.all(schedules.map(async (schedule) => {
+        const scheduleId = getScheduleId(schedule, type);
+        
+        if (!scheduleId) {
+          console.error(`Invalid schedule ID for type: ${type}`, schedule);
+          return null;
+        }
+
+        try {
+          // Get attendance stats for the authenticated user
+          const statsResponse = await api.get(`/attendance-venue-fee/meeting-stats`, {
+            params: {
+              type: type,
+              meeting_id: scheduleId,
+              member_id: auth.user.id // Add member_id to get user-specific stats
+            }
+          });
+
+          const stats = statsResponse.data.success ? statsResponse.data.data : null;
+
+          // Get user's specific attendance record
+          const attendanceResponse = await api.get(`/attendance-venue-fee/meeting-members`, {
+            params: {
+              type: type,
+              meeting_id: scheduleId
+            }
+          });
+
+          const userAttendance = attendanceResponse.data.success ? 
+            attendanceResponse.data.data.find(record => record.id === auth.user.id) : null;
+
+          return {
+            id: scheduleId,
+            title: schedule.title,
+            date_time: `${new Date(schedule.date).toLocaleDateString()} ${schedule.time}`,
+            venue: schedule.venue,
+            status: userAttendance ? userAttendance.status : 'pending',
+            venue_fee: {
+              amount: schedule.fee_amount,
+              status: userAttendance ? userAttendance.venue_fee_status : "not paid"
+            },
+            attendance_stats: stats,
+            type: type,
+            chapters: schedule.chapters || [],
+            chapter: schedule.chapter,
+            user_attendance: userAttendance
+          };
+        } catch (error) {
+          console.error(`Error fetching stats for ${type} ID ${scheduleId}:`, error);
+          return {
+            id: scheduleId,
+            title: schedule.title,
+            date_time: `${new Date(schedule.date).toLocaleDateString()} ${schedule.time}`,
+            venue: schedule.venue,
+            status: 'pending',
+            venue_fee: {
+              amount: schedule.fee_amount,
+              status: "not paid"
+            },
+            attendance_stats: null,
+            type: type,
+            chapters: schedule.chapters || [],
+            chapter: schedule.chapter,
+            user_attendance: null
+          };
+        }
+      }));
+    } catch (error) {
+      console.error(`Error processing ${type} schedules:`, error);
+      return [];
+    }
+  };
+
+  // Updated fetchScheduleData function
+  const fetchScheduleData = async () => {
     try {
       setLoading(true);
+
       // Get all schedules
       const response = await api.get(`/schedules`);
       
       if (response.data.success) {
         const { meetings = [], mdp = [], socialTraining = [] } = response.data.data;
         
-        // Process meetings data
-        const processedMeetings = await Promise.all(meetings.map(async (meeting) => {
-          // Get attendance stats for each meeting
-          const statsResponse = await api.get(`/attendance-venue-fee/meeting-stats`, {
-            params: {
-              type: "meeting",
-              meeting_id: meeting.meeting_id
+        // Filter schedules based on user's role and chapter
+        const filterSchedulesByUserAccess = (schedules) => {
+          if (auth.role === "Admin" || auth.role === "Regional Director" || auth.role === "Super Admin") {
+            return schedules; // Admins see all schedules
+          }
+          
+          // Regular members only see schedules for their chapter
+          return schedules.filter(schedule => {
+            // Check if schedule has chapters array
+            if (schedule.chapters && Array.isArray(schedule.chapters)) {
+              return schedule.chapters.some(chapter => chapter.chapter_id === auth.user.chapter);
             }
+            // Fallback to direct chapter comparison
+            return schedule.chapter === auth.user.chapter;
           });
-
-          const stats = statsResponse.data.success ? statsResponse.data.data : null;
-
-          return {
-            id: meeting.meeting_id,
-            title: meeting.title,
-            date_time: `${new Date(meeting.date).toLocaleDateString()} ${meeting.time}`,
-            venue: meeting.venue,
-            status: stats ? getOverallStatus(stats) : null,
-            venue_fee: {
-              amount: meeting.fee_amount,
-              status: stats ? (stats.venue_fee.paid_count > 0 ? "paid" : "not paid") : "not paid"
-            },
-            attendance_stats: stats
-          };
-        }));
-
-        // Update stats
-        const newStats = {
-          meetings: calculateTypeStats(processedMeetings),
-          mdp: calculateTypeStats(mdp),
-          social: calculateTypeStats(socialTraining)
         };
 
-        setStats(newStats);
-        setMeetingsData(processedMeetings);
+        // Process and filter schedules based on user's role and chapter
+        const processedMeetings = (await processScheduleData(
+          filterSchedulesByUserAccess(meetings), 
+          "meeting"
+        )).filter(Boolean);
+        
+        const processedMDP = (await processScheduleData(
+          filterSchedulesByUserAccess(mdp), 
+          "mdp"
+        )).filter(Boolean);
+        
+        const processedSocial = (await processScheduleData(
+          filterSchedulesByUserAccess(socialTraining), 
+          "socialTraining"
+        )).filter(Boolean);
+
+        setScheduleData({
+          meetings: processedMeetings,
+          mdp: processedMDP,
+          socialTraining: processedSocial
+        });
+
+        // Update stats only for relevant schedules
+        setStats({
+          meetings: calculateTypeStats(processedMeetings),
+          mdp: calculateTypeStats(processedMDP),
+          social: calculateTypeStats(processedSocial)
+        });
       }
     } catch (error) {
-      console.error("Error fetching meetings data:", error);
+      console.error("Error fetching schedule data:", error);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchMeetingsData();
+    fetchScheduleData();
   }, []);
 
-  // Helper function to calculate overall status based on attendance stats
-  const getOverallStatus = (stats) => {
-    if (!stats || !stats.attendance) return "unknown";
-    
-    const { present, absent, late_less, late_more } = stats.attendance;
-    const total = present + absent + (late_less || 0) + (late_more || 0);
-    
-    if (present > (total * 0.7)) return "present";
-    if (absent > (total * 0.3)) return "absent";
-    return "late_less";
+  // Get current data based on selected type
+  const getCurrentData = () => {
+    switch (selectedType) {
+      case "meetings":
+        return scheduleData.meetings;
+      case "mdp":
+        return scheduleData.mdp;
+      case "social":
+        return scheduleData.socialTraining;
+      default:
+        return [];
+    }
   };
 
-  // Helper function to calculate stats for each type
+  // Filter data based on selected filters
+  const filteredData = getCurrentData().filter((item) => {
+    if (selectedStatus !== "all" && item.status !== selectedStatus)
+      return false;
+    if (
+      selectedVenueFee !== "all" &&
+      item.venue_fee.status !== selectedVenueFee
+    )
+      return false;
+    return true;
+  });
+
+  // Update the view button handler
+  const handleViewClick = (item) => {
+    navigate(`/members-mdp-events?type=${item.type}&meeting_id=${item.id}`);
+  };
+
+  // Updated getOverallStatus function with error handling
+  const getOverallStatus = (stats) => {
+    if (!stats || !stats.attendance) return "pending";
+
+    try {
+      const {
+        present = 0,
+        absent = 0,
+        late_less = 0,
+        late_more = 0,
+      } = stats.attendance;
+      const total = present + absent + late_less + late_more;
+
+      if (total === 0) return "pending";
+      if (present > total * 0.7) return "present";
+      if (absent > total * 0.3) return "absent";
+      return "late";
+    } catch (error) {
+      console.error("Error calculating status:", error);
+      return "pending";
+    }
+  };
+
+  // Updated calculateTypeStats function with error handling
   const calculateTypeStats = (items) => {
     const stats = {
       total: items.length,
       present: 0,
       late: 0,
       absent: 0,
-      substitutes: 0
+      substitutes: 0,
     };
 
-    items.forEach(item => {
-      if (item.attendance_stats) {
+    items.forEach((item) => {
+      if (item?.attendance_stats?.attendance) {
         const { attendance } = item.attendance_stats;
         stats.present += attendance.present || 0;
         stats.late += (attendance.late_less || 0) + (attendance.late_more || 0);
@@ -127,12 +298,28 @@ const MeetingsMDP = () => {
       : "bg-red-500/10 text-red-500";
   };
 
-  // Filter meetings based on selected filters
-  const filteredMeetings = meetings_data.filter(meeting => {
-    if (selectedStatus !== "all" && meeting.status !== selectedStatus) return false;
-    if (selectedVenueFee !== "all" && meeting.venue_fee.status !== selectedVenueFee) return false;
-    return true;
-  });
+  // Add chapter information to the table
+  const renderChapterInfo = (item) => {
+    if (
+      auth.role === "Admin" ||
+      auth.role === "Regional Director" ||
+      auth.role === "Super Admin"
+    ) {
+      if (item.chapters && item.chapters.length > 0) {
+        return (
+          <span className="text-sm text-gray-400">
+            {item.chapters.map((ch) => ch.chapter_name).join(", ")}
+          </span>
+        );
+      }
+      return (
+        <span className="text-sm text-gray-400">
+          {item.chapter || "All Chapters"}
+        </span>
+      );
+    }
+    return null;
+  };
 
   return (
     <div className="mt-32 p-1 lg:p-6 flex flex-col space-y-5">
@@ -313,7 +500,7 @@ const MeetingsMDP = () => {
       {/* Filters Section */}
       <div className="border-b border-gray-700 pb-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {/* Meeting Type Filter */}
+          {/* Schedule Type Filter */}
           <div className="relative">
             <select
               value={selectedType}
@@ -324,7 +511,6 @@ const MeetingsMDP = () => {
               <option value="mdp">MDP</option>
               <option value="social">Social & Training</option>
             </select>
-            {/* ... icons ... */}
           </div>
           {/* Status Filter */}
           <div className="relative">
@@ -383,6 +569,15 @@ const MeetingsMDP = () => {
                       Venue
                     </span>
                   </th>
+                  {(auth.role === "Admin" ||
+                    auth.role === "Regional Director" ||
+                    auth.role === "Super Admin") && (
+                    <th className="px-6 py-4 text-left border-b border-gray-700">
+                      <span className="text-sm font-semibold text-gray-300">
+                        Chapter
+                      </span>
+                    </th>
+                  )}
                   <th className="px-6 py-4 text-left border-b border-gray-700">
                     <span className="text-sm font-semibold text-gray-300">
                       Status
@@ -409,62 +604,60 @@ const MeetingsMDP = () => {
                       </div>
                     </td>
                   </tr>
-                ) : filteredMeetings.length === 0 ? (
+                ) : filteredData.length === 0 ? (
                   <tr>
                     <td colSpan="6" className="text-center py-8 text-gray-400">
-                      No meetings found matching the selected filters
+                      No schedules found matching the selected filters
                     </td>
                   </tr>
                 ) : (
-                  filteredMeetings.map((meeting, index) => (
+                  filteredData.map((item, index) => (
                     <motion.tr
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      key={meeting.id}
+                      key={`${item.type}-${item.id}`}
                       className="group hover:bg-gradient-to-r hover:from-gray-700/30 hover:via-gray-700/40 hover:to-gray-700/30 transition-all duration-300"
                     >
                       <td className="px-6 py-4">
                         <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
-                          {meeting.title}
+                          {item.title}
                         </span>
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-sm text-gray-300">
-                          {meeting.date_time}
+                          {item.date_time}
                         </span>
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-sm text-gray-300">
-                          {meeting.venue}
+                          {item.venue}
                         </span>
                       </td>
+                      {(auth.role === "Admin" ||
+                        auth.role === "Regional Director" ||
+                        auth.role === "Super Admin") && (
+                        <td className="px-6 py-4">{renderChapterInfo(item)}</td>
+                      )}
                       <td className="px-6 py-4">
-                        <span
-                          className={`px-2.5 py-1 rounded-lg text-sm ${getStatusClass(
-                            meeting.status
-                          )}`}
-                        >
-                          {meeting.status
+                        <span className={`px-2.5 py-1 rounded-lg text-sm ${getStatusClass(item.user_attendance?.status || 'pending')}`}>
+                          {(item.user_attendance?.status || 'pending')
                             .replace("_", " ")
                             .charAt(0)
-                            .toUpperCase() + meeting.status.slice(1)}
+                            .toUpperCase() + 
+                            (item.user_attendance?.status || 'pending').slice(1)}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getVenueFeeClass(
-                            meeting.venue_fee.status
-                          )}`}
-                        >
-                          ₹{meeting.venue_fee.amount} - {meeting.venue_fee.status}
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getVenueFeeClass(item.user_attendance?.venue_fee_status || 'not paid')}`}>
+                          ₹{item.venue_fee.amount} - {item.user_attendance?.venue_fee_status || 'not paid'}
                         </span>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-center">
-                          <button 
-                            onClick={() => navigate(`/members-mdp-events?type=meeting&meeting_id=${meeting.id}`)}
-                            className="relative group/btn flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-r from-amber-600/90 to-amber-800/90 hover:from-amber-600 hover:to-amber-800 transition-all duration-300 shadow-lg hover:shadow-amber-900/30"
+                          <button
+                            onClick={() => handleViewClick(item)}
+                            className="relative group/btn flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-r from-amber-600/90 to-amber-800/90 hover:from-amber-600 hover:to-amber-800 transition-all duration-300 shadow-lg hover:shadow-amber-900/30 hover:-translate-y-0.5"
                           >
                             <div className="absolute inset-0 rounded-xl bg-amber-600 opacity-0 group-hover/btn:opacity-20 blur-lg transition-opacity" />
                             <FiEye className="w-5 h-5 text-white/90 group-hover/btn:text-white transition-colors relative" />
@@ -478,7 +671,7 @@ const MeetingsMDP = () => {
             </table>
 
             {/* Empty State */}
-            {(!meetings_data || meetings_data.length === 0) && (
+            {(!scheduleData || scheduleData.meetings.length === 0) && (
               <div className="flex flex-col items-center justify-center py-8">
                 <div className="p-3 bg-gray-800/50 rounded-xl mb-4">
                   <svg
@@ -495,7 +688,7 @@ const MeetingsMDP = () => {
                     />
                   </svg>
                 </div>
-                <p className="text-gray-400 text-center">No meetings found</p>
+                <p className="text-gray-400 text-center">No schedules found</p>
               </div>
             )}
           </div>

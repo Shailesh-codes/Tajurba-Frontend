@@ -114,6 +114,18 @@ const MonthlyReward = () => {
     totalPoints: 0,
   });
 
+  const [attendanceData, setAttendanceData] = useState({
+    points: 0,
+    maxPoints: 20,
+    breakdown: {
+      totalMeetings: 0,
+      present: 0,
+      late: 0,
+      absent: 0,
+      deductions: 0
+    }
+  });
+
   // Dummy data for demonstration
   const dummyCategories = [
     {
@@ -243,6 +255,105 @@ const MonthlyReward = () => {
       };
     }
   };
+
+  // Update the fetchAttendancePoints function
+  const fetchAttendancePoints = async (month, year) => {
+    try {
+      const response = await api.get('/attendance-venue-fee/monthly-points', {
+        params: {
+          month: month || new Date().getMonth() + 1,
+          year: year || new Date().getFullYear()
+        }
+      });
+
+      if (response.data.success) {
+        const data = response.data.data;
+        
+        // Update the attendance data state
+        setAttendanceData({
+          points: data.points,
+          maxPoints: data.maxPoints,
+          breakdown: {
+            totalMeetings: data.breakdown.totalMeetings,
+            present: data.breakdown.present,
+            late: data.breakdown.late,
+            absent: data.breakdown.absent,
+            deductions: data.breakdown.deductions
+          }
+        });
+
+        // Update the meetings metric in userData
+        setUserData(prev => ({
+          ...prev,
+          meetings: getMeetingsContent(data)
+        }));
+
+        // Update total points
+        setUserData(prev => ({
+          ...prev,
+          totalPoints: prev.totalPoints - (prev.meetings.points || 0) + data.points
+        }));
+      }
+    } catch (error) {
+      console.error('Error fetching attendance points:', error);
+    }
+  };
+
+  // Update the getAttendanceSubtitle function
+  const getAttendanceSubtitle = (data) => {
+    const { totalMeetings, present, late, deductions } = data.breakdown;
+    
+    if (totalMeetings === 0) {
+      return 'No meetings this month';
+    }
+
+    if (present === 0) {
+      return 'No points - Absent from all meetings';
+    }
+
+    if (late > 0) {
+      return `${late} late arrival(s) (-${deductions} points)`;
+    }
+
+    if (present === totalMeetings) {
+      return 'Maximum points - All meetings attended!';
+    }
+
+    if (present >= 2) {
+      return `20 points - Attended ${present} meetings`;
+    }
+
+    if (present === 1) {
+      return `10 points - Attended 1 meeting`;
+    }
+
+    return `${totalMeetings - present} more meetings needed`;
+  };
+
+  // Also update the meetings card content display
+  const getMeetingsContent = (data) => {
+    const { totalMeetings, present } = data.breakdown;
+    
+    return {
+      points: data.points,
+      maxPoints: 20,
+      ratio: `${present}/${totalMeetings}`,
+      subtitle: getAttendanceSubtitle(data),
+      details: [
+        `Total Monthly Meetings: ${totalMeetings}`,
+        `Meetings Attended: ${present}`,
+        present >= 2 ? '20 points - Multiple meetings attended' :
+        present === 1 ? '10 points - One meeting attended' :
+        '0 points - No meetings attended'
+      ]
+    };
+  };
+
+  // Update useEffect to fetch attendance data when month changes
+  useEffect(() => {
+    const [year, month] = selectedMonth.split('-');
+    fetchAttendancePoints(parseInt(month), parseInt(year));
+  }, [selectedMonth]);
 
   useEffect(() => {
     setLoading(true);
@@ -565,11 +676,23 @@ const MonthlyReward = () => {
               <div className="col-span-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <MetricCard
                   title="Meetings"
-                  value={userData.meetings.value}
-                  points={userData.meetings.points}
-                  subtitle={userData.meetings.subtitle}
-                  maxValue={userData.meetings.maxValue}
+                  value={`${attendanceData.breakdown.present}/${attendanceData.breakdown.totalMeetings}`}
+                  points={attendanceData.points}
+                  subtitle={getAttendanceSubtitle(attendanceData)}
+                  maxValue={attendanceData.maxPoints}
                   icon={Users}
+                  details={
+                    <div className="mt-2 text-xs text-gray-400">
+                      <p>Total Meetings: {attendanceData.breakdown.totalMeetings}</p>
+                      <p>Present: {attendanceData.breakdown.present}</p>
+                      {attendanceData.breakdown.late > 0 && (
+                        <p>Late Arrivals: {attendanceData.breakdown.late} (-{attendanceData.breakdown.deductions} points)</p>
+                      )}
+                      {attendanceData.breakdown.absent > 0 && (
+                        <p className="text-red-400">Absent: {attendanceData.breakdown.absent}</p>
+                      )}
+                    </div>
+                  }
                 />
 
                 <MetricCard
