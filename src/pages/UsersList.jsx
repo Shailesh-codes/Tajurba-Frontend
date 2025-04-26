@@ -83,13 +83,10 @@ const UsersList = () => {
         setSelectedUser(null);
       }
     } catch (error) {
-      console.error("Error deleting Regional Director:", error);
-
       // Show error message from the server or a default message
       showToast({
         title: "Error",
-        message:
-          error.response?.data?.message || "Failed to delete Regional Director",
+        message: "Cannot delete R.D. might be linked elsewhere.",
         status: "error",
       });
 

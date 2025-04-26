@@ -37,7 +37,7 @@ const EditScheduleMeeting = () => {
         // Fetch chapters data
         const chaptersResponse = await api.get(`/chapters`);
         // Fetch default payment info
-        const paymentResponse = await api.get('/admin-settings/payment-info');
+        const paymentResponse = await api.get("/admin-settings/payment-info");
 
         if (
           scheduleResponse.data.success &&
@@ -52,13 +52,13 @@ const EditScheduleMeeting = () => {
               )
             : [];
 
-          // Format date for input field
+          // Format date and time
           const formattedDate = new Date(scheduleData.date)
             .toISOString()
             .split("T")[0];
-          // Format time for input field
           const formattedTime = scheduleData.time.split(".")[0];
 
+          // Set form data
           setFormData({
             ...scheduleData,
             date: formattedDate,
@@ -67,21 +67,25 @@ const EditScheduleMeeting = () => {
             chapters: parsedChapters,
           });
 
-          // Set initial QR preview based on payment method
-          if (scheduleData.payment_method === 'custom' && scheduleData.qr_code) {
-            setQrPreview(`data:image/png;base64,${scheduleData.qr_code}`);
+          // Handle QR code preview based on payment method
+          if (scheduleData.payment_method === "custom") {
+            if (scheduleData.qr_code) {
+              // For custom payment with existing QR code
+              setQrPreview(`data:image/png;base64,${scheduleData.qr_code}`);
+            }
+          } else if (
+            scheduleData.payment_method === "default" &&
+            paymentResponse.data.success
+          ) {
+            // For default payment
+            const defaultPayment = paymentResponse.data.data;
+            setDefaultPaymentInfo(defaultPayment);
+            if (defaultPayment?.qrCodeUrl) {
+              setQrPreview(defaultPayment.qrCodeUrl);
+            }
           }
 
           setAllChapters(chaptersResponse.data.data);
-        }
-
-        // Set default payment info
-        if (paymentResponse.data.success) {
-          setDefaultPaymentInfo(paymentResponse.data.data);
-          // If payment method is default, set the QR preview to default QR
-          if (formData.payment_method === 'default') {
-            setQrPreview(paymentResponse.data.data.qrCodeUrl);
-          }
         }
       } catch (error) {
         console.error("Error loading data:", error);
@@ -109,27 +113,54 @@ const EditScheduleMeeting = () => {
     }));
   };
 
-  const handlePaymentMethodChange = (e) => {
+  const handlePaymentMethodChange = async (e) => {
     const method = e.target.value;
-    setFormData(prev => ({
-      ...prev,
-      payment_method: method,
-      default_payment_id: method === 'default' ? defaultPaymentInfo?.id || '' : '',
-      upi_id: method === 'default' ? '' : prev.upi_id
-    }));
-    
-    // Update QR preview based on payment method
-    if (method === 'default' && defaultPaymentInfo?.qrCodeUrl) {
-      setQrPreview(defaultPaymentInfo.qrCodeUrl);
-    } else if (method === 'custom' && formData.qr_code) {
-      // If switching to custom and there's an existing QR code
-      setQrPreview(
-        formData.qr_code instanceof File 
-          ? URL.createObjectURL(formData.qr_code)
-          : `data:image/png;base64,${formData.qr_code}`
-      );
-    } else {
-      setQrPreview(null);
+
+    try {
+      if (method === "default") {
+        // If switching to default payment, fetch latest default payment info
+        const paymentResponse = await api.get("/admin-settings/payment-info");
+        if (paymentResponse.data.success) {
+          const defaultPayment = paymentResponse.data.data;
+          setDefaultPaymentInfo(defaultPayment);
+          setQrPreview(defaultPayment.qrCodeUrl);
+        }
+
+        setFormData((prev) => ({
+          ...prev,
+          payment_method: "default",
+          default_payment_id: defaultPaymentInfo?.id || "",
+          upi_id: "",
+          qr_code: null,
+        }));
+      } else {
+        // If switching to custom payment
+        setFormData((prev) => ({
+          ...prev,
+          payment_method: "custom",
+          default_payment_id: "",
+          qr_code: prev.qr_code, // Preserve existing custom QR if any
+        }));
+
+        // If there's an existing custom QR code in formData, show it
+        if (formData.qr_code) {
+          if (formData.qr_code instanceof File) {
+            setQrPreview(URL.createObjectURL(formData.qr_code));
+          } else {
+            setQrPreview(`data:image/png;base64,${formData.qr_code}`);
+          }
+        } else {
+          setQrPreview(null);
+        }
+      }
+    } catch (error) {
+      console.error("Error handling payment method change:", error);
+      showToast({
+        title: "Error",
+        message: "Failed to update payment method",
+        icon: "error",
+        status: "error",
+      });
     }
   };
 
@@ -147,14 +178,15 @@ const EditScheduleMeeting = () => {
       }
 
       // Clean up previous preview URL if it exists
-      if (qrPreview && qrPreview.startsWith('blob:')) {
+      if (qrPreview && qrPreview.startsWith("blob:")) {
         URL.revokeObjectURL(qrPreview);
       }
 
-      // Create preview URL for the selected file
+      // Create new preview URL for the selected file
       const reader = new FileReader();
       reader.onload = (e) => {
-        setQrPreview(e.target.result);
+        const base64String = e.target.result;
+        setQrPreview(base64String);
       };
       reader.readAsDataURL(file);
 
@@ -228,7 +260,7 @@ const EditScheduleMeeting = () => {
   // Add cleanup effect for QR preview URL
   useEffect(() => {
     return () => {
-      if (qrPreview && qrPreview.startsWith('blob:')) {
+      if (qrPreview && qrPreview.startsWith("blob:")) {
         URL.revokeObjectURL(qrPreview);
       }
     };
@@ -537,8 +569,12 @@ const EditScheduleMeeting = () => {
               {/* Show default payment info when default is selected */}
               {formData.payment_method === "default" && defaultPaymentInfo && (
                 <div className="mt-4 p-4 bg-gray-700/30 rounded-xl">
-                  <p className="text-sm text-gray-300">Default Payment ID: {defaultPaymentInfo.id}</p>
-                  <p className="text-sm text-gray-300 mt-1">Default UPI ID: {defaultPaymentInfo.upiId}</p>
+                  <p className="text-sm text-gray-300">
+                    Default Payment ID: {defaultPaymentInfo.id}
+                  </p>
+                  <p className="text-sm text-gray-300 mt-1">
+                    Default UPI ID: {defaultPaymentInfo.upiId}
+                  </p>
                 </div>
               )}
 
@@ -573,11 +609,11 @@ const EditScheduleMeeting = () => {
                         />
                       </label>
                       <span className="text-sm text-gray-400">
-                        {formData.qr_code instanceof File 
-                          ? formData.qr_code.name 
-                          : formData.qr_code 
-                            ? "Current QR Code" 
-                            : "No file chosen"}
+                        {formData.qr_code instanceof File
+                          ? formData.qr_code.name
+                          : formData.qr_code
+                          ? "Current QR Code"
+                          : "No file chosen"}
                       </span>
                     </div>
                   </div>
@@ -609,20 +645,39 @@ const EditScheduleMeeting = () => {
               </h3>
             </div>
 
-            <div className="flex items-center justify-center h-[200px] bg-gray-700/50 rounded-xl border border-gray-600">
+            <div className="flex items-center justify-center h-[320px] bg-gray-700/50 rounded-xl border border-gray-600">
               {qrPreview ? (
-                <img
-                  src={qrPreview}
-                  alt="QR Code"
-                  className="max-h-full max-w-full object-contain rounded-lg"
-                  onError={(e) => {
-                    console.error("Error loading QR code image");
-                    e.target.style.display = "none";
-                    setQrPreview(null);
-                  }}
-                />
+                <div className="p-1 bg-white rounded-lg">
+                  <img
+                    src={qrPreview}
+                    alt="QR Code"
+                    className="max-h-[160px] max-w-[160px] object-contain"
+                    onError={(e) => {
+                      console.error("Error loading QR code image");
+                      e.target.style.display = "none";
+                      setQrPreview(null);
+                      showToast({
+                        title: "Error",
+                        message: "Failed to load QR code image",
+                        icon: "error",
+                        status: "error",
+                      });
+                    }}
+                  />
+                </div>
               ) : (
-                <span className="text-gray-400">No QR code selected</span>
+                <div className="text-center p-4">
+                  <span className="text-gray-400 block">
+                    {formData.payment_method === "default"
+                      ? "Default QR code not available"
+                      : "No custom QR code selected"}
+                  </span>
+                  {formData.payment_method === "custom" && (
+                    <span className="text-gray-500 text-sm block mt-2">
+                      Upload a QR code to see preview
+                    </span>
+                  )}
+                </div>
               )}
             </div>
           </div>

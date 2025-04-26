@@ -10,62 +10,102 @@ import {
 } from "react-icons/bs";
 import events from "../assets/images/icons/events.svg";
 import { IndianRupee } from "lucide-react";
+import { useLocation } from "react-router-dom";
+import api from "../hooks/api";
+import { useAuth } from "../contexts/AuthContext";
 
 const EventDetails = () => {
-  const [selectedMonth, setSelectedMonth] = useState(() => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, "0");
-    return `${year}-${month}`;
-  });
+  const location = useLocation();
+  const { auth } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [eventDetails, setEventDetails] = useState(null);
+  const [attendanceDetails, setAttendanceDetails] = useState(null);
+  const [defaultPaymentSettings, setDefaultPaymentSettings] = useState(null);
+  const searchParams = new URLSearchParams(location.search);
+  const type = searchParams.get("type");
+  const meetingId = searchParams.get("meeting_id");
 
-  // Dummy data for demonstration
-  const mdpEvents = [
-    {
-      id: 1,
-      title: "Business Growth Workshop",
-      dateTime: "2024-03-15 10:00 AM",
-      venue: "Hotel Grand Plaza",
-      status: "present",
-      venueFee: {
-        amount: 500,
-        status: "paid",
-        paymentDate: "2024-03-14",
-      },
-    },
-    {
-      id: 2,
-      title: "Leadership Development Session",
-      dateTime: "2024-03-20 02:00 PM",
-      venue: "Business Center",
-      status: "upcoming",
-      venueFee: {
-        amount: 750,
-        status: "pending",
-      },
-    },
-  ];
-
-  const formatStatus = (status) => {
-    const statusMap = {
-      present: "bg-green-500/10 text-green-500",
-      absent: "bg-red-500/10 text-red-500",
-      late_less: "bg-yellow-500/10 text-yellow-500",
-      late_more: "bg-orange-500/10 text-orange-500",
-      "not marked": "bg-gray-500/10 text-gray-500",
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      await Promise.all([fetchEventDetails(), fetchAttendanceDetails()]);
+      setLoading(false);
     };
+    fetchData();
+  }, [type, meetingId]);
 
-    return statusMap[status] || "bg-gray-500/10 text-gray-500";
+  useEffect(() => {
+    if (eventDetails?.payment_method === "default") {
+      fetchDefaultPaymentSettings();
+    }
+  }, [eventDetails]);
+
+  const fetchEventDetails = async () => {
+    try {
+      const response = await api.get(`/schedules/${type}/${meetingId}`);
+      if (response.data.success) {
+        setEventDetails(response.data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching event details:", error);
+    }
   };
 
-  const formatVenueStatus = (status) => {
-    const statusMap = {
-      paid: "bg-green-500/10 text-green-500",
-      "not paid": "bg-red-500/10 text-red-500",
-      pending: "bg-amber-500/10 text-amber-500",
-    };
+  const fetchAttendanceDetails = async () => {
+    try {
+      const response = await api.get(`/attendance-venue-fee/meeting-members`, {
+        params: {
+          type: type,
+          meeting_id: meetingId,
+        },
+      });
 
-    return statusMap[status] || "bg-gray-500/10 text-gray-500";
+      if (response.data.success) {
+        const userAttendance = response.data.data.find(
+          (record) => record.id === auth.user.id
+        );
+        setAttendanceDetails(userAttendance);
+      }
+    } catch (error) {
+      console.error("Error fetching attendance details:", error);
+    }
+  };
+
+  const fetchDefaultPaymentSettings = async () => {
+    try {
+      const response = await api.get("/admin-settings/payment-info");
+      if (response.data.success) {
+        setDefaultPaymentSettings(response.data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching default payment settings:", error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="mt-32 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-500"></div>
+      </div>
+    );
+  }
+
+  if (!eventDetails) {
+    return (
+      <div className="mt-32 text-center text-gray-400">
+        Event details not found
+      </div>
+    );
+  }
+
+  const formatDateTime = (date, time) => {
+    const dateObj = new Date(date);
+    const formattedDate = dateObj.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+    return `${formattedDate} ${time}`;
   };
 
   return (
@@ -130,7 +170,7 @@ const EventDetails = () => {
                 <BsGraphUp className="w-7 h-7 text-white" />
               </div>
               <h3 className="text-2xl font-bold text-white">
-                Business Growth Workshop
+                {eventDetails.title}
               </h3>
             </div>
             <div className="space-y-8">
@@ -143,7 +183,7 @@ const EventDetails = () => {
                     Date & Time
                   </p>
                   <p className="text-base text-white group-hover:text-amber-500 transition-colors duration-300">
-                    March 15, 2024 10:00 AM
+                    {formatDateTime(eventDetails.date, eventDetails.time)}
                   </p>
                 </div>
               </div>
@@ -157,7 +197,7 @@ const EventDetails = () => {
                     Venue
                   </p>
                   <p className="text-base text-white group-hover:text-amber-500 transition-colors duration-300">
-                    Hotel Grand Plaza
+                    {eventDetails.venue}
                   </p>
                 </div>
               </div>
@@ -171,15 +211,7 @@ const EventDetails = () => {
                     Description
                   </p>
                   <p className="text-base text-white group-hover:text-amber-500 transition-colors duration-300">
-                    Meetings are an essential part of effective team
-                    collaboration – but we've all been in meetings that were a
-                    complete waste of everyone's time. The participants would
-                    come unprepared, the discussion would get side-tracked, and
-                    hours would go by with no decisions made. While some
-                    meetings simply shouldn't happen at all – status updates or
-                    daily standups, for example, – others are necessary. And
-                    when you do need to have a meeting with your team, an
-                    effective meeting agenda is of paramount importance.
+                    {eventDetails.description || "No description available"}
                   </p>
                 </div>
               </div>
@@ -206,20 +238,39 @@ const EventDetails = () => {
             <div className="space-y-6">
               <div className="flex items-center justify-between p-4 bg-gray-800/30 rounded-xl hover:bg-gray-800/50 transition-all duration-300">
                 <span className="text-gray-400">Status</span>
-                <span className="px-4 py-2 rounded-lg text-sm font-medium bg-gradient-to-r from-green-500 to-emerald-600 text-white">
-                  Present
+                <span
+                  className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                    attendanceDetails?.status === "present"
+                      ? "bg-green-500/10 text-green-500"
+                      : attendanceDetails?.status === "absent"
+                      ? "bg-red-500/10 text-red-500"
+                      : attendanceDetails?.status === "late"
+                      ? "bg-yellow-500/10 text-yellow-500"
+                      : "bg-gray-500/10 text-gray-400"
+                  }`}
+                >
+                  {attendanceDetails?.status
+                    ? attendanceDetails.status.charAt(0).toUpperCase() +
+                      attendanceDetails.status.slice(1)
+                    : "Not Marked"}
                 </span>
               </div>
-              <div className="flex items-center justify-between p-4 bg-gray-800/30 rounded-xl hover:bg-gray-800/50 transition-all duration-300">
-                <span className="text-gray-400">Check-in Time</span>
-                <span className="text-white">09:55 AM</span>
-              </div>
+              {attendanceDetails?.status === "late" && (
+                <div className="flex items-center justify-between p-4 bg-gray-800/30 rounded-xl hover:bg-gray-800/50 transition-all duration-300">
+                  <span className="text-gray-400">Late Duration</span>
+                  <span className="text-white">
+                    {attendanceDetails.late_minutes === "less_than_10"
+                      ? "Less than 10 minutes"
+                      : "More than 10 minutes"}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </motion.div>
       </div>
 
-      {/* Payment Section with enhanced styling */}
+      {/* Payment Section */}
       <div className="grid lg:grid-cols-3 gap-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -237,27 +288,53 @@ const EventDetails = () => {
               </h3>
             </div>
             <div className="grid sm:grid-cols-2 gap-8">
-              <div className="flex flex-col items-center p-8 bg-gradient-to-br from-amber-500/5 to-purple-500/5 rounded-2xl border border-gray-700/50 hover:border-amber-500/50 transition-all duration-300">
-                <div className="p-3 bg-white rounded-xl mb-4 shadow-lg transform hover:scale-105 transition-transform duration-300">
-                  <img
-                    src="https://dummyimage.com/128x128/000/fff&text=QR+Code"
-                    alt="QR Code"
-                    className="w-32 h-32"
-                  />
-                </div>
-                <p className="text-sm text-gray-400 mt-2">
-                  Scan QR code to pay
-                </p>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <IndianRupee className="w-5 h-5 text-amber-500" />
-                  <div>
-                    <p className="text-sm text-gray-400">UPI ID</p>
-                    <p className="text-white">example@upi</p>
+              {/* QR Code Display */}
+              {((eventDetails.payment_method === "custom" &&
+                eventDetails.qr_code) ||
+                (eventDetails.payment_method === "default" &&
+                  defaultPaymentSettings?.qrCodeUrl)) && (
+                <div className="flex flex-col items-center p-8 bg-gradient-to-br from-amber-500/5 to-purple-500/5 rounded-2xl border border-gray-700/50 hover:border-amber-500/50 transition-all duration-300">
+                  <div className="p-3 bg-white rounded-xl mb-4 shadow-lg transform hover:scale-105 transition-transform duration-300">
+                    <img
+                      src={
+                        eventDetails.payment_method === "custom"
+                          ? `data:image/png;base64,${eventDetails.qr_code}`
+                          : defaultPaymentSettings?.qrCodeUrl
+                      }
+                      alt="QR Code"
+                      className="w-32 h-32"
+                    />
                   </div>
+                  <p className="text-sm text-gray-400 mt-2">
+                    Scan QR code to pay
+                  </p>
                 </div>
+              )}
+
+              {/* UPI Details */}
+              <div className="space-y-4">
+                {eventDetails.payment_method === "custom" &&
+                  eventDetails.upi_id && (
+                    <div className="flex items-center gap-3">
+                      <IndianRupee className="w-5 h-5 text-amber-500" />
+                      <div>
+                        <p className="text-sm text-gray-400">UPI ID</p>
+                        <p className="text-white">{eventDetails.upi_id}</p>
+                      </div>
+                    </div>
+                  )}
+                {eventDetails.payment_method === "default" &&
+                  defaultPaymentSettings?.upiId && (
+                    <div className="flex items-center gap-3">
+                      <IndianRupee className="w-5 h-5 text-amber-500" />
+                      <div>
+                        <p className="text-sm text-gray-400">Default UPI ID</p>
+                        <p className="text-white">
+                          {defaultPaymentSettings.upiId}
+                        </p>
+                      </div>
+                    </div>
+                  )}
               </div>
             </div>
           </div>
@@ -282,14 +359,38 @@ const EventDetails = () => {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-gray-400">Amount</span>
-                <span className="text-xl font-semibold text-white">₹500</span>
+                <span className="text-xl font-semibold text-white">
+                  ₹{eventDetails.fee_amount}
+                </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-gray-400">Status</span>
-                <span className="inline-flex px-3 py-1 rounded-lg text-sm font-medium bg-amber-500/10 text-amber-500">
-                  Pending
+                <span
+                  className={`inline-flex px-3 py-1 rounded-lg text-sm font-medium ${
+                    attendanceDetails?.venue_fee_status === "paid"
+                      ? "bg-green-500/10 text-green-500"
+                      : "bg-red-500/10 text-red-500"
+                  }`}
+                >
+                  {attendanceDetails?.venue_fee_status
+                    ? attendanceDetails.venue_fee_status
+                        .charAt(0)
+                        .toUpperCase() +
+                      attendanceDetails.venue_fee_status.slice(1)
+                    : "Not Paid"}
                 </span>
               </div>
+              {attendanceDetails?.venue_fee_status === "paid" &&
+                attendanceDetails?.payment_date && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-400">Payment Date</span>
+                    <span className="text-white">
+                      {new Date(
+                        attendanceDetails.payment_date
+                      ).toLocaleDateString()}
+                    </span>
+                  </div>
+                )}
             </div>
           </div>
         </motion.div>

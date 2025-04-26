@@ -67,14 +67,18 @@ const MemberReferView = () => {
           const isGiver = referral.given_by_member_id === auth.user.id;
 
           // Determine which member's data to display based on referral direction
-          const displayMember = isGiver ? referral.receivedByMember : referral.givenByMember;
-          const otherMember = isGiver ? referral.givenByMember : referral.receivedByMember;
+          const displayMember = isGiver
+            ? referral.receivedByMember
+            : referral.givenByMember;
+          const otherMember = isGiver
+            ? referral.givenByMember
+            : referral.receivedByMember;
 
           setReferralData({
             referral_id: referral.referral_id,
             isGiver: isGiver,
             referralType: isGiver ? "Given To" : "Received From",
-            
+
             // Main display member details
             displayMemberName: displayMember?.name || "N/A",
             displayMemberEmail: displayMember?.email || "N/A",
@@ -99,7 +103,9 @@ const MemberReferView = () => {
 
             profileImage: "https://avatar.iran.liara.run/public",
             socialMedia: {
-              whatsapp: referral.mobile ? `https://wa.me/${referral.mobile.replace(/[^0-9]/g, "")}` : "",
+              whatsapp: referral.mobile
+                ? `https://wa.me/${referral.mobile.replace(/[^0-9]/g, "")}`
+                : "",
               // ... other social media remains same
             },
           });
@@ -288,15 +294,6 @@ const MemberReferView = () => {
             </h3>
             <span className="px-3 py-1 bg-amber-500/20 text-amber-400 rounded-full text-sm font-medium mb-4">
               {referralData.displayMemberChapter}
-            </span>
-
-            {/* Referral Type Badge */}
-            <span className={`px-3 py-1 rounded-full text-sm font-medium mb-4 ${
-              referralData.isGiver 
-                ? "bg-green-500/20 text-green-400"
-                : "bg-blue-500/20 text-blue-400"
-            }`}>
-              {referralData.referralType}
             </span>
 
             <div className="w-full border-t border-gray-700 pt-4">

@@ -4,9 +4,6 @@ import { Link, useNavigate } from "react-router-dom";
 import reward from "../assets/images/icons/cup.svg";
 import {
   Award,
-  Diamond,
-  Trophy,
-  Medal,
   Users,
   Handshake,
   UserPlus,
@@ -122,37 +119,79 @@ const MonthlyReward = () => {
       present: 0,
       late: 0,
       absent: 0,
-      deductions: 0
-    }
+      deductions: 0,
+    },
   });
 
+  // Add this state for tier statistics
+  const [tierStats, setTierStats] = useState({
+    platinum: 0,
+    platinumPercentage: 0,
+    gold: 0,
+    goldPercentage: 0,
+    silver: 0,
+    silverPercentage: 0,
+    bronze: 0,
+    bronzePercentage: 0,
+  });
+
+  // Add this state to store all members' data
+  const [allMembers, setAllMembers] = useState([]);
+
+  // Add these states
+  const [loadingStats, setLoadingStats] = useState(true);
+  const [statsError, setStatsError] = useState(null);
+
   // Dummy data for demonstration
+  const MEMBERSHIP_TIERS = {
+    BRONZE: {
+      name: "Bronze Pin",
+      range: [0, 29],
+      emoji: "🥉",
+      color: "from-amber-700 to-amber-800",
+    },
+    SILVER: {
+      name: "Silver",
+      range: [30, 50],
+      emoji: "🥈",
+      color: "from-gray-300 to-gray-400",
+    },
+    GOLD: {
+      name: "Gold",
+      range: [51, 75],
+      emoji: "🏆",
+      color: "from-amber-400 to-amber-500",
+    },
+    PLATINUM: {
+      name: "Platinum",
+      range: [76, 100],
+      emoji: "💎",
+      color: "from-blue-400 to-blue-500",
+    },
+  };
+
   const dummyCategories = [
     {
-      emoji: "💎",
-      title: "Diamond",
-      points: "500+ Points",
+      ...MEMBERSHIP_TIERS.PLATINUM,
+      points: "76-100 Points",
       memberCount: 25,
       percentage: 15,
     },
     {
-      emoji: "🏆",
-      title: "Gold",
-      points: "400+ Points",
+      ...MEMBERSHIP_TIERS.GOLD,
+      points: "51-75 Points",
       memberCount: 42,
       percentage: 28,
     },
     {
-      emoji: "🥈",
-      title: "Silver",
-      points: "300+ Points",
+      ...MEMBERSHIP_TIERS.SILVER,
+      points: "30-50 Points",
       memberCount: 56,
       percentage: 37,
     },
     {
-      emoji: "🥉",
-      title: "Bronze",
-      points: "200+ Points",
+      ...MEMBERSHIP_TIERS.BRONZE,
+      points: "0-29 Points",
       memberCount: 78,
       percentage: 52,
     },
@@ -227,31 +266,31 @@ const MonthlyReward = () => {
   const calculateBusinessPoints = (amount) => {
     // Convert amount to number if it's a string
     const businessAmount = parseFloat(amount) || 0;
-    
+
     // Business given points based on amount ranges (in INR)
     if (businessAmount === 0) {
       return {
         points: 0,
-        tier: 'No business given',
-        nextTierAmount: 1
+        tier: "No business given",
+        nextTierAmount: 1,
       };
     } else if (businessAmount <= 50000) {
       return {
         points: 5,
-        tier: 'Tier 1',
-        nextTierAmount: 50001 - businessAmount
+        tier: "Tier 1",
+        nextTierAmount: 50001 - businessAmount,
       };
     } else if (businessAmount <= 500000) {
       return {
         points: 10,
-        tier: 'Tier 2',
-        nextTierAmount: 500001 - businessAmount
+        tier: "Tier 2",
+        nextTierAmount: 500001 - businessAmount,
       };
     } else {
       return {
         points: 15,
-        tier: 'Tier 3 (Maximum)',
-        nextTierAmount: 0
+        tier: "Tier 3 (Maximum)",
+        nextTierAmount: 0,
       };
     }
   };
@@ -259,16 +298,16 @@ const MonthlyReward = () => {
   // Update the fetchAttendancePoints function
   const fetchAttendancePoints = async (month, year) => {
     try {
-      const response = await api.get('/attendance-venue-fee/monthly-points', {
+      const response = await api.get("/attendance-venue-fee/monthly-points", {
         params: {
           month: month || new Date().getMonth() + 1,
-          year: year || new Date().getFullYear()
-        }
+          year: year || new Date().getFullYear(),
+        },
       });
 
       if (response.data.success) {
         const data = response.data.data;
-        
+
         // Update the attendance data state
         setAttendanceData({
           points: data.points,
@@ -278,37 +317,38 @@ const MonthlyReward = () => {
             present: data.breakdown.present,
             late: data.breakdown.late,
             absent: data.breakdown.absent,
-            deductions: data.breakdown.deductions
-          }
+            deductions: data.breakdown.deductions,
+          },
         });
 
         // Update the meetings metric in userData
-        setUserData(prev => ({
+        setUserData((prev) => ({
           ...prev,
-          meetings: getMeetingsContent(data)
+          meetings: getMeetingsContent(data),
         }));
 
         // Update total points
-        setUserData(prev => ({
+        setUserData((prev) => ({
           ...prev,
-          totalPoints: prev.totalPoints - (prev.meetings.points || 0) + data.points
+          totalPoints:
+            prev.totalPoints - (prev.meetings.points || 0) + data.points,
         }));
       }
     } catch (error) {
-      console.error('Error fetching attendance points:', error);
+      console.error("Error fetching attendance points:", error);
     }
   };
 
   // Update the getAttendanceSubtitle function
   const getAttendanceSubtitle = (data) => {
     const { totalMeetings, present, late, deductions } = data.breakdown;
-    
+
     if (totalMeetings === 0) {
-      return 'No meetings this month';
+      return "No meetings this month";
     }
 
     if (present === 0) {
-      return 'No points - Absent from all meetings';
+      return "No points - Absent from all meetings";
     }
 
     if (late > 0) {
@@ -316,7 +356,7 @@ const MonthlyReward = () => {
     }
 
     if (present === totalMeetings) {
-      return 'Maximum points - All meetings attended!';
+      return "Maximum points - All meetings attended!";
     }
 
     if (present >= 2) {
@@ -333,7 +373,7 @@ const MonthlyReward = () => {
   // Also update the meetings card content display
   const getMeetingsContent = (data) => {
     const { totalMeetings, present } = data.breakdown;
-    
+
     return {
       points: data.points,
       maxPoints: 20,
@@ -342,16 +382,18 @@ const MonthlyReward = () => {
       details: [
         `Total Monthly Meetings: ${totalMeetings}`,
         `Meetings Attended: ${present}`,
-        present >= 2 ? '20 points - Multiple meetings attended' :
-        present === 1 ? '10 points - One meeting attended' :
-        '0 points - No meetings attended'
-      ]
+        present >= 2
+          ? "20 points - Multiple meetings attended"
+          : present === 1
+          ? "10 points - One meeting attended"
+          : "0 points - No meetings attended",
+      ],
     };
   };
 
   // Update useEffect to fetch attendance data when month changes
   useEffect(() => {
-    const [year, month] = selectedMonth.split('-');
+    const [year, month] = selectedMonth.split("-");
     fetchAttendancePoints(parseInt(month), parseInt(year));
   }, [selectedMonth]);
 
@@ -430,46 +472,47 @@ const MonthlyReward = () => {
   useEffect(() => {
     const fetchBusinessData = async () => {
       try {
-        const response = await api.get('/business');
+        const response = await api.get("/business");
         const businesses = response.data;
-        
+
         // Filter for verified businesses in current month
         const currentDate = new Date();
         const currentMonth = currentDate.getMonth() + 1;
         const currentYear = currentDate.getFullYear();
-        
-        const monthlyBusinesses = businesses.filter(business => {
+
+        const monthlyBusinesses = businesses.filter((business) => {
           const businessDate = new Date(business.businessDate);
           return (
             businessDate.getMonth() + 1 === currentMonth &&
             businessDate.getFullYear() === currentYear &&
-            business.status === 'verified'
+            business.status === "verified"
           );
         });
-        
+
         // Calculate total business amount
         const totalAmount = monthlyBusinesses.reduce((sum, business) => {
           return sum + parseFloat(business.amount);
         }, 0);
-        
+
         // Calculate points and next tier info
-        const { points, tier, nextTierAmount } = calculateBusinessPoints(totalAmount);
-        
-        setUserData(prev => ({
+        const { points, tier, nextTierAmount } =
+          calculateBusinessPoints(totalAmount);
+
+        setUserData((prev) => ({
           ...prev,
           business: {
             value: totalAmount,
             points: points,
             maxValue: 500000,
-            subtitle: nextTierAmount > 0 
-              ? `₹${nextTierAmount.toLocaleString()} more needed for next tier`
-              : 'Maximum tier achieved',
-            tier: tier
-          }
+            subtitle:
+              nextTierAmount > 0
+                ? `₹${nextTierAmount.toLocaleString()} more needed for next tier`
+                : "Maximum tier achieved",
+            tier: tier,
+          },
         }));
-        
       } catch (error) {
-        console.error('Error fetching business data:', error);
+        console.error("Error fetching business data:", error);
       }
     };
 
@@ -479,29 +522,27 @@ const MonthlyReward = () => {
   useEffect(() => {
     const fetchReferralData = async () => {
       try {
-        const response = await api.get('/referrals');
+        const response = await api.get("/referrals");
         if (response.data.success) {
           const { stats } = response.data;
-          
-          setUserData(prev => ({
+
+          setUserData((prev) => ({
             ...prev,
             referrals: {
               value: stats.totalReferrals,
               points: stats.points,
               maxValue: 5,
-              subtitle: stats.nextTierNeeded > 0
-                ? `${stats.nextTierNeeded} more referral${stats.nextTierNeeded > 1 ? 's' : ''} needed for ${stats.nextTierPoints} points`
-                : "Maximum tier achieved",
-              details: `
-                • 1-2 referrals: 5 points
-                • 3-4 referrals: 10 points
-                • 5+ referrals: 15 points (max)
-              `
-            }
+              subtitle:
+                stats.nextTierNeeded > 0
+                  ? `${stats.nextTierNeeded} more referral${
+                      stats.nextTierNeeded > 1 ? "s" : ""
+                    } needed for ${stats.nextTierPoints} points`
+                  : "Maximum tier achieved",
+            },
           }));
         }
       } catch (error) {
-        console.error('Error fetching referral data:', error);
+        console.error("Error fetching referral data:", error);
       }
     };
 
@@ -511,34 +552,234 @@ const MonthlyReward = () => {
   useEffect(() => {
     const fetchVisitorData = async () => {
       try {
-        const response = await api.get('/visitors/stats');
+        const response = await api.get("/visitors/stats");
         if (response.data.success) {
           const { stats } = response.data.data;
-          
-          setUserData(prev => ({
+
+          setUserData((prev) => ({
             ...prev,
             visitors: {
               value: stats.totalVisitors,
               points: stats.points,
               maxValue: 3,
-              subtitle: stats.nextTierNeeded > 0
-                ? `${stats.nextTierNeeded} more visitor${stats.nextTierNeeded > 1 ? 's' : ''} needed for ${stats.nextTierPoints} points`
-                : "Maximum tier achieved",
+              subtitle:
+                stats.nextTierNeeded > 0
+                  ? `${stats.nextTierNeeded} more visitor${
+                      stats.nextTierNeeded > 1 ? "s" : ""
+                    } needed for ${stats.nextTierPoints} points`
+                  : "Maximum tier achieved",
               details: `
                 • 1 visitor: 5 points
                 • 2 visitors: 10 points
                 • 3+ visitors: 15 points (max)
-              `
-            }
+              `,
+            },
           }));
         }
       } catch (error) {
-        console.error('Error fetching visitor data:', error);
+        console.error("Error fetching visitor data:", error);
       }
     };
 
     fetchVisitorData();
   }, [auth.user.id]);
+
+  useEffect(() => {
+    const fetchSocialTrainingData = async () => {
+      try {
+        const response = await api.get("/attendance-venue-fee/social-stats");
+        if (response.data.success) {
+          const { stats, breakdown } = response.data.data;
+
+          // Calculate points based on attendance count
+          let points = 0;
+          let subtitle = "";
+
+          if (stats.totalAttended >= 3) {
+            points = 15;
+            subtitle = "Maximum points achieved";
+          } else if (stats.totalAttended === 2) {
+            points = 10;
+            subtitle = "1 more social/training needed for 15 points";
+          } else if (stats.totalAttended === 1) {
+            points = 5;
+            subtitle = "2 more socials/trainings needed for 15 points";
+          } else {
+            points = 0;
+            subtitle = "3 socials/trainings needed for 15 points";
+          }
+
+          setUserData((prev) => ({
+            ...prev,
+            socials: {
+              value: stats.totalAttended,
+              points: points,
+              maxValue: 3,
+              subtitle: subtitle,
+            },
+          }));
+        }
+      } catch (error) {
+        console.error("Error fetching social training data:", error);
+      }
+    };
+
+    fetchSocialTrainingData();
+  }, [auth.user.id]);
+
+  useEffect(() => {
+    // Calculate total points whenever any of the individual metrics change
+    const totalPoints = [
+      attendanceData.points || 0,
+      userData.bdm.points || 0,
+      userData.business.points || 0,
+      userData.referrals.points || 0,
+      userData.socials.points || 0,
+      userData.visitors.points || 0,
+    ].reduce((sum, points) => sum + points, 0);
+
+    // Update only the totalPoints in userData
+    setUserData((prev) => ({
+      ...prev,
+      totalPoints: totalPoints,
+    }));
+  }, [
+    attendanceData.points,
+    userData.bdm.points,
+    userData.business.points,
+    userData.referrals.points,
+    userData.socials.points,
+    userData.visitors.points,
+  ]);
+
+  // Add this function to fetch all members' data
+  const fetchAllMembers = async () => {
+    try {
+      setLoadingStats(true);
+      setStatsError(null);
+      const response = await api.get("/members/members");
+      if (response.data.success) {
+        setAllMembers(response.data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching members:", error);
+      setStatsError("Failed to load member statistics");
+    } finally {
+      setLoadingStats(false);
+    }
+  };
+
+  // Add this function to calculate tier statistics
+  const calculateTierStats = () => {
+    const stats = {
+      platinum: 0,
+      platinumPercentage: 0,
+      gold: 0,
+      goldPercentage: 0,
+      silver: 0,
+      silverPercentage: 0,
+      bronze: 0,
+      bronzePercentage: 0,
+      total: allMembers.length,
+    };
+
+    allMembers.forEach((member) => {
+      // Calculate total points for the member using existing point calculation logic
+      const totalPoints = calculateMemberPoints(member);
+
+      // Assign to appropriate tier
+      if (totalPoints >= 76) {
+        stats.platinum++;
+      } else if (totalPoints >= 51) {
+        stats.gold++;
+      } else if (totalPoints >= 30) {
+        stats.silver++;
+      } else {
+        stats.bronze++;
+      }
+    });
+
+    // Calculate percentages
+    if (stats.total > 0) {
+      stats.platinumPercentage = Math.round(
+        (stats.platinum / stats.total) * 100
+      );
+      stats.goldPercentage = Math.round((stats.gold / stats.total) * 100);
+      stats.silverPercentage = Math.round((stats.silver / stats.total) * 100);
+      stats.bronzePercentage = Math.round((stats.bronze / stats.total) * 100);
+    }
+
+    return stats;
+  };
+
+  // Function to calculate points for a single member
+  const calculateMemberPoints = (member) => {
+    let totalPoints = 0;
+
+    // Add attendance points (max 20)
+    const attendancePoints = userData.meetings.points || 0;
+    totalPoints += attendancePoints;
+
+    // Add BDM points (max 20)
+    const bdmPoints = userData.bdm.points || 0;
+    totalPoints += bdmPoints;
+
+    // Add business points (max 15)
+    const businessPoints = userData.business.points || 0;
+    totalPoints += businessPoints;
+
+    // Add referral points (max 15)
+    const referralPoints = userData.referrals.points || 0;
+    totalPoints += referralPoints;
+
+    // Add visitor points (max 15)
+    const visitorPoints = userData.visitors.points || 0;
+    totalPoints += visitorPoints;
+
+    // Add social training points (max 15)
+    const socialPoints = userData.socials.points || 0;
+    totalPoints += socialPoints;
+
+    // Cap total points at 100
+    return Math.min(totalPoints, 100);
+  };
+
+  // Update the getCategoryData function to use the calculated stats
+  const getCategoryData = () => {
+    const stats = calculateTierStats();
+
+    return [
+      {
+        ...MEMBERSHIP_TIERS.PLATINUM,
+        points: "76-100 Points",
+        memberCount: stats.platinum,
+        percentage: stats.platinumPercentage,
+      },
+      {
+        ...MEMBERSHIP_TIERS.GOLD,
+        points: "51-75 Points",
+        memberCount: stats.gold,
+        percentage: stats.goldPercentage,
+      },
+      {
+        ...MEMBERSHIP_TIERS.SILVER,
+        points: "30-50 Points",
+        memberCount: stats.silver,
+        percentage: stats.silverPercentage,
+      },
+      {
+        ...MEMBERSHIP_TIERS.BRONZE,
+        points: "0-29 Points",
+        memberCount: stats.bronze,
+        percentage: stats.bronzePercentage,
+      },
+    ];
+  };
+
+  // Add useEffect to fetch members when component mounts or month changes
+  useEffect(() => {
+    fetchAllMembers();
+  }, [selectedMonth]);
 
   const LoadingCard = () => (
     <div className="p-4 rounded-xl bg-gray-800/50 border border-gray-700 backdrop-blur-xl">
@@ -558,8 +799,11 @@ const MonthlyReward = () => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="w-full p-6 rounded-2xl bg-gray-900/50 backdrop-blur-xl border border-gray-800"
+      className="w-full p-6 rounded-2xl bg-gray-900/50 backdrop-blur-xl border border-gray-800 relative overflow-hidden"
     >
+      <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-amber-500/5"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(#fbbf24_1px,transparent_1px)] opacity-[0.03] [background-size:16px_16px]"></div>
+
       {/* Header Section */}
       <div className="mt-32 flex flex-col gap-6">
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
@@ -650,23 +894,28 @@ const MonthlyReward = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 items-center gap-6">
               {/* Profile QR Section */}
               <div className="flex flex-col items-center justify-center gap-6 w-full">
-                <div className="w-40 h-40 bg-gradient-to-br from-gray-800 to-gray-900 p-3 rounded-2xl shadow-lg shadow-amber-500/10 border border-gray-700">
-                  <div className="w-full h-full bg-white p-2 rounded-lg">
-                    <img
-                      src="path-to-qr-code"
-                      alt="Profile QR"
-                      className="w-full h-full object-contain"
-                    />
+                <div className="w-50 h-40 flex items-center justify-center">
+                  <div className="relative animate-bounce">
+                    <div className="text-9xl">🏆</div>
+                    <div className="absolute -top-2 -right-2 text-4xl animate-ping">
+                      ✨
+                    </div>
+                    <div className="absolute -bottom-2 -left-2 text-4xl animate-ping delay-100">
+                      ✨
+                    </div>
                   </div>
                 </div>
 
                 <div className="w-40 bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl shadow-lg shadow-amber-500/20">
-                  <div className="px-6 py-4 text-center">
+                  <div className="px-6 py-9 text-center">
                     <div className="text-5xl font-bold text-white mb-1">
                       {userData.totalPoints}
                     </div>
                     <div className="text-white/90 text-sm font-medium">
                       Total Points
+                    </div>
+                    <div className="text-white/70 text-xs mt-1">
+                      {Math.round((userData.totalPoints / 100) * 100)}% Complete
                     </div>
                   </div>
                 </div>
@@ -683,13 +932,20 @@ const MonthlyReward = () => {
                   icon={Users}
                   details={
                     <div className="mt-2 text-xs text-gray-400">
-                      <p>Total Meetings: {attendanceData.breakdown.totalMeetings}</p>
+                      <p>
+                        Total Meetings: {attendanceData.breakdown.totalMeetings}
+                      </p>
                       <p>Present: {attendanceData.breakdown.present}</p>
                       {attendanceData.breakdown.late > 0 && (
-                        <p>Late Arrivals: {attendanceData.breakdown.late} (-{attendanceData.breakdown.deductions} points)</p>
+                        <p>
+                          Late Arrivals: {attendanceData.breakdown.late} (-
+                          {attendanceData.breakdown.deductions} points)
+                        </p>
                       )}
                       {attendanceData.breakdown.absent > 0 && (
-                        <p className="text-red-400">Absent: {attendanceData.breakdown.absent}</p>
+                        <p className="text-red-400">
+                          Absent: {attendanceData.breakdown.absent}
+                        </p>
                       )}
                     </div>
                   }
@@ -748,11 +1004,40 @@ const MonthlyReward = () => {
 
                 <MetricCard
                   title="Socials"
-                  value={userData.socials.value}
+                  value={`${userData.socials.value}/3`}
                   points={userData.socials.points}
                   subtitle={userData.socials.subtitle}
                   maxValue={userData.socials.maxValue}
                   icon={Users}
+                  details={
+                    <div className="mt-2 text-xs space-y-2">
+                      <div className="text-gray-400">
+                        <p className="font-medium text-amber-500 mb-1">
+                          Current Status:
+                        </p>
+                        <p>Total Attended: {userData.socials.value}</p>
+                        {userData.socials.breakdown && (
+                          <>
+                            <p>
+                              • Present: {userData.socials.breakdown.present}
+                            </p>
+                            <p>• Late: {userData.socials.breakdown.late}</p>
+                          </>
+                        )}
+                        <p className="mt-1">
+                          Points Earned: {userData.socials.points}/15
+                        </p>
+                      </div>
+                      <div className="text-gray-400">
+                        <p className="font-medium text-amber-500 mb-1">
+                          Points System:
+                        </p>
+                        <pre className="whitespace-pre-wrap font-sans">
+                          {userData.socials.details}
+                        </pre>
+                      </div>
+                    </div>
+                  }
                 />
               </div>
             </div>
@@ -787,82 +1072,88 @@ const MonthlyReward = () => {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {loading
-            ? Array(4).fill(<LoadingCard />)
-            : data.categories.map((category, index) => (
-                <motion.div
-                  key={category.title}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="group p-4 rounded-xl bg-gray-800/50 backdrop-blur-xl 
-                          border border-gray-700 hover:border-amber-500/20
-                          shadow-lg hover:shadow-xl hover:shadow-amber-500/5
-                          transition-all duration-300 hover:-translate-y-1"
-                >
-                  <div className="flex justify-between items-center mb-4">
-                    <div className="flex items-center gap-3">
-                      <motion.div
-                        whileHover={{ scale: 1.1, rotate: 5 }}
-                        className="p-2 bg-gradient-to-r from-gray-700 to-gray-800 
-                                  rounded-xl shadow-lg relative"
-                      >
-                        <span className="text-xl">{category.emoji}</span>
-                        <div className="absolute -top-1 -right-1 w-2 h-2 bg-amber-500 rounded-full animate-ping" />
-                      </motion.div>
-                      <div>
-                        <span className="text-base text-gray-100 font-semibold group-hover:text-amber-400 transition-colors">
-                          {category.title}
-                        </span>
-                        <p className="text-xs text-gray-400">
-                          {category.points}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="text-center py-6 relative">
-                    <div className="absolute inset-0 flex items-center justify-center opacity-10">
-                      <span className="text-8xl font-bold text-gray-500">
-                        {category.emoji}
-                      </span>
-                    </div>
+        {loadingStats ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {Array(4).fill(<LoadingCard />)}
+          </div>
+        ) : statsError ? (
+          <div className="text-red-500 text-center p-4">{statsError}</div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {getCategoryData().map((category, index) => (
+              <motion.div
+                key={category.title}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="group p-4 rounded-xl bg-gray-800/50 backdrop-blur-xl 
+                        border border-gray-700 hover:border-amber-500/20
+                        shadow-lg hover:shadow-xl hover:shadow-amber-500/5
+                        transition-all duration-300 hover:-translate-y-1
+                        relative overflow-hidden"
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="flex justify-between items-center mb-4">
+                  <div className="flex items-center gap-3">
                     <motion.div
-                      initial={{ scale: 0.5, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ delay: index * 0.2 }}
-                      className="relative"
+                      whileHover={{ scale: 1.1, rotate: 5 }}
+                      className="p-2 bg-gradient-to-r from-gray-700 to-gray-800 
+                                rounded-xl shadow-lg relative"
                     >
-                      <span className="text-4xl font-bold text-gray-100">
-                        {category.memberCount}
-                      </span>
-                      <p className="text-gray-400 text-sm">
-                        Members ({category.percentage}%)
-                      </p>
+                      <span className="text-xl">{category.emoji}</span>
+                      <div className="absolute -top-1 -right-1 w-2 h-2 bg-amber-500 rounded-full animate-ping" />
                     </motion.div>
+                    <div>
+                      <span className="text-base text-gray-100 font-semibold group-hover:text-amber-400 transition-colors">
+                        {category.title}
+                      </span>
+                      <p className="text-xs text-gray-400">{category.points}</p>
+                    </div>
                   </div>
+                </div>
 
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => navigate("/member-levels")}
-                    className="w-full mt-2 py-2 px-4 bg-gray-900 hover:bg-gray-800 
-                            text-gray-100 rounded-lg transition-all duration-300 text-sm
-                            relative group/btn"
-                  >
-                    View All
-                    <span
-                      className="absolute right-4 top-1/2 transform -translate-y-1/2 
-                                 opacity-0 group-hover/btn:opacity-100 group-hover/btn:translate-x-2 
-                                 transition-all duration-300"
-                    >
-                      →
+                <div className="text-center py-6 relative">
+                  <div className="absolute inset-0 flex items-center justify-center opacity-10">
+                    <span className="text-8xl font-bold text-gray-500">
+                      {category.emoji}
                     </span>
-                  </motion.button>
-                </motion.div>
-              ))}
-        </div>
+                  </div>
+                  <motion.div
+                    initial={{ scale: 0.5, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: index * 0.2 }}
+                    className="relative"
+                  >
+                    <span className="text-4xl font-bold text-gray-100">
+                      {category.memberCount}
+                    </span>
+                    <p className="text-gray-400 text-sm">
+                      Members ({category.percentage}%)
+                    </p>
+                  </motion.div>
+                </div>
+
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => navigate("/member-levels")}
+                  className="w-full mt-2 py-2 px-4 bg-gray-900 hover:bg-gray-800 
+                          text-gray-100 rounded-lg transition-all duration-300 text-sm
+                          relative group/btn"
+                >
+                  View All
+                  <span
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 
+                               opacity-0 group-hover/btn:opacity-100 group-hover/btn:translate-x-2 
+                               transition-all duration-300"
+                  >
+                    →
+                  </span>
+                </motion.button>
+              </motion.div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Fortnight Recognition */}

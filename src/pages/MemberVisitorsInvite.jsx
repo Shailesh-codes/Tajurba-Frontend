@@ -37,7 +37,7 @@ const MemberVisitorsInvite = () => {
   const fetchVisitors = async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/visitors`, {
+      const response = await api.get(`/visitors/useauth`, {
         params: {
           page: currentPage,
           limit: resultsPerPage,

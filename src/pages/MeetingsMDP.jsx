@@ -63,73 +63,94 @@ const MeetingsMDP = () => {
   // Updated processScheduleData function
   const processScheduleData = async (schedules, type) => {
     try {
-      return await Promise.all(schedules.map(async (schedule) => {
-        const scheduleId = getScheduleId(schedule, type);
-        
-        if (!scheduleId) {
-          console.error(`Invalid schedule ID for type: ${type}`, schedule);
-          return null;
-        }
+      return await Promise.all(
+        schedules.map(async (schedule) => {
+          const scheduleId = getScheduleId(schedule, type);
 
-        try {
-          // Get attendance stats for the authenticated user
-          const statsResponse = await api.get(`/attendance-venue-fee/meeting-stats`, {
-            params: {
+          if (!scheduleId) {
+            console.error(`Invalid schedule ID for type: ${type}`, schedule);
+            return null;
+          }
+
+          try {
+            const statsResponse = await api.get(
+              `/attendance-venue-fee/meeting-stats`,
+              {
+                params: {
+                  type: type,
+                  meeting_id: scheduleId,
+                  member_id: auth.user.id,
+                },
+              }
+            );
+
+            const stats = statsResponse.data.success
+              ? statsResponse.data.data
+              : null;
+
+            // Get user's specific attendance record
+            const attendanceResponse = await api.get(
+              `/attendance-venue-fee/meeting-members`,
+              {
+                params: {
+                  type: type,
+                  meeting_id: scheduleId,
+                },
+              }
+            );
+
+            const userAttendance = attendanceResponse.data.success
+              ? attendanceResponse.data.data.find(
+                  (record) => record.id === auth.user.id
+                )
+              : null;
+
+            return {
+              id: scheduleId,
+              title: schedule.title,
+              date_time: `${new Date(schedule.date).toLocaleDateString()} ${
+                schedule.time
+              }`,
+              venue: schedule.venue,
+              status: userAttendance ? userAttendance.status : "pending",
+              venue_fee: {
+                amount: schedule.fee_amount,
+                status: userAttendance
+                  ? userAttendance.venue_fee_status
+                  : "not paid",
+              },
+              attendance_stats: stats,
               type: type,
-              meeting_id: scheduleId,
-              member_id: auth.user.id // Add member_id to get user-specific stats
-            }
-          });
-
-          const stats = statsResponse.data.success ? statsResponse.data.data : null;
-
-          // Get user's specific attendance record
-          const attendanceResponse = await api.get(`/attendance-venue-fee/meeting-members`, {
-            params: {
+              chapters: schedule.chapters || [],
+              chapter: schedule.chapter,
+              user_attendance: userAttendance,
+            };
+          } catch (error) {
+            console.error(
+              `Error fetching stats for ${type} ID ${scheduleId}:`,
+              error
+            );
+            return {
+              id: scheduleId,
+              title: schedule.title,
+              date_time: `${new Date(schedule.date).toLocaleDateString()} ${
+                schedule.time
+              }`,
+              venue: schedule.venue,
+              status: "pending",
+              venue_fee: {
+                amount: schedule.fee_amount,
+                status: "not paid",
+              },
+              attendance_stats: null,
               type: type,
-              meeting_id: scheduleId
-            }
-          });
-
-          const userAttendance = attendanceResponse.data.success ? 
-            attendanceResponse.data.data.find(record => record.id === auth.user.id) : null;
-
-          return {
-            id: scheduleId,
-            title: schedule.title,
-            date_time: `${new Date(schedule.date).toLocaleDateString()} ${schedule.time}`,
-            venue: schedule.venue,
-            status: userAttendance ? userAttendance.status : 'pending',
-            venue_fee: {
-              amount: schedule.fee_amount,
-              status: userAttendance ? userAttendance.venue_fee_status : "not paid"
-            },
-            attendance_stats: stats,
-            type: type,
-            chapters: schedule.chapters || [],
-            chapter: schedule.chapter,
-            user_attendance: userAttendance
-          };
-        } catch (error) {
-          console.error(`Error fetching stats for ${type} ID ${scheduleId}:`, error);
-          return {
-            id: scheduleId,
-            title: schedule.title,
-            date_time: `${new Date(schedule.date).toLocaleDateString()} ${schedule.time}`,
-            venue: schedule.venue,
-            status: 'pending',
-            venue_fee: {
-              amount: schedule.fee_amount,
-              status: "not paid"
-            },
-            attendance_stats: null,
-            type: type,
-            chapters: schedule.chapters || [],
-            chapter: schedule.chapter,
-            user_attendance: null
-          };
-        }
-      }));
+              chapters: schedule.chapters || [],
+              chapter: schedule.chapter,
+              user_attendance: null,
+            };
+          }
+        })
+      );
     } catch (error) {
       console.error(`Error processing ${type} schedules:`, error);
       return [];
@@ -143,21 +164,31 @@ const MeetingsMDP = () => {
 
       // Get all schedules
       const response = await api.get(`/schedules`);
-      
+
       if (response.data.success) {
-        const { meetings = [], mdp = [], socialTraining = [] } = response.data.data;
-        
+        const {
+          meetings = [],
+          mdp = [],
+          socialTraining = [],
+        } = response.data.data;
+
         // Filter schedules based on user's role and chapter
         const filterSchedulesByUserAccess = (schedules) => {
-          if (auth.role === "Admin" || auth.role === "Regional Director" || auth.role === "Super Admin") {
+          if (
+            auth.role === "Admin" ||
+            auth.role === "Regional Director" ||
+            auth.role === "Super Admin"
+          ) {
             return schedules; // Admins see all schedules
           }
-          
+
           // Regular members only see schedules for their chapter
-          return schedules.filter(schedule => {
+          return schedules.filter((schedule) => {
             // Check if schedule has chapters array
             if (schedule.chapters && Array.isArray(schedule.chapters)) {
-              return schedule.chapters.some(chapter => chapter.chapter_id === auth.user.chapter);
+              return schedule.chapters.some(
+                (chapter) => chapter.chapter_id === auth.user.chapter
+              );
             }
             // Fallback to direct chapter comparison
             return schedule.chapter === auth.user.chapter;
@@ -165,32 +196,35 @@ const MeetingsMDP = () => {
         };
 
         // Process and filter schedules based on user's role and chapter
-        const processedMeetings = (await processScheduleData(
-          filterSchedulesByUserAccess(meetings), 
-          "meeting"
-        )).filter(Boolean);
-        
-        const processedMDP = (await processScheduleData(
-          filterSchedulesByUserAccess(mdp), 
-          "mdp"
-        )).filter(Boolean);
-        
-        const processedSocial = (await processScheduleData(
-          filterSchedulesByUserAccess(socialTraining), 
-          "socialTraining"
-        )).filter(Boolean);
+        const processedMeetings = (
+          await processScheduleData(
+            filterSchedulesByUserAccess(meetings),
+            "meeting"
+          )
+        ).filter(Boolean);
+
+        const processedMDP = (
+          await processScheduleData(filterSchedulesByUserAccess(mdp), "mdp")
+        ).filter(Boolean);
+
+        const processedSocial = (
+          await processScheduleData(
+            filterSchedulesByUserAccess(socialTraining),
+            "socialTraining"
+          )
+        ).filter(Boolean);
 
         setScheduleData({
           meetings: processedMeetings,
           mdp: processedMDP,
-          socialTraining: processedSocial
+          socialTraining: processedSocial,
         });
 
         // Update stats only for relevant schedules
         setStats({
           meetings: calculateTypeStats(processedMeetings),
           mdp: calculateTypeStats(processedMDP),
-          social: calculateTypeStats(processedSocial)
+          social: calculateTypeStats(processedSocial),
         });
       }
     } catch (error) {
@@ -640,17 +674,28 @@ const MeetingsMDP = () => {
                         <td className="px-6 py-4">{renderChapterInfo(item)}</td>
                       )}
                       <td className="px-6 py-4">
-                        <span className={`px-2.5 py-1 rounded-lg text-sm ${getStatusClass(item.user_attendance?.status || 'pending')}`}>
-                          {(item.user_attendance?.status || 'pending')
+                        <span
+                          className={`px-2.5 py-1 rounded-lg text-sm ${getStatusClass(
+                            item.user_attendance?.status || "pending"
+                          )}`}
+                        >
+                          {(item.user_attendance?.status || "pending")
                             .replace("_", " ")
                             .charAt(0)
-                            .toUpperCase() + 
-                            (item.user_attendance?.status || 'pending').slice(1)}
+                            .toUpperCase() +
+                            (item.user_attendance?.status || "pending").slice(
+                              1
+                            )}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getVenueFeeClass(item.user_attendance?.venue_fee_status || 'not paid')}`}>
-                          ₹{item.venue_fee.amount} - {item.user_attendance?.venue_fee_status || 'not paid'}
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getVenueFeeClass(
+                            item.user_attendance?.venue_fee_status || "not paid"
+                          )}`}
+                        >
+                          ₹{item.venue_fee.amount} -{" "}
+                          {item.user_attendance?.venue_fee_status || "not paid"}
                         </span>
                       </td>
                       <td className="px-6 py-4">
