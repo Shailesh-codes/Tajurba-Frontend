@@ -94,7 +94,46 @@ const Dashboard = () => {
       present: 0,
       absent: 0,
       late: 0,
+      rate: 0,
     },
+  });
+
+  const [mdpData, setMdpData] = useState({
+    totalCount: 0,
+    recentCount: 0,
+    attendance: { present: 0, absent: 0, late: 0, rate: 0 },
+  });
+
+  const [socialData, setSocialData] = useState({
+    totalCount: 0,
+    recentCount: 0,
+    attendance: { present: 0, absent: 0, late: 0, rate: 0 },
+  });
+
+  const [memberStats, setMemberStats] = useState({
+    total: 0,
+    active: 0,
+    inactive: 0,
+  });
+
+  const [statisticsOverview, setStatisticsOverview] = useState({
+    totalMembers: 0,
+    totalBdms: 0,
+    totalReferrals: 0,
+    topPerformers: [],
+    recentActivities: [],
+  });
+
+  const [bdmStats, setBdmStats] = useState({
+    total: 0,
+    recent: 0,
+    topGivers: [],
+  });
+
+  const [referralStats, setReferralStats] = useState({
+    total: 0,
+    recent: 0,
+    topGivers: [],
   });
 
   useEffect(() => {
@@ -103,7 +142,7 @@ const Dashboard = () => {
         // First, get the auth token from localStorage
         const token = localStorage.getItem("token"); // Make sure this matches how you store your auth token
 
-        const response = await api.get("/referrals/", {
+        const response = await api.get("/referrals/ref-all", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -255,56 +294,72 @@ const Dashboard = () => {
     const fetchMeetingData = async () => {
       try {
         const token = localStorage.getItem("token");
-        // First, get all meetings
-        const response = await api.get("/attendance-venue-fee/meeting-stats", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          params: {
-            type: "meeting",
-          },
+        // 1. Get all meetings
+        const response = await api.get("/schedules", {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { type: "meeting" },
         });
-
-        console.log("Meeting response:", response.data); // For debugging
 
         if (response.data.success) {
           const meetings = response.data.data || [];
-          const currentDate = new Date();
-          const fifteenDaysAgo = new Date(
-            currentDate - 15 * 24 * 60 * 60 * 1000
+          if (meetings.length === 0) {
+            setMeetingData({
+              totalCount: 0,
+              recentCount: 0,
+              attendance: { present: 0, absent: 0, late: 0, rate: 0 },
+            });
+            return;
+          }
+
+          // 2. Fetch attendance stats for each meeting in parallel
+          let totalPresent = 0;
+          let totalAbsent = 0;
+          let totalLate = 0;
+          let totalMarked = 0;
+
+          await Promise.all(
+            meetings.map(async (meeting) => {
+              try {
+                const statsRes = await api.get(
+                  "/attendance-venue-fee/meeting-stats",
+                  {
+                    headers: { Authorization: `Bearer ${token}` },
+                    params: { type: "meeting", meeting_id: meeting.meeting_id },
+                  }
+                );
+                if (
+                  statsRes.data.success &&
+                  statsRes.data.data &&
+                  statsRes.data.data.attendance
+                ) {
+                  const att = statsRes.data.data.attendance;
+                  totalPresent += att.present || 0;
+                  totalAbsent += att.absent || 0;
+                  totalLate += (att.late_less || 0) + (att.late_more || 0);
+                  totalMarked += att.marked || 0;
+                }
+              } catch (err) {}
+            })
           );
 
-          // Count recent meetings (last 15 days)
-          const recentMeetings = meetings.filter(
-            (meeting) => new Date(meeting.date) >= fifteenDaysAgo
-          );
-
-          // Get attendance stats for meetings
-          const attendanceResponse = await api.get(
-            "/attendance-venue-fee/meeting-stats",
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-              params: {
-                type: "meeting",
-              },
-            }
-          );
-
-          const attendanceStats = attendanceResponse.data.data?.attendance || {
-            present: 0,
-            absent: 0,
-            late_total: 0,
-          };
+          // 3. Calculate attendance rate for meetings only
+          const attendanceRate =
+            totalMarked > 0
+              ? Math.round((totalPresent / totalMarked) * 100)
+              : 0;
 
           setMeetingData({
             totalCount: meetings.length,
-            recentCount: recentMeetings.length,
+            recentCount: meetings.filter(
+              (meeting) =>
+                new Date(meeting.date) >=
+                new Date(Date.now() - 15 * 24 * 60 * 60 * 1000)
+            ).length,
             attendance: {
-              present: attendanceStats.present || 0,
-              absent: attendanceStats.absent || 0,
-              late: attendanceStats.late_total || 0,
+              present: totalPresent,
+              absent: totalAbsent,
+              late: totalLate,
+              rate: attendanceRate,
             },
           });
         }
@@ -313,11 +368,7 @@ const Dashboard = () => {
         setMeetingData({
           totalCount: 0,
           recentCount: 0,
-          attendance: {
-            present: 0,
-            absent: 0,
-            late: 0,
-          },
+          attendance: { present: 0, absent: 0, late: 0, rate: 0 },
         });
       }
     };
@@ -325,620 +376,1007 @@ const Dashboard = () => {
     fetchMeetingData();
   }, []);
 
+  useEffect(() => {
+    const fetchMdpData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        // 1. Get all MDP meetings
+        const response = await api.get("/schedules", {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { type: "mdp" },
+        });
+
+        if (response.data.success) {
+          const mdps = response.data.data || [];
+          if (mdps.length === 0) {
+            setMdpData({
+              totalCount: 0,
+              recentCount: 0,
+              attendance: { present: 0, absent: 0, late: 0, rate: 0 },
+            });
+            return;
+          }
+
+          // 2. Fetch attendance stats for each MDP in parallel
+          let totalPresent = 0;
+          let totalAbsent = 0;
+          let totalLate = 0;
+          let totalMarked = 0;
+
+          await Promise.all(
+            mdps.map(async (mdp) => {
+              try {
+                const statsRes = await api.get(
+                  "/attendance-venue-fee/meeting-stats",
+                  {
+                    headers: { Authorization: `Bearer ${token}` },
+                    params: { type: "mdp", meeting_id: mdp.mdp_id },
+                  }
+                );
+                if (
+                  statsRes.data.success &&
+                  statsRes.data.data &&
+                  statsRes.data.data.attendance
+                ) {
+                  const att = statsRes.data.data.attendance;
+                  totalPresent += att.present || 0;
+                  totalAbsent += att.absent || 0;
+                  totalLate += (att.late_less || 0) + (att.late_more || 0);
+                  totalMarked += att.marked || 0;
+                }
+              } catch (err) {
+                // Ignore errors for individual MDPs
+              }
+            })
+          );
+
+          // 3. Calculate attendance rate for MDPs only
+          const attendanceRate =
+            totalMarked > 0
+              ? Math.round((totalPresent / totalMarked) * 100)
+              : 0;
+
+          setMdpData({
+            totalCount: mdps.length,
+            recentCount: mdps.filter(
+              (mdp) =>
+                new Date(mdp.date) >=
+                new Date(Date.now() - 15 * 24 * 60 * 60 * 1000)
+            ).length,
+            attendance: {
+              present: totalPresent,
+              absent: totalAbsent,
+              late: totalLate,
+              rate: attendanceRate,
+            },
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching MDP data:", error);
+        setMdpData({
+          totalCount: 0,
+          recentCount: 0,
+          attendance: { present: 0, absent: 0, late: 0, rate: 0 },
+        });
+      }
+    };
+
+    fetchMdpData();
+  }, []);
+
+  useEffect(() => {
+    const fetchSocialData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        // 1. Get all social & training meetings
+        const response = await api.get("/schedules", {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { type: "social_training" },
+        });
+
+        if (response.data.success) {
+          const socials = response.data.data || [];
+          if (socials.length === 0) {
+            setSocialData({
+              totalCount: 0,
+              recentCount: 0,
+              attendance: { present: 0, absent: 0, late: 0, rate: 0 },
+            });
+            return;
+          }
+
+          // 2. Fetch attendance stats for each social in parallel
+          let totalPresent = 0;
+          let totalAbsent = 0;
+          let totalLate = 0;
+          let totalMarked = 0;
+
+          await Promise.all(
+            socials.map(async (social) => {
+              try {
+                const statsRes = await api.get(
+                  "/attendance-venue-fee/meeting-stats",
+                  {
+                    headers: { Authorization: `Bearer ${token}` },
+                    params: {
+                      type: "socialTraining",
+                      meeting_id: social.social_training_id,
+                    },
+                  }
+                );
+                if (
+                  statsRes.data.success &&
+                  statsRes.data.data &&
+                  statsRes.data.data.attendance
+                ) {
+                  const att = statsRes.data.data.attendance;
+                  totalPresent += att.present || 0;
+                  totalAbsent += att.absent || 0;
+                  totalLate += (att.late_less || 0) + (att.late_more || 0);
+                  totalMarked += att.marked || 0;
+                }
+              } catch (err) {
+                // Ignore errors for individual socials
+              }
+            })
+          );
+
+          // 3. Calculate attendance rate for Social & Training only
+          const attendanceRate =
+            totalMarked > 0
+              ? Math.round((totalPresent / totalMarked) * 100)
+              : 0;
+
+          setSocialData({
+            totalCount: socials.length,
+            recentCount: socials.filter(
+              (social) =>
+                new Date(social.date) >=
+                new Date(Date.now() - 15 * 24 * 60 * 60 * 1000)
+            ).length,
+            attendance: {
+              present: totalPresent,
+              absent: totalAbsent,
+              late: totalLate,
+              rate: attendanceRate,
+            },
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching social data:", error);
+        setSocialData({
+          totalCount: 0,
+          recentCount: 0,
+          attendance: { present: 0, absent: 0, late: 0, rate: 0 },
+        });
+      }
+    };
+
+    fetchSocialData();
+  }, []);
+
+  useEffect(() => {
+    const fetchMemberStats = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await api.get("/members/members", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        console.log("Members API Response:", response.data); // For debugging
+
+        if (response.data.success) {
+          const members = response.data.data || [];
+          setMemberStats({
+            total: members.length,
+            active: members.filter((m) => m.status === "active").length,
+            inactive: members.filter((m) => m.status === "inactive").length,
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching member stats:", error);
+        setMemberStats({ total: 0, active: 0, inactive: 0 });
+      }
+    };
+
+    fetchMemberStats();
+  }, []);
+
+  useEffect(() => {
+    const fetchBdmStats = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await api.get("/bdm/all", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (response.data && response.data.data) {
+          const bdms = response.data.data;
+          const giverStats = {};
+          let recentCount = 0;
+          const fifteenDaysAgo = new Date(
+            Date.now() - 15 * 24 * 60 * 60 * 1000
+          );
+
+          bdms.forEach((bdm) => {
+            const giverName = bdm.givenByName || "Unknown";
+            if (!giverStats[giverName]) {
+              giverStats[giverName] = { count: 0, points: 0 };
+            }
+            giverStats[giverName].count += 1;
+            giverStats[giverName].points += 5;
+
+            if (new Date(bdm.created_at) >= fifteenDaysAgo) {
+              recentCount++;
+            }
+          });
+
+          const topGivers = Object.entries(giverStats)
+            .map(([name, stats]) => ({ name, ...stats }))
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 5);
+
+          setBdmStats({
+            total: bdms.length,
+            recent: recentCount,
+            topGivers,
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching BDM stats:", error);
+      }
+    };
+
+    fetchBdmStats();
+  }, []);
+
+  useEffect(() => {
+    const fetchReferralStats = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await api.get("/referrals/ref-all", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (response.data && response.data.data) {
+          const referrals = response.data.data;
+          const giverStats = {};
+          let recentCount = 0;
+          const fifteenDaysAgo = new Date(
+            Date.now() - 15 * 24 * 60 * 60 * 1000
+          );
+
+          referrals.forEach((referral) => {
+            const giverName = referral.givenByName || "Unknown";
+            if (!giverStats[giverName]) {
+              giverStats[giverName] = { count: 0, points: 0 };
+            }
+            giverStats[giverName].count += 1;
+
+            // Update points based on count
+            if (giverStats[giverName].count >= 5) {
+              giverStats[giverName].points = 15;
+            } else if (giverStats[giverName].count >= 3) {
+              giverStats[giverName].points = 10;
+            } else {
+              giverStats[giverName].points = 5;
+            }
+
+            if (new Date(referral.created_at) >= fifteenDaysAgo) {
+              recentCount++;
+            }
+          });
+
+          const topGivers = Object.entries(giverStats)
+            .map(([name, stats]) => ({ name, ...stats }))
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 5);
+
+          setReferralStats({
+            total: referrals.length,
+            recent: recentCount,
+            topGivers,
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching referral stats:", error);
+      }
+    };
+
+    fetchReferralStats();
+  }, []);
+
   return (
-    <div className="mt-32 lg:p-4 sm:p-6 space-y-6 sm:space-y-8 min-h-screen bg-gradient-to-b from-gray-900 via-gray-900/95 to-gray-950">
-      {/* Header Section */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
-        <div className="flex items-center gap-3 sm:gap-4">
-          <div className="p-3 sm:p-4 bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] rounded-xl sm:rounded-2xl shadow-lg shadow-[#D4B86A]/20">
-            <Users className="w-6 h-6 sm:w-7 sm:h-7 text-gray-900" />
-          </div>
-          <div>
-            <h2 className="text-2xl sm:text-4xl font-bold text-white bg-clip-text">
-              Dashboard Overview
-            </h2>
-            <p className="text-sm sm:text-base text-gray-400 mt-0.5 sm:mt-1">
-              Monitor your performance
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Filters Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="relative overflow-hidden bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 backdrop-blur-xl rounded-xl sm:rounded-2xl border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-300 shadow-xl"
-      >
-        <div className="absolute inset-0 bg-gradient-to-r from-[#D4B86A]/10 via-transparent to-[#D4B86A]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl" />
-        <div className="relative p-4 sm:p-8">
-          <div className="grid grid-cols-1 gap-4 sm:gap-8">
-            {/* Date Range */}
-            <div className="relative group space-y-2 sm:space-y-3">
-              <label className="text-sm font-semibold text-[#D4B86A] mb-1 sm:mb-2 block">
-                Date Range
-              </label>
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                <input
-                  type="date"
-                  className="flex-1 p-3 sm:p-4 bg-gray-800/50 rounded-lg sm:rounded-xl border border-[#D4B86A]/30 focus:border-[#D4B86A] focus:ring-2 focus:ring-[#D4B86A]/20 text-white transition-all duration-300 [color-scheme:dark] text-sm"
-                />
-                <input
-                  type="date"
-                  className="flex-1 p-3 sm:p-4 bg-gray-800/50 rounded-lg sm:rounded-xl border border-[#D4B86A]/30 focus:border-[#D4B86A] focus:ring-2 focus:ring-[#D4B86A]/20 text-white transition-all duration-300 [color-scheme:dark] text-sm"
-                />
-              </div>
+    <div className="container mx-auto px-4 py-8">
+      <div className="mt-32 lg:p-4 sm:p-6 space-y-6 sm:space-y-8 min-h-screen bg-gradient-to-b from-gray-900 via-gray-900/95 to-gray-950">
+        {/* Header Section */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="p-3 sm:p-4 bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] rounded-xl sm:rounded-2xl shadow-lg shadow-[#D4B86A]/20">
+              <Users className="w-6 h-6 sm:w-7 sm:h-7 text-gray-900" />
             </div>
-
-            {/* Status Selector */}
-            <div className="relative group space-y-2 sm:space-y-3">
-              <label className="text-sm font-semibold text-[#D4B86A] mb-1 sm:mb-2 block">
-                Status
-              </label>
-              <select
-                className="w-full p-3 sm:p-4 bg-gray-800/50 rounded-lg sm:rounded-xl border border-[#D4B86A]/30 focus:border-[#D4B86A] focus:ring-2 focus:ring-[#D4B86A]/20 text-white transition-all duration-300 text-sm appearance-none"
-                style={{
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23D4B86A'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                  backgroundRepeat: "no-repeat",
-                  backgroundPosition: "right 1rem center",
-                  backgroundSize: "1.5em 1.5em",
-                }}
-              >
-                <option value="">All Status</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Chapter Statistics Cards */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8"
-      >
-        <div className="group relative overflow-hidden p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-500">
-          <div className="absolute inset-0">
-            <div className="absolute inset-0 bg-gradient-to-r from-[#D4B86A]/10 via-purple-500/5 to-[#D4B86A]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl" />
-          </div>
-
-          <div className="relative z-10">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="p-3.5 rounded-xl bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] shadow-lg shadow-[#D4B86A]/20 group-hover:shadow-[#D4B86A]/40 transition-all duration-500">
-                <Handshake className="w-6 h-6 text-gray-900" />
-              </div>
-              <h3 className="text-[#D4B86A] font-medium tracking-wide">
-                Referrals Exchanged
-              </h3>
-            </div>
-
-            <div className="space-y-3 relative">
-              <p className="text-4xl font-bold text-white group-hover:text-[#D4B86A] transition-colors duration-500">
-                {allReferralsData.totalCount || 0}
+            <div>
+              <h2 className="text-2xl sm:text-4xl font-bold text-white bg-clip-text">
+                Dashboard Overview
+              </h2>
+              <p className="text-sm sm:text-base text-gray-400 mt-0.5 sm:mt-1">
+                Monitor your performance
               </p>
-              <div className="flex items-center gap-2">
-                <div className="flex flex-col items-center gap-1 text-emerald-400">
-                  <div className="flex items-center gap-1">
+            </div>
+          </div>
+        </div>
+
+        {/* Filters Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="relative overflow-hidden bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 backdrop-blur-xl rounded-xl sm:rounded-2xl border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-300 shadow-xl"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-[#D4B86A]/10 via-transparent to-[#D4B86A]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl" />
+          <div className="relative p-4 sm:p-8">
+            <div className="grid grid-cols-1 gap-4 sm:gap-8">
+              {/* Date Range */}
+              <div className="relative group space-y-2 sm:space-y-3">
+                <label className="text-sm font-semibold text-[#D4B86A] mb-1 sm:mb-2 block">
+                  Date Range
+                </label>
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                  <input
+                    type="date"
+                    className="flex-1 p-3 sm:p-4 bg-gray-800/50 rounded-lg sm:rounded-xl border border-[#D4B86A]/30 focus:border-[#D4B86A] focus:ring-2 focus:ring-[#D4B86A]/20 text-white transition-all duration-300 [color-scheme:dark] text-sm"
+                  />
+                  <input
+                    type="date"
+                    className="flex-1 p-3 sm:p-4 bg-gray-800/50 rounded-lg sm:rounded-xl border border-[#D4B86A]/30 focus:border-[#D4B86A] focus:ring-2 focus:ring-[#D4B86A]/20 text-white transition-all duration-300 [color-scheme:dark] text-sm"
+                  />
+                </div>
+              </div>
+
+              {/* Status Selector */}
+              <div className="relative group space-y-2 sm:space-y-3">
+                <label className="text-sm font-semibold text-[#D4B86A] mb-1 sm:mb-2 block">
+                  Status
+                </label>
+                <select
+                  className="w-full p-3 sm:p-4 bg-gray-800/50 rounded-lg sm:rounded-xl border border-[#D4B86A]/30 focus:border-[#D4B86A] focus:ring-2 focus:ring-[#D4B86A]/20 text-white transition-all duration-300 text-sm appearance-none"
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23D4B86A'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                    backgroundRepeat: "no-repeat",
+                    backgroundPosition: "right 1rem center",
+                    backgroundSize: "1.5em 1.5em",
+                  }}
+                >
+                  <option value="">All Status</option>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Chapter Statistics Cards */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8"
+        >
+          <div className="group relative overflow-hidden p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-500">
+            <div className="absolute inset-0">
+              <div className="absolute inset-0 bg-gradient-to-r from-[#D4B86A]/10 via-purple-500/5 to-[#D4B86A]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl" />
+            </div>
+
+            <div className="relative z-10">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="p-3.5 rounded-xl bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] shadow-lg shadow-[#D4B86A]/20 group-hover:shadow-[#D4B86A]/40 transition-all duration-500">
+                  <Handshake className="w-6 h-6 text-gray-900" />
+                </div>
+                <h3 className="text-[#D4B86A] font-medium tracking-wide">
+                  Referrals Exchanged
+                </h3>
+              </div>
+
+              <div className="space-y-3 relative">
+                <p className="text-4xl font-bold text-white group-hover:text-[#D4B86A] transition-colors duration-500">
+                  {allReferralsData.totalCount || 0}
+                </p>
+                <div className="flex items-center gap-2">
+                  <div className="flex flex-col items-center gap-1 text-emerald-400">
+                    <div className="flex items-center gap-1">
+                      <ArrowUpRight className="w-4 h-4" />
+                      <span>
+                        {Object.values(
+                          allReferralsData.memberStats || {}
+                        ).reduce(
+                          (total, member) => total + member.points,
+                          0
+                        )}{" "}
+                        total points
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="group relative overflow-hidden p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-500">
+            <div className="absolute inset-0">
+              <div className="absolute inset-0 bg-gradient-to-r from-[#D4B86A]/10 via-purple-500/5 to-[#D4B86A]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl" />
+            </div>
+
+            <div className="relative z-10">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="p-3.5 rounded-xl bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] shadow-lg shadow-[#D4B86A]/20 group-hover:shadow-[#D4B86A]/40 transition-all duration-500">
+                  <Briefcase className="w-6 h-6 text-gray-900" />
+                </div>
+                <h3 className="text-[#D4B86A] font-medium tracking-wide">
+                  Total Business Revenue
+                </h3>
+              </div>
+
+              <div className="space-y-3 relative">
+                <p className="text-4xl font-bold text-white group-hover:text-[#D4B86A] transition-colors duration-500">
+                  ₹95.59 CR
+                </p>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 text-emerald-400">
                     <ArrowUpRight className="w-4 h-4" />
-                    <span>
-                      {Object.values(allReferralsData.memberStats || {}).reduce(
-                        (total, member) => total + member.points,
-                        0
-                      )}{" "}
-                      total points
+                    <span>+0</span>
+                  </div>
+                  <span className="text-gray-400">last 15 days</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="group relative overflow-hidden p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-500">
+            <div className="absolute inset-0">
+              <div className="absolute inset-0 bg-gradient-to-r from-[#D4B86A]/10 via-purple-500/5 to-[#D4B86A]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl" />
+            </div>
+
+            <div className="relative z-10">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="p-3.5 rounded-xl bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] shadow-lg shadow-[#D4B86A]/20 group-hover:shadow-[#D4B86A]/40 transition-all duration-500">
+                  <Users className="w-6 h-6 text-gray-900" />
+                </div>
+                <h3 className="text-[#D4B86A] font-medium tracking-wide">
+                  Total BDMs
+                </h3>
+              </div>
+
+              <div className="space-y-3 relative">
+                <p className="text-4xl font-bold text-white group-hover:text-[#D4B86A] transition-colors duration-500">
+                  {bdmData.totalBdms}
+                </p>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 text-emerald-400">
+                    <ArrowUpRight className="w-4 h-4" />
+                    <span>+{bdmData.recentCount}</span>
+                  </div>
+                  <span className="text-gray-400">last 15 days</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="group relative overflow-hidden p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-500">
+            <div className="absolute inset-0">
+              <div className="absolute inset-0 bg-gradient-to-r from-[#D4B86A]/10 via-purple-500/5 to-[#D4B86A]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl" />
+            </div>
+
+            <div className="relative z-10">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="p-3.5 rounded-xl bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] shadow-lg shadow-[#D4B86A]/20 group-hover:shadow-[#D4B86A]/40 transition-all duration-500">
+                  <UserPlus className="w-6 h-6 text-gray-900" />
+                </div>
+                <h3 className="text-[#D4B86A] font-medium tracking-wide">
+                  Total Guests
+                </h3>
+              </div>
+
+              <div className="space-y-3 relative">
+                <p className="text-4xl font-bold text-white group-hover:text-[#D4B86A] transition-colors duration-500">
+                  {visitorData.totalCount || 0}
+                </p>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 text-emerald-400">
+                    <ArrowUpRight className="w-4 h-4" />
+                    <span>+{visitorData.recentCount || 0}</span>
+                  </div>
+                  <span className="text-gray-400">last 15 days</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Statistics Overview Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"
+        >
+          {/* Card 1 - Meetings & Attendance */}
+          <div className="group relative overflow-hidden p-4 sm:p-6 rounded-lg sm:rounded-xl bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-500 hover:transform hover:scale-[1.02]">
+            <div className="absolute inset-0">
+              <div className="absolute inset-0 bg-gradient-to-r from-[#D4B86A]/10 via-purple-500/5 to-[#D4B86A]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl" />
+            </div>
+
+            <div className="relative z-10">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2.5 rounded-lg bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] shadow-lg shadow-[#D4B86A]/20 group-hover:shadow-[#D4B86A]/40 transition-all duration-500">
+                  <Users className="w-4 h-4 text-gray-900" />
+                </div>
+                <h3 className="text-[#D4B86A] font-medium text-sm">
+                  Meetings & Attendance
+                </h3>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex flex-col">
+                  <span className="text-3xl font-bold text-white group-hover:text-[#D4B86A] transition-colors duration-500">
+                    {meetingData.totalCount}
+                  </span>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="text-emerald-400 text-xs flex items-center gap-1 bg-emerald-400/10 px-2 py-0.5 rounded-full">
+                      <ArrowUpRight className="w-3 h-3" />+
+                      {meetingData.recentCount}
+                    </span>
+                    <span className="text-gray-400 text-xs">
+                      total meetings
                     </span>
                   </div>
+                </div>
+                <div className="flex flex-col pt-3 border-t border-gray-800">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-400">
+                      Attendance Rate
+                    </span>
+                    <span className="text-2xl font-bold text-white group-hover:text-[#D4B86A] transition-colors duration-500">
+                      {meetingData.attendance.rate || 0}%
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-2">
+                    <div className="flex gap-2 text-xs">
+                      <span className="text-emerald-400">
+                        {meetingData.attendance.present} Present
+                      </span>
+                      <span className="text-yellow-400">
+                        {meetingData.attendance.late} Late
+                      </span>
+                      <span className="text-red-400">
+                        {meetingData.attendance.absent} Absent
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 2 - MDP & Attendance */}
+          <div className="group relative overflow-hidden p-4 sm:p-6 rounded-lg sm:rounded-xl bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-500 hover:transform hover:scale-[1.02]">
+            <div className="absolute inset-0">
+              <div className="absolute inset-0 bg-gradient-to-r from-[#D4B86A]/10 via-purple-500/5 to-[#D4B86A]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl" />
+            </div>
+
+            <div className="relative z-10">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2.5 rounded-lg bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] shadow-lg shadow-[#D4B86A]/20 group-hover:shadow-[#D4B86A]/40 transition-all duration-500">
+                  <Medal className="w-4 h-4 text-gray-900" />
+                </div>
+                <h3 className="text-[#D4B86A] font-medium text-sm">
+                  MDP & Attendance
+                </h3>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex flex-col">
+                  <span className="text-3xl font-bold text-white group-hover:text-[#D4B86A] transition-colors duration-500">
+                    {mdpData.totalCount}
+                  </span>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="text-emerald-400 text-xs flex items-center gap-1 bg-emerald-400/10 px-2 py-0.5 rounded-full">
+                      <ArrowUpRight className="w-3 h-3" />+{mdpData.recentCount}
+                    </span>
+                    <span className="text-gray-400 text-xs">last 15 days</span>
+                  </div>
+                </div>
+                <div className="flex flex-col pt-3 border-t border-gray-800">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-400">
+                      Attendance Rate
+                    </span>
+                    <span className="text-2xl font-bold text-white group-hover:text-[#D4B86A] transition-colors duration-500">
+                      {mdpData.attendance.rate || 0}%
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-2">
+                    <div className="flex gap-2 text-xs">
+                      <span className="text-emerald-400">
+                        {mdpData.attendance.present} Present
+                      </span>
+                      <span className="text-yellow-400">
+                        {mdpData.attendance.late} Late
+                      </span>
+                      <span className="text-red-400">
+                        {mdpData.attendance.absent} Absent
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 3 - Socials & Training */}
+          <div className="group relative overflow-hidden p-4 sm:p-6 rounded-lg sm:rounded-xl bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-500 hover:transform hover:scale-[1.02]">
+            <div className="absolute inset-0">
+              <div className="absolute inset-0 bg-gradient-to-r from-[#D4B86A]/10 via-purple-500/5 to-[#D4B86A]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl" />
+            </div>
+
+            <div className="relative z-10">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2.5 rounded-lg bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] shadow-lg shadow-[#D4B86A]/20 group-hover:shadow-[#D4B86A]/40 transition-all duration-500">
+                  <GraduationCap className="w-4 h-4 text-gray-900" />
+                </div>
+                <h3 className="text-[#D4B86A] font-medium text-sm">
+                  Socials & Training
+                </h3>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex flex-col">
+                  <span className="text-3xl font-bold text-white group-hover:text-[#D4B86A] transition-colors duration-500">
+                    {socialData.totalCount}
+                  </span>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="text-emerald-400 text-xs flex items-center gap-1 bg-emerald-400/10 px-2 py-0.5 rounded-full">
+                      <ArrowUpRight className="w-3 h-3" />+
+                      {socialData.recentCount}
+                    </span>
+                    <span className="text-gray-400 text-xs">last 15 days</span>
+                  </div>
+                </div>
+                <div className="flex flex-col pt-3 border-t border-gray-800">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-400">
+                      Attendance Rate
+                    </span>
+                    <span className="text-2xl font-bold text-white group-hover:text-[#D4B86A] transition-colors duration-500">
+                      {socialData.attendance.rate || 0}%
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-2">
+                    <div className="flex gap-2 text-xs">
+                      <span className="text-emerald-400">
+                        {socialData.attendance.present} Present
+                      </span>
+                      <span className="text-yellow-400">
+                        {socialData.attendance.late} Late
+                      </span>
+                      <span className="text-red-400">
+                        {socialData.attendance.absent} Absent
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 4 - Total Members */}
+          <div className="group relative overflow-hidden p-4 sm:p-6 rounded-lg sm:rounded-xl bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-500 hover:transform hover:scale-[1.02]">
+            <div className="absolute inset-0">
+              <div className="absolute inset-0 bg-gradient-to-r from-[#D4B86A]/10 via-purple-500/5 to-[#D4B86A]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl" />
+            </div>
+
+            <div className="relative z-10">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2.5 rounded-lg bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] shadow-lg shadow-[#D4B86A]/20 group-hover:shadow-[#D4B86A]/40 transition-all duration-500">
+                  <Users className="w-4 h-4 text-gray-900" />
+                </div>
+                <h3 className="text-[#D4B86A] font-medium text-sm">
+                  Total Members
+                </h3>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex flex-col">
+                  <span className="text-3xl font-bold text-white group-hover:text-[#D4B86A] transition-colors duration-500">
+                    {memberStats.total}
+                  </span>
+                  <div className="flex items-center gap-2 mt-2">
+                    <div className="flex gap-2">
+                      <span className="text-emerald-400 text-xs flex items-center gap-1 bg-emerald-400/10 px-2 py-0.5 rounded-full">
+                        <ArrowUpRight className="w-3 h-3" />
+                        Active: {memberStats.active}
+                      </span>
+                      <span className="text-red-400 text-xs flex items-center gap-1 bg-red-400/10 px-2 py-0.5 rounded-full">
+                        Inactive: {memberStats.inactive}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+        {/* Statistics Cards */}
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="bg-gray-800/90 rounded-xl border border-[#D4B86A]/30 overflow-hidden mt-20 mb-8"
+        >
+          <div className="p-6">
+            <h3 className="text-xl font-semibold text-[#D4B86A] mb-4">
+              Statistics Overview
+            </h3>
+
+            {/* Visual Stats Row */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+              {/* BDM Stats */}
+              <div className="bg-gray-900/60 rounded-lg p-4 relative overflow-hidden">
+                <div
+                  className="absolute bottom-0 left-0 h-1.5 bg-blue-500"
+                  style={{
+                    width: `${
+                      (bdmStats.total /
+                        (bdmStats.total + referralStats.total)) *
+                        100 || 0
+                    }%`,
+                  }}
+                ></div>
+                <h4 className="text-white text-lg mb-2">BDM Activity</h4>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-3xl font-bold text-white">
+                      {bdmStats.total}
+                    </p>
+                    <p className="text-sm text-gray-400">Total BDMs</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xl font-bold text-emerald-400">
+                      +{bdmStats.recent}
+                    </p>
+                    <p className="text-sm text-gray-400">Recent (15d)</p>
+                  </div>
+                </div>
+
+                {/* Mini Bar Chart for BDM */}
+                <div className="mt-4 h-10 flex items-end gap-1">
+                  {bdmStats.topGivers.slice(0, 5).map((giver, index) => (
+                    <div
+                      key={index}
+                      className="bg-blue-500/80 hover:bg-blue-400 transition-all rounded-t w-full h-full flex flex-col justify-end tooltip-trigger"
+                      style={{
+                        height: `${
+                          (giver.count /
+                            Math.max(
+                              ...bdmStats.topGivers.map((g) => g.count)
+                            )) *
+                          100
+                        }%`,
+                      }}
+                      title={`${giver.name}: ${giver.count} BDMs`}
+                    >
+                      <div className="tooltip absolute bottom-full mb-2 bg-gray-900 text-white text-xs rounded p-2 hidden">
+                        {giver.name}: {giver.count} BDMs
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Referral Stats */}
+              <div className="bg-gray-900/60 rounded-lg p-4 relative overflow-hidden">
+                <div
+                  className="absolute bottom-0 left-0 h-1.5 bg-green-500"
+                  style={{
+                    width: `${
+                      (referralStats.total /
+                        (bdmStats.total + referralStats.total)) *
+                        100 || 0
+                    }%`,
+                  }}
+                ></div>
+                <h4 className="text-white text-lg mb-2">Referral Activity</h4>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-3xl font-bold text-white">
+                      {referralStats.total}
+                    </p>
+                    <p className="text-sm text-gray-400">Total Referrals</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xl font-bold text-emerald-400">
+                      +{referralStats.recent}
+                    </p>
+                    <p className="text-sm text-gray-400">Recent (15d)</p>
+                  </div>
+                </div>
+
+                {/* Mini Bar Chart for Referrals */}
+                <div className="mt-4 h-10 flex items-end gap-1">
+                  {referralStats.topGivers.slice(0, 5).map((giver, index) => (
+                    <div
+                      key={index}
+                      className="bg-green-500/80 hover:bg-green-400 transition-all rounded-t w-full flex flex-col justify-end"
+                      style={{
+                        height: `${
+                          (giver.count /
+                            Math.max(
+                              ...referralStats.topGivers.map((g) => g.count)
+                            )) *
+                          100
+                        }%`,
+                      }}
+                      title={`${giver.name}: ${giver.count} Referrals`}
+                    ></div>
+                  ))}
                 </div>
               </div>
 
               {/* Member Stats */}
-              <div className="mt-4 pt-4 border-t border-gray-800">
-                <h4 className="text-[#D4B86A] text-sm font-medium mb-2">
-                  Top Referral Givers
-                </h4>
-                <div className="space-y-2 max-h-40 overflow-y-auto scrollbar-thin scrollbar-thumb-[#D4B86A]/20 scrollbar-track-transparent">
-                  {Object.entries(allReferralsData.memberStats || {})
-                    .sort(([, a], [, b]) => b.count - a.count)
-                    .slice(0, 5)
-                    .map(([name, stats], index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between text-sm"
-                      >
-                        <span className="text-gray-400">{name}</span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-[#D4B86A] text-xs">
-                            {stats.count} referrals
-                          </span>
-                          <span className="text-emerald-400 text-xs">
-                            {stats.points} points
-                          </span>
-                        </div>
-                      </div>
-                    ))}
+              <div className="bg-gray-900/60 rounded-lg p-4 relative overflow-hidden">
+                <div
+                  className="absolute bottom-0 left-0 h-1.5 bg-[#D4B86A]"
+                  style={{ width: "100%" }}
+                ></div>
+                <h4 className="text-white text-lg mb-2">Member Status</h4>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-3xl font-bold text-white">
+                      {memberStats.total}
+                    </p>
+                    <p className="text-sm text-gray-400">Total Members</p>
+                  </div>
+
+                  {/* Member Status Pie Chart */}
+                  <div className="relative h-16 w-16">
+                    <svg viewBox="0 0 36 36" className="h-full w-full">
+                      {/* Active Members */}
+                      <path
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                        fill="none"
+                        stroke="#10B981"
+                        strokeWidth="3"
+                        strokeDasharray={`${
+                          (memberStats.active / memberStats.total) * 100
+                        }, 100`}
+                        className="rounded-full"
+                      />
+                      {/* Inactive Members */}
+                      <path
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                        fill="none"
+                        stroke="#EF4444"
+                        strokeWidth="3"
+                        strokeDasharray={`${
+                          (memberStats.inactive / memberStats.total) * 100
+                        }, 100`}
+                        strokeDashoffset={`${
+                          -1 * ((memberStats.active / memberStats.total) * 100)
+                        }`}
+                        className="rounded-full"
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white">
+                      {Math.round(
+                        (memberStats.active / memberStats.total) * 100
+                      ) || 0}
+                      %
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
 
-        <div className="group relative overflow-hidden p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-500">
-          <div className="absolute inset-0">
-            <div className="absolute inset-0 bg-gradient-to-r from-[#D4B86A]/10 via-purple-500/5 to-[#D4B86A]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl" />
-          </div>
-
-          <div className="relative z-10">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="p-3.5 rounded-xl bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] shadow-lg shadow-[#D4B86A]/20 group-hover:shadow-[#D4B86A]/40 transition-all duration-500">
-                <Briefcase className="w-6 h-6 text-gray-900" />
-              </div>
-              <h3 className="text-[#D4B86A] font-medium tracking-wide">
-                Total Business Revenue
-              </h3>
-            </div>
-
-            <div className="space-y-3 relative">
-              <p className="text-4xl font-bold text-white group-hover:text-[#D4B86A] transition-colors duration-500">
-                ₹95.59 CR
-              </p>
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1 text-emerald-400">
-                  <ArrowUpRight className="w-4 h-4" />
-                  <span>+0</span>
-                </div>
-                <span className="text-gray-400">last 15 days</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="group relative overflow-hidden p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-500">
-          <div className="absolute inset-0">
-            <div className="absolute inset-0 bg-gradient-to-r from-[#D4B86A]/10 via-purple-500/5 to-[#D4B86A]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl" />
-          </div>
-
-          <div className="relative z-10">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="p-3.5 rounded-xl bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] shadow-lg shadow-[#D4B86A]/20 group-hover:shadow-[#D4B86A]/40 transition-all duration-500">
-                <Users className="w-6 h-6 text-gray-900" />
-              </div>
-              <h3 className="text-[#D4B86A] font-medium tracking-wide">
-                Total BDMs
-              </h3>
-            </div>
-
-            <div className="space-y-3 relative">
-              <p className="text-4xl font-bold text-white group-hover:text-[#D4B86A] transition-colors duration-500">
-                {bdmData.totalBdms}
-              </p>
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1 text-emerald-400">
-                  <ArrowUpRight className="w-4 h-4" />
-                  <span>+{bdmData.recentCount}</span>
-                </div>
-                <span className="text-gray-400">last 15 days</span>
-              </div>
-
-              {/* Top BDM Givers Section */}
-              <div className="mt-4 pt-4 border-t border-gray-800">
-                <h4 className="text-[#D4B86A] text-sm font-medium mb-2">
-                  Top BDM Givers
-                </h4>
-                <div className="space-y-2 max-h-40 overflow-y-auto scrollbar-thin scrollbar-thumb-[#D4B86A]/20 scrollbar-track-transparent">
-                  {Object.entries(bdmData.memberStats || {})
-                    .sort(([, a], [, b]) => b.count - a.count)
-                    .slice(0, 5)
-                    .map(([name, stats], index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between text-sm"
-                      >
-                        <span className="text-gray-400">{name}</span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-[#D4B86A] text-xs">
-                            {stats.count} BDMs
-                          </span>
-                          <span className="text-emerald-400 text-xs">
-                            {stats.points} points
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="group relative overflow-hidden p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-500">
-          <div className="absolute inset-0">
-            <div className="absolute inset-0 bg-gradient-to-r from-[#D4B86A]/10 via-purple-500/5 to-[#D4B86A]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl" />
-          </div>
-
-          <div className="relative z-10">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="p-3.5 rounded-xl bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] shadow-lg shadow-[#D4B86A]/20 group-hover:shadow-[#D4B86A]/40 transition-all duration-500">
-                <UserPlus className="w-6 h-6 text-gray-900" />
-              </div>
-              <h3 className="text-[#D4B86A] font-medium tracking-wide">
-                Total Guests
-              </h3>
-            </div>
-
-            <div className="space-y-3 relative">
-              <p className="text-4xl font-bold text-white group-hover:text-[#D4B86A] transition-colors duration-500">
-                {visitorData.totalCount || 0}
-              </p>
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1 text-emerald-400">
-                  <ArrowUpRight className="w-4 h-4" />
-                  <span>+{visitorData.recentCount || 0}</span>
-                </div>
-                <span className="text-gray-400">last 15 days</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Statistics Overview Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"
-      >
-        {/* Card 1 - Meetings & Attendance */}
-        <div className="group relative overflow-hidden p-4 sm:p-6 rounded-lg sm:rounded-xl bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-500 hover:transform hover:scale-[1.02]">
-          <div className="absolute inset-0">
-            <div className="absolute inset-0 bg-gradient-to-r from-[#D4B86A]/10 via-purple-500/5 to-[#D4B86A]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl" />
-          </div>
-
-          <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2.5 rounded-lg bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] shadow-lg shadow-[#D4B86A]/20 group-hover:shadow-[#D4B86A]/40 transition-all duration-500">
-                <Users className="w-4 h-4 text-gray-900" />
-              </div>
-              <h3 className="text-[#D4B86A] font-medium text-sm">
-                Meetings & Attendance
-              </h3>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex flex-col">
-                <span className="text-3xl font-bold text-white group-hover:text-[#D4B86A] transition-colors duration-500">
-                  {meetingData.totalCount}
-                </span>
-                <div className="flex items-center gap-2 mt-2">
-                  <span className="text-emerald-400 text-xs flex items-center gap-1 bg-emerald-400/10 px-2 py-0.5 rounded-full">
-                    <ArrowUpRight className="w-3 h-3" />+
-                    {meetingData.recentCount}
-                  </span>
-                  <span className="text-gray-400 text-xs">total meetings</span>
-                </div>
-              </div>
-              <div className="flex flex-col pt-3 border-t border-gray-800">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-400">Attendance Rate</span>
-                  <span className="text-2xl font-bold text-white group-hover:text-[#D4B86A] transition-colors duration-500">
-                    {meetingData.totalCount > 0
-                      ? Math.round(
-                          (meetingData.attendance.present /
-                            meetingData.totalCount) *
-                            100
-                        )
-                      : 0}
-                    %
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 mt-2">
-                  <div className="flex gap-2 text-xs">
-                    <span className="text-emerald-400">
-                      {meetingData.attendance.present} Present
+                {/* Member Stats Legend */}
+                <div className="mt-4 flex justify-between text-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="block w-3 h-3 rounded-full bg-emerald-500"></span>
+                    <span className="text-gray-300">
+                      {memberStats.active} Active
                     </span>
-                    <span className="text-yellow-400">
-                      {meetingData.attendance.late} Late
-                    </span>
-                    <span className="text-red-400">
-                      {meetingData.attendance.absent} Absent
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="block w-3 h-3 rounded-full bg-red-500"></span>
+                    <span className="text-gray-300">
+                      {memberStats.inactive} Inactive
                     </span>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Card 2 - MDP & Attendance */}
-        <div className="group relative overflow-hidden p-4 sm:p-6 rounded-lg sm:rounded-xl bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-500 hover:transform hover:scale-[1.02]">
-          <div className="absolute inset-0">
-            <div className="absolute inset-0 bg-gradient-to-r from-[#D4B86A]/10 via-purple-500/5 to-[#D4B86A]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl" />
-          </div>
-
-          <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2.5 rounded-lg bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] shadow-lg shadow-[#D4B86A]/20 group-hover:shadow-[#D4B86A]/40 transition-all duration-500">
-                <Medal className="w-4 h-4 text-gray-900" />
-              </div>
-              <h3 className="text-[#D4B86A] font-medium text-sm">
-                MDP & Attendance
-              </h3>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex flex-col">
-                <span className="text-3xl font-bold text-white group-hover:text-[#D4B86A] transition-colors duration-500">
-                  1
-                </span>
-                <div className="flex items-center gap-2 mt-2">
-                  <span className="text-emerald-400 text-xs flex items-center gap-1 bg-emerald-400/10 px-2 py-0.5 rounded-full">
-                    <ArrowUpRight className="w-3 h-3" />
-                    +0
-                  </span>
-                  <span className="text-gray-400 text-xs">this month</span>
-                </div>
-              </div>
-              <div className="flex flex-col pt-3 border-t border-gray-800">
-                <span className="text-2xl font-bold text-white group-hover:text-[#D4B86A] transition-colors duration-500">
-                  33.3%
-                </span>
-                <div className="flex items-center gap-2 mt-2">
-                  <span className="text-emerald-400 text-xs flex items-center gap-1 bg-emerald-400/10 px-2 py-0.5 rounded-full">
-                    <ArrowUpRight className="w-3 h-3" />
-                    +0%
-                  </span>
-                  <span className="text-gray-400 text-xs">attendance</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 3 - Socials & Training */}
-        <div className="group relative overflow-hidden p-4 sm:p-6 rounded-lg sm:rounded-xl bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-500 hover:transform hover:scale-[1.02]">
-          <div className="absolute inset-0">
-            <div className="absolute inset-0 bg-gradient-to-r from-[#D4B86A]/10 via-purple-500/5 to-[#D4B86A]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl" />
-          </div>
-
-          <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2.5 rounded-lg bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] shadow-lg shadow-[#D4B86A]/20 group-hover:shadow-[#D4B86A]/40 transition-all duration-500">
-                <GraduationCap className="w-4 h-4 text-gray-900" />
-              </div>
-              <h3 className="text-[#D4B86A] font-medium text-sm">
-                Socials & Training
-              </h3>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex flex-col">
-                <span className="text-3xl font-bold text-white group-hover:text-[#D4B86A] transition-colors duration-500">
-                  1
-                </span>
-                <div className="flex items-center gap-2 mt-2">
-                  <span className="text-emerald-400 text-xs flex items-center gap-1 bg-emerald-400/10 px-2 py-0.5 rounded-full">
-                    <ArrowUpRight className="w-3 h-3" />
-                    +0
-                  </span>
-                  <span className="text-gray-400 text-xs">this month</span>
-                </div>
-              </div>
-              <div className="flex flex-col pt-3 border-t border-gray-800">
-                <span className="text-2xl font-bold text-white group-hover:text-[#D4B86A] transition-colors duration-500">
-                  33.3%
-                </span>
-                <div className="flex items-center gap-2 mt-2">
-                  <span className="text-emerald-400 text-xs flex items-center gap-1 bg-emerald-400/10 px-2 py-0.5 rounded-full">
-                    <ArrowUpRight className="w-3 h-3" />
-                    +0%
-                  </span>
-                  <span className="text-gray-400 text-xs">attendance</span>
-                </div>
+            {/* Top Performers Visual */}
+            <div className="bg-gray-900/60 rounded-lg p-4">
+              <h4 className="text-white text-lg mb-4">Top Performers</h4>
+              <div className="space-y-3">
+                {[...bdmStats.topGivers, ...referralStats.topGivers]
+                  .reduce((acc, current) => {
+                    const existing = acc.find(
+                      (item) => item.name === current.name
+                    );
+                    if (existing) {
+                      existing.totalPoints += current.points;
+                      existing.count += current.count;
+                    } else {
+                      acc.push({
+                        name: current.name,
+                        totalPoints: current.points,
+                        count: current.count,
+                        type:
+                          current.count ===
+                          bdmStats.topGivers.find(
+                            (g) => g.name === current.name
+                          )?.count
+                            ? "BDM"
+                            : "Referral",
+                      });
+                    }
+                    return acc;
+                  }, [])
+                  .sort((a, b) => b.totalPoints - a.totalPoints)
+                  .slice(0, 5)
+                  .map((performer, index) => (
+                    <div key={index} className="flex items-center">
+                      <div className="w-8 h-8 rounded-full bg-[#D4B86A]/20 text-[#D4B86A] flex items-center justify-center font-bold">
+                        {index + 1}
+                      </div>
+                      <div className="ml-3 flex-1">
+                        <div className="flex justify-between">
+                          <span className="text-white">{performer.name}</span>
+                          <span className="text-[#D4B86A]">
+                            {performer.totalPoints} pts
+                          </span>
+                        </div>
+                        <div className="w-full mt-1 bg-gray-800 rounded-full h-1.5">
+                          <div
+                            className="bg-[#D4B86A] h-1.5 rounded-full"
+                            style={{
+                              width: `${
+                                (performer.totalPoints /
+                                  Math.max(
+                                    ...[
+                                      ...bdmStats.topGivers,
+                                      ...referralStats.topGivers,
+                                    ]
+                                      .reduce((acc, current) => {
+                                        const existing = acc.find(
+                                          (item) => item.name === current.name
+                                        );
+                                        if (existing) {
+                                          existing.totalPoints +=
+                                            current.points;
+                                        } else {
+                                          acc.push({
+                                            name: current.name,
+                                            totalPoints: current.points,
+                                          });
+                                        }
+                                        return acc;
+                                      }, [])
+                                      .map((p) => p.totalPoints)
+                                  )) *
+                                100
+                              }%`,
+                            }}
+                          ></div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Card 4 - Total Members */}
-        <div className="group relative overflow-hidden p-4 sm:p-6 rounded-lg sm:rounded-xl bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-500 hover:transform hover:scale-[1.02]">
-          <div className="absolute inset-0">
-            <div className="absolute inset-0 bg-gradient-to-r from-[#D4B86A]/10 via-purple-500/5 to-[#D4B86A]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl" />
-          </div>
-
-          <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2.5 rounded-lg bg-gradient-to-r from-[#D4B86A] via-[#C4A55F] to-[#B88746] shadow-lg shadow-[#D4B86A]/20 group-hover:shadow-[#D4B86A]/40 transition-all duration-500">
-                <Users className="w-4 h-4 text-gray-900" />
-              </div>
-              <h3 className="text-[#D4B86A] font-medium text-sm">
-                Total Members
-              </h3>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex flex-col">
-                <span className="text-3xl font-bold text-white group-hover:text-[#D4B86A] transition-colors duration-500">
-                  4
-                </span>
-                <div className="flex items-center gap-2 mt-2">
-                  <span className="text-emerald-400 text-xs flex items-center gap-1 bg-emerald-400/10 px-2 py-0.5 rounded-full">
-                    <ArrowUpRight className="w-3 h-3" />
-                    +0
-                  </span>
-                  <span className="text-gray-400 text-xs">this month</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Statistics Chart */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-        className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-b from-[#0A0F1C] to-[#1A1F2C] p-4 sm:p-8 mt-6 sm:mt-8 border border-[#D4B86A]/20 hover:border-[#D4B86A]/40 transition-all duration-500"
-      >
-        {/* Glowing background effects */}
-        <div className="absolute top-0 left-1/4 w-1/2 h-1/2 bg-[#D4B86A]/10 blur-[120px] rounded-full" />
-        <div className="absolute bottom-0 right-1/4 w-1/2 h-1/2 bg-blue-500/10 blur-[120px] rounded-full" />
-
-        <div className="relative">
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 sm:mb-8 gap-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-gradient-to-r from-[#D4B86A] to-[#B88746] shadow-lg shadow-[#D4B86A]/20">
-                <TrendingUp className="w-5 h-5 text-gray-900" />
-              </div>
-              <h3 className="text-xl font-semibold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-                Statistics Overview
-              </h3>
-            </div>
-
-            <select className="px-4 py-2 bg-white/5 rounded-xl border border-white/10 hover:border-[#D4B86A]/50 focus:border-[#D4B86A] text-white text-sm transition-all duration-300 outline-none backdrop-blur-sm">
-              <option value="weekly">Weekly</option>
-              <option value="monthly">Monthly</option>
-              <option value="yearly">Yearly</option>
-            </select>
-          </div>
-
-          {/* Chart */}
-          <div className="bg-white/[0.02] rounded-lg sm:rounded-xl p-3 sm:p-6 border border-white/10 backdrop-blur-sm hover:border-[#D4B86A]/30 transition-all duration-500">
-            <div className="h-[300px] sm:h-[400px] w-full">
-              <Line
-                data={{
-                  labels: referralData.referrals.map((ref) =>
-                    new Date(ref.referral_date).toLocaleDateString()
-                  ),
-                  datasets: [
-                    {
-                      label: "Referrals",
-                      data: referralData.referrals.map((_, index) => index + 1), // Cumulative count
-                      borderColor: "#D4B86A",
-                      backgroundColor: "rgba(212, 184, 106, 0.15)",
-                      fill: true,
-                      tension: 0.3,
-                      borderWidth: 2.5,
-                      pointRadius: 2,
-                      pointBackgroundColor: "#D4B86A",
-                      pointBorderColor: "#D4B86A",
-                      pointHoverRadius: 6,
-                      pointHoverBackgroundColor: "#D4B86A",
-                      pointHoverBorderColor: "#fff",
-                      pointHoverBorderWidth: 2,
-                      pointShadowBlur: 20,
-                    },
-                  ],
-                }}
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  interaction: {
-                    mode: "index",
-                    intersect: false,
-                  },
-                  scales: {
-                    y: {
-                      beginAtZero: true,
-                      grid: {
-                        color: "rgba(255, 255, 255, 0.03)",
-                        drawBorder: false,
-                        lineWidth: 1,
-                      },
-                      ticks: {
-                        color: "#94A3B8",
-                        padding: 15,
-                        font: {
-                          size: 11,
-                        },
-                      },
-                      border: {
-                        display: false,
-                      },
-                    },
-                    x: {
-                      grid: {
-                        color: "rgba(255, 255, 255, 0.03)",
-                        drawBorder: false,
-                        lineWidth: 1,
-                      },
-                      ticks: {
-                        color: "#94A3B8",
-                        padding: 15,
-                        font: {
-                          size: 11,
-                        },
-                        maxRotation: 45,
-                        minRotation: 45,
-                      },
-                      border: {
-                        display: false,
-                      },
-                    },
-                  },
-                  plugins: {
-                    legend: {
-                      position: "top",
-                      align: "end",
-                      labels: {
-                        color: "#94A3B8",
-                        usePointStyle: true,
-                        pointStyle: "circle",
-                        padding: 25,
-                        font: {
-                          size: 12,
-                          weight: "500",
-                        },
-                        boxWidth: 8,
-                        boxHeight: 8,
-                      },
-                    },
-                    tooltip: {
-                      backgroundColor: "rgba(0, 0, 0, 0.85)",
-                      titleColor: "#fff",
-                      bodyColor: "#fff",
-                      borderColor: "rgba(255, 255, 255, 0.1)",
-                      borderWidth: 1,
-                      padding: {
-                        x: 15,
-                        y: 10,
-                      },
-                      displayColors: true,
-                      usePointStyle: true,
-                      bodyFont: {
-                        size: 12,
-                      },
-                      titleFont: {
-                        size: 13,
-                        weight: "bold",
-                      },
-                      callbacks: {
-                        label: function (context) {
-                          let label = context.dataset.label || "";
-                          if (label) {
-                            label += ": ";
-                          }
-                          if (context.parsed.y !== null) {
-                            label += new Intl.NumberFormat("en-US").format(
-                              context.parsed.y
-                            );
-                          }
-                          return label;
-                        },
-                      },
-                    },
-                  },
-                }}
-              />
-            </div>
-          </div>
-        </div>
-      </motion.div>
+        </motion.div>
+      </div>
     </div>
   );
 };
@@ -1041,6 +1479,99 @@ const generateLabels = () => {
 
 const generateData = () => {
   return Array.from({ length: 30 }, () => Math.random() * 0.5);
+};
+
+const StatisticsOverview = () => {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      {/* Summary Cards */}
+      <div className="bg-gray-800 rounded-lg p-6 shadow-lg">
+        <h3 className="text-xl font-semibold text-[#D4B86A] mb-4">
+          Performance Overview
+        </h3>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="text-center">
+            <p className="text-gray-400 text-sm">Total Members</p>
+            <p className="text-2xl font-bold text-white">
+              {statisticsOverview.totalMembers}
+            </p>
+          </div>
+          <div className="text-center">
+            <p className="text-gray-400 text-sm">Total BDMs</p>
+            <p className="text-2xl font-bold text-white">
+              {statisticsOverview.totalBdms}
+            </p>
+          </div>
+          <div className="text-center">
+            <p className="text-gray-400 text-sm">Total Referrals</p>
+            <p className="text-2xl font-bold text-white">
+              {statisticsOverview.totalReferrals}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Top Performers */}
+      <div className="bg-gray-800 rounded-lg p-6 shadow-lg">
+        <h3 className="text-xl font-semibold text-[#D4B86A] mb-4">
+          Top Performers
+        </h3>
+        <div className="space-y-3">
+          {statisticsOverview.topPerformers.map((performer, index) => (
+            <div key={index} className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <span className="text-gray-400">{index + 1}.</span>
+                <span className="text-white">{performer.name}</span>
+              </div>
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-[#D4B86A]">
+                  {performer.totalPoints} pts
+                </span>
+                <span className="text-xs text-gray-400">
+                  {performer.bdms} BDMs | {performer.referrals} Refs
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Recent Activities */}
+      <div className="md:col-span-2 bg-gray-800 rounded-lg p-6 shadow-lg">
+        <h3 className="text-xl font-semibold text-[#D4B86A] mb-4">
+          Recent Activities
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {statisticsOverview.recentActivities.map((activity, index) => (
+            <div
+              key={index}
+              className="flex justify-between items-center p-3 bg-gray-700/50 rounded"
+            >
+              <div>
+                <span className="text-white">{activity.giverName}</span>
+                <span className="text-gray-400 mx-2">→</span>
+                <span className="text-white">{activity.receiverName}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span
+                  className={`text-xs px-2 py-1 rounded ${
+                    activity.type === "BDM"
+                      ? "bg-blue-500/20 text-blue-300"
+                      : "bg-green-500/20 text-green-300"
+                  }`}
+                >
+                  {activity.type}
+                </span>
+                <span className="text-[#D4B86A] text-sm">
+                  {activity.points} pts
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default Dashboard;

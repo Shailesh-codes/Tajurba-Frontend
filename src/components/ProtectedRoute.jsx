@@ -94,6 +94,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   // Add Regional Director specific routes check
   if (auth.role === "Regional Director") {
     const regionalDirectorAllowedPaths = [
+      "/dashboard",
       "/member-list",
       "/add-user",
       "/chapters-list",
