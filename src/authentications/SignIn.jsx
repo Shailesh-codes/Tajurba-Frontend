@@ -30,11 +30,7 @@ const SignIn = () => {
   useEffect(() => {
     // Only redirect if authenticated and not loading
     if (auth.isAuthenticated && !auth.isLoading) {
-      if (auth.role === "Member") {
-        navigate("/member-dashboard", { replace: true });
-      } else {
-        navigate("/dashboard", { replace: true });
-      }
+      navigate("/dashboard", { replace: true });
     }
   }, [auth.isAuthenticated, auth.isLoading, auth.role, navigate]);
 
@@ -83,11 +79,6 @@ const SignIn = () => {
         await login({ token, member });
 
         showToast("Login Successful", "Welcome back!", "success");
-
-        // Navigate based on role
-        const redirectPath =
-          member.role === "Member" ? "/member-dashboard" : "/dashboard";
-        navigate(redirectPath, { replace: true });
       }
     } catch (error) {
       console.error("Login error:", error);

@@ -242,13 +242,10 @@ const MonthlyReward = () => {
   // Add a function to calculate BDM points
   const calculateBDMPoints = (count) => {
     if (count >= 4) return 20;
-    const pointsMap = {
-      0: 0,
-      1: 5,
-      2: 10,
-      3: 15,
-    };
-    return pointsMap[count] || 0;
+    if (count === 3) return 15;
+    if (count === 2) return 10;
+    if (count === 1) return 5;
+    return 0;
   };
 
   // Add a function to get next tier BDMs needed
@@ -264,35 +261,11 @@ const MonthlyReward = () => {
   };
 
   const calculateBusinessPoints = (amount) => {
-    // Convert amount to number if it's a string
     const businessAmount = parseFloat(amount) || 0;
-
-    // Business given points based on amount ranges (in INR)
-    if (businessAmount === 0) {
-      return {
-        points: 0,
-        tier: "No business given",
-        nextTierAmount: 1,
-      };
-    } else if (businessAmount <= 50000) {
-      return {
-        points: 5,
-        tier: "Tier 1",
-        nextTierAmount: 50001 - businessAmount,
-      };
-    } else if (businessAmount <= 500000) {
-      return {
-        points: 10,
-        tier: "Tier 2",
-        nextTierAmount: 500001 - businessAmount,
-      };
-    } else {
-      return {
-        points: 15,
-        tier: "Tier 3 (Maximum)",
-        nextTierAmount: 0,
-      };
-    }
+    if (businessAmount >= 500000) return { points: 15 };
+    if (businessAmount >= 50000) return { points: 10 };
+    if (businessAmount > 0) return { points: 5 };
+    return { points: 0 };
   };
 
   // Update the fetchAttendancePoints function
@@ -413,131 +386,222 @@ const MonthlyReward = () => {
   useEffect(() => {
     const fetchUserBDMs = async () => {
       try {
-        const response = await api.get("/bdm");
-        const bdms = response.data;
-
-        // Count verified BDMs for the current month
-        const currentDate = new Date();
-        const currentMonth = currentDate.getMonth() + 1;
-        const currentYear = currentDate.getFullYear();
-
-        const monthlyBDMs = bdms.filter((bdm) => {
-          const bdmDate = new Date(bdm.bdmDate);
-          return (
-            bdmDate.getMonth() + 1 === currentMonth &&
-            bdmDate.getFullYear() === currentYear &&
-            bdm.status === "verified"
-          );
+        const [year, month] = selectedMonth.split("-");
+        // First get all BDMs for the user
+        const response = await api.get("/bdm", {
+          params: {
+            memberId: auth.user.id,
+          },
         });
 
-        const givenBDMs = monthlyBDMs.filter(
-          (bdm) => bdm.givenBy_MemberId === auth.user.id
-        ).length;
-        const receivedBDMs = monthlyBDMs.filter(
-          (bdm) => bdm.received_MemberId === auth.user.id
-        ).length;
-        const totalBDMs = givenBDMs + receivedBDMs;
-        const pointsEarned = calculateBDMPoints(totalBDMs);
-        const nextTierNeeded = getNextTierBDMs(totalBDMs);
+        if (response.data) {
+          // Filter BDMs for current month and verified status
+          const monthlyBDMs = response.data.filter((bdm) => {
+            const bdmDate = new Date(bdm.bdmDate);
+            return (
+              bdmDate.getMonth() + 1 === parseInt(month) &&
+              bdmDate.getFullYear() === parseInt(year) &&
+              bdm.status === "verified"
+            );
+          });
 
+          const givenBDMs = monthlyBDMs.filter(
+            (bdm) => bdm.givenBy_MemberId === auth.user.id
+          ).length;
+          const receivedBDMs = monthlyBDMs.filter(
+            (bdm) => bdm.received_MemberId === auth.user.id
+          ).length;
+
+          // Calculate points
+          let points = 0;
+          if (givenBDMs >= 4) points = 20;
+          else if (givenBDMs === 3) points = 15;
+          else if (givenBDMs === 2) points = 10;
+          else if (givenBDMs === 1) points = 5;
+
+          setUserData((prev) => ({
+            ...prev,
+            bdm: {
+              value: `${givenBDMs}/${receivedBDMs}`, // Format as "given/received"
+              points: points,
+              maxValue: 4,
+              subtitle:
+                givenBDMs >= 4
+                  ? "Maximum points achieved"
+                  : `${4 - givenBDMs} more BDM${
+                      4 - givenBDMs > 1 ? "s" : ""
+                    } needed for maximum points`,
+              breakdown: {
+                given: givenBDMs,
+                received: receivedBDMs,
+                total: givenBDMs + receivedBDMs,
+                pointsEarned: points,
+                nextTierNeeded: givenBDMs >= 4 ? 0 : 4 - givenBDMs,
+              },
+            },
+          }));
+        }
+      } catch (error) {
+        console.error("Error fetching BDM data:", error);
+        // Set default values on error
         setUserData((prev) => ({
           ...prev,
           bdm: {
-            value: totalBDMs,
-            points: pointsEarned,
+            value: "0/0",
+            points: 0,
             maxValue: 4,
-            subtitle:
-              nextTierNeeded > 0
-                ? `${nextTierNeeded} more BDM${
-                    nextTierNeeded > 1 ? "s" : ""
-                  } needed for next tier`
-                : "Maximum tier achieved",
+            subtitle: "4 more BDMs needed",
             breakdown: {
-              given: givenBDMs,
-              received: receivedBDMs,
-              total: totalBDMs,
-              pointsEarned,
-              nextTierNeeded,
+              given: 0,
+              received: 0,
+              total: 0,
+              pointsEarned: 0,
+              nextTierNeeded: 4,
             },
           },
         }));
-      } catch (error) {
-        console.error("Error fetching BDM data:", error);
       }
     };
 
     fetchUserBDMs();
-  }, [auth.user.id]);
+  }, [selectedMonth, auth.user.id]);
 
   useEffect(() => {
     const fetchBusinessData = async () => {
       try {
-        const response = await api.get("/business");
-        const businesses = response.data;
-
-        // Filter for verified businesses in current month
-        const currentDate = new Date();
-        const currentMonth = currentDate.getMonth() + 1;
-        const currentYear = currentDate.getFullYear();
-
-        const monthlyBusinesses = businesses.filter((business) => {
-          const businessDate = new Date(business.businessDate);
-          return (
-            businessDate.getMonth() + 1 === currentMonth &&
-            businessDate.getFullYear() === currentYear &&
-            business.status === "verified"
-          );
+        const [year, month] = selectedMonth.split("-");
+        // First get all businesses for the user
+        const response = await api.get("/business", {
+          params: {
+            memberId: auth.user.id,
+          },
         });
 
-        // Calculate total business amount
-        const totalAmount = monthlyBusinesses.reduce((sum, business) => {
-          return sum + parseFloat(business.amount);
-        }, 0);
+        if (response.data) {
+          // Filter businesses for current month and verified status
+          const monthlyBusinesses = response.data.filter((business) => {
+            const businessDate = new Date(business.businessDate);
+            return (
+              businessDate.getMonth() + 1 === parseInt(month) &&
+              businessDate.getFullYear() === parseInt(year) &&
+              business.status === "verified"
+            );
+          });
 
-        // Calculate points and next tier info
-        const { points, tier, nextTierAmount } =
-          calculateBusinessPoints(totalAmount);
+          // Calculate total amount
+          const totalAmount = monthlyBusinesses.reduce((sum, business) => {
+            return sum + (parseFloat(business.amount) || 0);
+          }, 0);
 
+          // Calculate points
+          let points = 0;
+          let nextTierAmount = 0;
+          if (totalAmount >= 500000) {
+            points = 15;
+            nextTierAmount = 0;
+          } else if (totalAmount >= 50000) {
+            points = 10;
+            nextTierAmount = 500000 - totalAmount;
+          } else if (totalAmount > 0) {
+            points = 5;
+            nextTierAmount = 50000 - totalAmount;
+          } else {
+            nextTierAmount = 50000;
+          }
+
+          setUserData((prev) => ({
+            ...prev,
+            business: {
+              value: totalAmount.toLocaleString("en-IN", {
+                style: "currency",
+                currency: "INR",
+                maximumFractionDigits: 0,
+              }),
+              points: points,
+              maxValue: 500000,
+              subtitle:
+                nextTierAmount === 0
+                  ? "Maximum points achieved"
+                  : `₹${nextTierAmount.toLocaleString()} more needed for next tier`,
+              tier:
+                points === 15
+                  ? "Maximum"
+                  : points === 10
+                  ? "Intermediate"
+                  : points === 5
+                  ? "Basic"
+                  : "No Business",
+            },
+          }));
+        }
+      } catch (error) {
+        console.error("Error fetching business data:", error);
+        // Set default values on error
         setUserData((prev) => ({
           ...prev,
           business: {
-            value: totalAmount,
-            points: points,
+            value: "₹0",
+            points: 0,
             maxValue: 500000,
-            subtitle:
-              nextTierAmount > 0
-                ? `₹${nextTierAmount.toLocaleString()} more needed for next tier`
-                : "Maximum tier achieved",
-            tier: tier,
+            subtitle: "₹50,000 more needed for next tier",
+            tier: "No Business",
           },
         }));
-      } catch (error) {
-        console.error("Error fetching business data:", error);
       }
     };
 
     fetchBusinessData();
-  }, [auth.user.id]);
+  }, [selectedMonth, auth.user.id]);
 
   useEffect(() => {
     const fetchReferralData = async () => {
       try {
-        const response = await api.get("/referrals");
+        const [year, month] = selectedMonth.split("-");
+        const response = await api.get("/referrals", {
+          params: {
+            month,
+            year,
+            memberId: auth.user.id,
+          },
+        });
+
         if (response.data.success) {
           const { stats } = response.data;
+          const referralCount = stats.totalReferrals;
+
+          // Calculate points based on referral count
+          let points = 0;
+          let nextTierNeeded = 0;
+          if (referralCount >= 5) {
+            points = 15;
+            nextTierNeeded = 0;
+          } else if (referralCount >= 3) {
+            points = 10;
+            nextTierNeeded = 5 - referralCount;
+          } else if (referralCount >= 1) {
+            points = 5;
+            nextTierNeeded = 3 - referralCount;
+          } else {
+            nextTierNeeded = 1;
+          }
 
           setUserData((prev) => ({
             ...prev,
             referrals: {
-              value: stats.totalReferrals,
-              points: stats.points,
+              value: referralCount,
+              points: points,
               maxValue: 5,
               subtitle:
-                stats.nextTierNeeded > 0
-                  ? `${stats.nextTierNeeded} more referral${
-                      stats.nextTierNeeded > 1 ? "s" : ""
-                    } needed for ${stats.nextTierPoints} points`
-                  : "Maximum tier achieved",
+                nextTierNeeded === 0
+                  ? "Maximum points achieved"
+                  : `${nextTierNeeded} more referral${
+                      nextTierNeeded > 1 ? "s" : ""
+                    } needed for next tier`,
+              details: `
+                • 1-2 referrals: 5 points
+                • 3-4 referrals: 10 points
+                • 5+ referrals: 15 points (max)
+              `,
             },
           }));
         }
@@ -547,27 +611,52 @@ const MonthlyReward = () => {
     };
 
     fetchReferralData();
-  }, [auth.user.id]);
+  }, [selectedMonth, auth.user.id]);
 
   useEffect(() => {
     const fetchVisitorData = async () => {
       try {
-        const response = await api.get("/visitors/stats");
+        const [year, month] = selectedMonth.split("-");
+        const response = await api.get("/visitors/stats", {
+          params: {
+            month,
+            year,
+            memberId: auth.user.id,
+          },
+        });
+
         if (response.data.success) {
           const { stats } = response.data.data;
+          const visitorCount = stats.totalVisitors;
+
+          // Calculate points based on visitor count
+          let points = 0;
+          let nextTierNeeded = 0;
+          if (visitorCount >= 3) {
+            points = 15;
+            nextTierNeeded = 0;
+          } else if (visitorCount === 2) {
+            points = 10;
+            nextTierNeeded = 1;
+          } else if (visitorCount === 1) {
+            points = 5;
+            nextTierNeeded = 2;
+          } else {
+            nextTierNeeded = 3;
+          }
 
           setUserData((prev) => ({
             ...prev,
             visitors: {
-              value: stats.totalVisitors,
-              points: stats.points,
+              value: visitorCount,
+              points: points,
               maxValue: 3,
               subtitle:
-                stats.nextTierNeeded > 0
-                  ? `${stats.nextTierNeeded} more visitor${
-                      stats.nextTierNeeded > 1 ? "s" : ""
-                    } needed for ${stats.nextTierPoints} points`
-                  : "Maximum tier achieved",
+                nextTierNeeded === 0
+                  ? "Maximum points achieved"
+                  : `${nextTierNeeded} more visitor${
+                      nextTierNeeded > 1 ? "s" : ""
+                    } needed for next tier`,
               details: `
                 • 1 visitor: 5 points
                 • 2 visitors: 10 points
@@ -582,7 +671,7 @@ const MonthlyReward = () => {
     };
 
     fetchVisitorData();
-  }, [auth.user.id]);
+  }, [selectedMonth, auth.user.id]);
 
   useEffect(() => {
     const fetchSocialTrainingData = async () => {
@@ -629,14 +718,15 @@ const MonthlyReward = () => {
 
   useEffect(() => {
     // Calculate total points whenever any of the individual metrics change
-    const totalPoints = [
-      attendanceData.points || 0,
-      userData.bdm.points || 0,
-      userData.business.points || 0,
-      userData.referrals.points || 0,
-      userData.socials.points || 0,
-      userData.visitors.points || 0,
-    ].reduce((sum, points) => sum + points, 0);
+    const totalPoints = Math.min(
+      attendanceData.points +
+        userData.bdm.points +
+        userData.business.points +
+        userData.referrals.points +
+        userData.socials.points +
+        userData.visitors.points,
+      100 // Cap at 100 points
+    );
 
     // Update only the totalPoints in userData
     setUserData((prev) => ({
@@ -652,15 +742,143 @@ const MonthlyReward = () => {
     userData.visitors.points,
   ]);
 
-  // Add this function to fetch all members' data
+  // Utility function to calculate total points for a member
+  const calculateTotalPoints = (points) => {
+    return (
+      (points.attendance || 0) +
+      (points.bdm || 0) +
+      (points.business || 0) +
+      (points.referrals || 0) +
+      (points.visitors || 0) +
+      (points.socials || 0)
+    );
+  };
+
   const fetchAllMembers = async () => {
     try {
       setLoadingStats(true);
       setStatsError(null);
-      const response = await api.get("/members/members");
-      if (response.data.success) {
-        setAllMembers(response.data.data);
+
+      // Get all members with their monthly stats in a single API call
+      const [year, month] = selectedMonth.split("-");
+
+      // Get all members
+      const membersResponse = await api.get("/members/members");
+      const members = membersResponse.data.data;
+
+      // Calculate points for each member
+      const membersWithPoints = await Promise.all(
+        members
+          .filter((member) => member.status === "active")
+          .map(async (member) => {
+            try {
+              // Get all metrics for the member
+              const [
+                attendanceRes,
+                bdmRes,
+                businessRes,
+                referralsRes,
+                visitorsRes,
+                socialsRes,
+              ] = await Promise.all([
+                api.get(
+                  `/attendance-venue-fee/monthly-points?memberId=${member.id}&month=${month}&year=${year}`
+                ),
+                api.get(`/bdm?memberId=${member.id}`),
+                api.get(`/business?memberId=${member.id}`),
+                api.get(`/referrals?memberId=${member.id}`),
+                api.get(`/visitors/stats?memberId=${member.id}`),
+                api.get(
+                  `/attendance-venue-fee/social-stats?memberId=${member.id}`
+                ),
+              ]);
+
+              // Calculate points for each category
+              const points = {
+                attendance: attendanceRes.data?.data?.points || 0,
+                bdm: calculateBDMPoints(bdmRes.data?.length || 0),
+                business: calculateBusinessPoints(
+                  businessRes.data?.total_amount || 0
+                ).points,
+                referrals: referralsRes.data?.stats?.points || 0,
+                visitors: visitorsRes.data?.data?.stats?.points || 0,
+                socials: socialsRes.data?.data?.stats?.points || 0,
+              };
+
+              const totalPoints = Math.min(
+                Object.values(points).reduce((sum, p) => sum + p, 0),
+                100
+              );
+
+              return {
+                ...member,
+                totalPoints,
+                pointsBreakdown: points,
+              };
+            } catch (error) {
+              console.error(
+                `Error calculating points for member ${member.id}:`,
+                error
+              );
+              return null;
+            }
+          })
+      );
+
+      // Filter out failed calculations and sort by points
+      const validMembers = membersWithPoints
+        .filter((m) => m !== null)
+        .sort((a, b) => b.totalPoints - a.totalPoints);
+
+      // Calculate tier statistics
+      const stats = {
+        platinum: 0,
+        platinumPercentage: 0,
+        gold: 0,
+        goldPercentage: 0,
+        silver: 0,
+        silverPercentage: 0,
+        bronze: 0,
+        bronzePercentage: 0,
+        total: validMembers.length,
+      };
+
+      // Distribute members based on points criteria
+      validMembers.forEach((member) => {
+        if (member.totalPoints >= 76) {
+          stats.platinum++;
+        } else if (member.totalPoints >= 51) {
+          stats.gold++;
+        } else if (member.totalPoints >= 30) {
+          stats.silver++;
+        } else {
+          stats.bronze++;
+        }
+      });
+
+      // Calculate percentages
+      if (stats.total > 0) {
+        stats.platinumPercentage = Math.round(
+          (stats.platinum / stats.total) * 100
+        );
+        stats.goldPercentage = Math.round((stats.gold / stats.total) * 100);
+        stats.silverPercentage = Math.round((stats.silver / stats.total) * 100);
+        stats.bronzePercentage = Math.round((stats.bronze / stats.total) * 100);
       }
+
+      // Log distribution for verification
+      console.log("Member Distribution:", {
+        totalMembers: stats.total,
+        byTier: {
+          platinum: `${stats.platinum} members (${stats.platinumPercentage}%)`,
+          gold: `${stats.gold} members (${stats.goldPercentage}%)`,
+          silver: `${stats.silver} members (${stats.silverPercentage}%)`,
+          bronze: `${stats.bronze} members (${stats.bronzePercentage}%)`,
+        },
+      });
+
+      setAllMembers(validMembers);
+      setTierStats(stats);
     } catch (error) {
       console.error("Error fetching members:", error);
       setStatsError("Failed to load member statistics");
@@ -669,117 +887,48 @@ const MonthlyReward = () => {
     }
   };
 
-  // Add this function to calculate tier statistics
-  const calculateTierStats = () => {
-    const stats = {
-      platinum: 0,
-      platinumPercentage: 0,
-      gold: 0,
-      goldPercentage: 0,
-      silver: 0,
-      silverPercentage: 0,
-      bronze: 0,
-      bronzePercentage: 0,
-      total: allMembers.length,
-    };
-
-    allMembers.forEach((member) => {
-      // Calculate total points for the member using existing point calculation logic
-      const totalPoints = calculateMemberPoints(member);
-
-      // Assign to appropriate tier
-      if (totalPoints >= 76) {
-        stats.platinum++;
-      } else if (totalPoints >= 51) {
-        stats.gold++;
-      } else if (totalPoints >= 30) {
-        stats.silver++;
-      } else {
-        stats.bronze++;
-      }
-    });
-
-    // Calculate percentages
-    if (stats.total > 0) {
-      stats.platinumPercentage = Math.round(
-        (stats.platinum / stats.total) * 100
-      );
-      stats.goldPercentage = Math.round((stats.gold / stats.total) * 100);
-      stats.silverPercentage = Math.round((stats.silver / stats.total) * 100);
-      stats.bronzePercentage = Math.round((stats.bronze / stats.total) * 100);
-    }
-
-    return stats;
-  };
-
-  // Function to calculate points for a single member
-  const calculateMemberPoints = (member) => {
-    let totalPoints = 0;
-
-    // Add attendance points (max 20)
-    const attendancePoints = userData.meetings.points || 0;
-    totalPoints += attendancePoints;
-
-    // Add BDM points (max 20)
-    const bdmPoints = userData.bdm.points || 0;
-    totalPoints += bdmPoints;
-
-    // Add business points (max 15)
-    const businessPoints = userData.business.points || 0;
-    totalPoints += businessPoints;
-
-    // Add referral points (max 15)
-    const referralPoints = userData.referrals.points || 0;
-    totalPoints += referralPoints;
-
-    // Add visitor points (max 15)
-    const visitorPoints = userData.visitors.points || 0;
-    totalPoints += visitorPoints;
-
-    // Add social training points (max 15)
-    const socialPoints = userData.socials.points || 0;
-    totalPoints += socialPoints;
-
-    // Cap total points at 100
-    return Math.min(totalPoints, 100);
-  };
-
-  // Update the getCategoryData function to use the calculated stats
-  const getCategoryData = () => {
-    const stats = calculateTierStats();
-
-    return [
-      {
-        ...MEMBERSHIP_TIERS.PLATINUM,
-        points: "76-100 Points",
-        memberCount: stats.platinum,
-        percentage: stats.platinumPercentage,
-      },
-      {
-        ...MEMBERSHIP_TIERS.GOLD,
-        points: "51-75 Points",
-        memberCount: stats.gold,
-        percentage: stats.goldPercentage,
-      },
-      {
-        ...MEMBERSHIP_TIERS.SILVER,
-        points: "30-50 Points",
-        memberCount: stats.silver,
-        percentage: stats.silverPercentage,
-      },
-      {
-        ...MEMBERSHIP_TIERS.BRONZE,
-        points: "0-29 Points",
-        memberCount: stats.bronze,
-        percentage: stats.bronzePercentage,
-      },
-    ];
-  };
-
-  // Add useEffect to fetch members when component mounts or month changes
+  // Update useEffect to fetch data when month changes
   useEffect(() => {
     fetchAllMembers();
   }, [selectedMonth]);
+
+  // Update the getCategoryData function
+  const getCategoryData = () => {
+    return [
+      {
+        name: "Platinum",
+        points: "76-100 Points",
+        emoji: "🏆",
+        memberCount: tierStats.platinum,
+        percentage: tierStats.platinumPercentage,
+        color: "from-amber-500 to-amber-600",
+      },
+      {
+        name: "Gold",
+        points: "51-75 Points",
+        emoji: "🥇",
+        memberCount: tierStats.gold,
+        percentage: tierStats.goldPercentage,
+        color: "from-yellow-500 to-yellow-600",
+      },
+      {
+        name: "Silver",
+        points: "30-50 Points",
+        emoji: "🥈",
+        memberCount: tierStats.silver,
+        percentage: tierStats.silverPercentage,
+        color: "from-gray-300 to-gray-400",
+      },
+      {
+        name: "Bronze",
+        points: "0-29 Points",
+        emoji: "🥉",
+        memberCount: tierStats.bronze,
+        percentage: tierStats.bronzePercentage,
+        color: "from-orange-600 to-orange-700",
+      },
+    ];
+  };
 
   const LoadingCard = () => (
     <div className="p-4 rounded-xl bg-gray-800/50 border border-gray-700 backdrop-blur-xl">
@@ -969,7 +1118,7 @@ const MonthlyReward = () => {
 
                 <MetricCard
                   title="Business"
-                  value={`₹${userData.business.value}`}
+                  value={`${userData.business.value}`}
                   points={userData.business.points}
                   subtitle={userData.business.subtitle}
                   maxValue={userData.business.maxValue}
@@ -1082,17 +1231,15 @@ const MonthlyReward = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {getCategoryData().map((category, index) => (
               <motion.div
-                key={category.title}
+                key={category.points}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
                 className="group p-4 rounded-xl bg-gray-800/50 backdrop-blur-xl 
                         border border-gray-700 hover:border-amber-500/20
                         shadow-lg hover:shadow-xl hover:shadow-amber-500/5
-                        transition-all duration-300 hover:-translate-y-1
-                        relative overflow-hidden"
+                        transition-all duration-300 hover:-translate-y-1"
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <div className="flex justify-between items-center mb-4">
                   <div className="flex items-center gap-3">
                     <motion.div
@@ -1105,7 +1252,7 @@ const MonthlyReward = () => {
                     </motion.div>
                     <div>
                       <span className="text-base text-gray-100 font-semibold group-hover:text-amber-400 transition-colors">
-                        {category.title}
+                        {category.name}
                       </span>
                       <p className="text-xs text-gray-400">{category.points}</p>
                     </div>
@@ -1113,11 +1260,6 @@ const MonthlyReward = () => {
                 </div>
 
                 <div className="text-center py-6 relative">
-                  <div className="absolute inset-0 flex items-center justify-center opacity-10">
-                    <span className="text-8xl font-bold text-gray-500">
-                      {category.emoji}
-                    </span>
-                  </div>
                   <motion.div
                     initial={{ scale: 0.5, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}

@@ -42,7 +42,6 @@ import MemberReqReceived from "./pages/MemberReqReceived";
 import MemberVisitorsInvite from "./pages/MemberVisitorsInvite";
 import VisitorInviteAddEdit from "./components/VisitorInviteAddEdit";
 import ViewMemberVisitor from "./components/ViewMemberVisitor";
-import MemberDashboard from "./pages/MemberDashboard";
 import Setting from "./pages/Settings";
 import AdminSettings from "./pages/AdminSettings";
 // import PrivacyPolicy from "./pages/PrivacyPolicy";
@@ -167,7 +166,7 @@ function App() {
             </ProtectedRoute>
           }
         >
-          <Route path="/member-dashboard" element={<MemberDashboard />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/bdm" element={<BDM />} />
           <Route path="/add-bdm" element={<AddBDM />} />
           <Route path="/edit-bdm/:id" element={<AddBDM />} />

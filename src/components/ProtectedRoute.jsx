@@ -33,7 +33,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   // Member specific routes check
   if (auth.role === "Member") {
     const memberAllowedPaths = [
-      "/member-dashboard",
+      "/dashboard",
       "/bdm",
       "/add-bdm",
       "/edit-bdm",
@@ -50,6 +50,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
       "/meetings-mdp-socials",
       "/members-mdp-events",
       "/monthly-reward",
+      "/member-levels",
       "/ref-given",
       "/view-ref-given",
       "/add-edit-ref-given",
@@ -93,7 +94,6 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   // Add Regional Director specific routes check
   if (auth.role === "Regional Director") {
     const regionalDirectorAllowedPaths = [
-      "/dashboard",
       "/member-list",
       "/add-user",
       "/chapters-list",
@@ -192,7 +192,6 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
       "/settings",
       "/privacy-policy",
       // Member paths
-      "/member-dashboard",
       "/bdm",
       "/add-bdm",
       "/edit-bdm",

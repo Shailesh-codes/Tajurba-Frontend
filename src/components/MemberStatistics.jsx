@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import stats from "../assets/images/icons/trade.svg";
+import api from "../hooks/api";
 
 const MemberStatistics = () => {
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
@@ -51,13 +52,141 @@ const MemberStatistics = () => {
     )}`;
   }
 
-  useEffect(() => {
-    setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setMembers(dummyMembers);
+  const fetchMembers = async () => {
+    try {
+      setLoading(true);
+      const [year, month] = selectedMonth.split('-');
+
+      // Get all members
+      const membersResponse = await api.get("/members/members");
+      const members = membersResponse.data.data;
+
+      // Fetch and calculate points for each member
+      const membersWithStats = await Promise.all(
+        members.map(async (member) => {
+          try {
+            // Get all metrics for the member
+            const [
+              attendanceRes,
+              bdmRes,
+              businessRes,
+              referralsRes,
+              visitorsRes,
+              socialsRes
+            ] = await Promise.all([
+              api.get("/attendance-venue-fee/monthly-points", {
+                params: { memberId: member.id, month, year }
+              }),
+              api.get("/bdm"),
+              api.get("/business"),
+              api.get("/referrals"),
+              api.get("/visitors/stats"),
+              api.get("/attendance-venue-fee/social-stats")
+            ]);
+
+            // Calculate BDM stats
+            const monthlyBDMs = bdmRes.data.filter(bdm => {
+              const bdmDate = new Date(bdm.bdmDate);
+              return (
+                bdmDate.getMonth() + 1 === parseInt(month) &&
+                bdmDate.getFullYear() === parseInt(year) &&
+                bdm.status === "verified"
+              );
+            });
+            const givenBDMs = monthlyBDMs.filter(bdm => bdm.givenBy_MemberId === member.id).length;
+            const receivedBDMs = monthlyBDMs.filter(bdm => bdm.received_MemberId === member.id).length;
+
+            // Calculate business stats
+            const monthlyBusinesses = businessRes.data.filter(business => {
+              const businessDate = new Date(business.businessDate);
+              return (
+                businessDate.getMonth() + 1 === parseInt(month) &&
+                businessDate.getFullYear() === parseInt(year) &&
+                business.status === "verified"
+              );
+            });
+            const totalBusinessAmount = monthlyBusinesses.reduce((sum, business) => 
+              sum + parseFloat(business.amount || 0), 0
+            );
+
+            // Calculate points
+            const points = {
+              attendance: attendanceRes.data?.data?.points || 0,
+              bdm: givenBDMs >= 4 ? 20 : givenBDMs >= 3 ? 15 : givenBDMs >= 2 ? 10 : givenBDMs >= 1 ? 5 : 0,
+              business: totalBusinessAmount >= 500000 ? 15 : totalBusinessAmount >= 50000 ? 10 : totalBusinessAmount > 0 ? 5 : 0,
+              referrals: referralsRes.data?.stats?.points || 0,
+              visitors: visitorsRes.data?.data?.stats?.points || 0,
+              socials: socialsRes.data?.data?.stats?.points || 0
+            };
+
+            const totalPoints = Math.min(
+              Object.values(points).reduce((sum, p) => sum + p, 0),
+              100
+            );
+
+            // Determine member level based on points
+            let level;
+            if (totalPoints >= 76) level = "Platinum";
+            else if (totalPoints >= 51) level = "Gold";
+            else if (totalPoints >= 30) level = "Silver";
+            else level = "Bronze";
+
+            return {
+              id: member.id,
+              full_name: member.name,
+              profile_image: member.profilePicture,
+              chapter_name: member.chapter,
+              level,
+              total_points: totalPoints,
+              attendance: {
+                total_meetings: attendanceRes.data?.data?.breakdown?.totalMeetings || 0,
+                present: attendanceRes.data?.data?.breakdown?.present || 0,
+                points: points.attendance
+              },
+              bdm: {
+                given: { count: givenBDMs },
+                received: { count: receivedBDMs },
+                points: points.bdm
+              },
+              business: {
+                total_amount: totalBusinessAmount,
+                points: points.business
+              },
+              referrals: {
+                count: referralsRes.data?.stats?.totalReferrals || 0,
+                points: points.referrals
+              },
+              visitor_invited: {
+                count: visitorsRes.data?.data?.stats?.totalVisitors || 0,
+                points: points.visitors
+              },
+              social_training: {
+                count: socialsRes.data?.data?.stats?.totalAttended || 0,
+                points: points.socials
+              }
+            };
+          } catch (error) {
+            console.error(`Error calculating stats for member ${member.id}:`, error);
+            return null;
+          }
+        })
+      );
+
+      // Filter out any null results and sort by total points
+      const validMembers = membersWithStats
+        .filter(m => m !== null)
+        .sort((a, b) => b.total_points - a.total_points);
+
+      setMembers(validMembers);
+    } catch (error) {
+      console.error("Error fetching members:", error);
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
+  };
+
+  useEffect(() => {
+    fetchMembers();
   }, [selectedMonth, selectedChapter, selectedLevel]);
 
   const formatIndianCurrency = (amount) => {
@@ -95,6 +224,75 @@ const MemberStatistics = () => {
         <div className="h-12 bg-gray-700/50 rounded-lg animate-pulse"></div>
       </td>
     </tr>
+  );
+
+  const MemberRow = ({ member, index }) => (
+    <motion.tr
+      key={member.id}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.05 }}
+      className="group hover:bg-gradient-to-r hover:from-gray-700/30 hover:via-gray-700/40 hover:to-gray-700/30 transition-all duration-300"
+    >
+      <td className="px-6 py-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/20 to-amber-600/20 flex items-center justify-center border border-amber-500/20">
+            <span className="text-amber-500 font-medium">
+              {member.full_name.charAt(0)}
+            </span>
+          </div>
+          <span className="text-gray-200 font-medium">{member.full_name}</span>
+        </div>
+      </td>
+      <td className="px-6 py-4">
+        <span className="text-gray-300">{member.chapter_name}</span>
+      </td>
+      <td className="px-6 py-4">
+        <span className={`inline-flex px-3 py-1 rounded-lg text-xs font-medium bg-gradient-to-r ${getLevelColor(member.level)}`}>
+          {member.level}
+        </span>
+      </td>
+      <td className="px-6 py-4">
+        <span className="text-gray-300">{member.total_points}</span>
+      </td>
+      <td className="px-6 py-4">
+        <div className="text-gray-300">
+          <div>{member.attendance.present}/{member.attendance.total_meetings}</div>
+          <div className="text-xs text-gray-400">{member.attendance.points} pts</div>
+        </div>
+      </td>
+      <td className="px-6 py-4">
+        <div className="text-gray-300">
+          <div>G: {member.bdm.given.count}</div>
+          <div>R: {member.bdm.received.count}</div>
+          <div className="text-xs text-gray-400">{member.bdm.points} pts</div>
+        </div>
+      </td>
+      <td className="px-6 py-4">
+        <div className="text-gray-300">
+          <div>{formatIndianCurrency(member.business.total_amount)}</div>
+          <div className="text-xs text-gray-400">{member.business.points} pts</div>
+        </div>
+      </td>
+      <td className="px-6 py-4">
+        <div className="text-gray-300">
+          <div>{member.referrals.count}</div>
+          <div className="text-xs text-gray-400">{member.referrals.points} pts</div>
+        </div>
+      </td>
+      <td className="px-6 py-4">
+        <div className="text-gray-300">
+          <div>{member.visitor_invited.count}</div>
+          <div className="text-xs text-gray-400">{member.visitor_invited.points} pts</div>
+        </div>
+      </td>
+      <td className="px-6 py-4">
+        <div className="text-gray-300">
+          <div>{member.social_training.count}</div>
+          <div className="text-xs text-gray-400">{member.social_training.points} pts</div>
+        </div>
+      </td>
+    </motion.tr>
   );
 
   return (
@@ -266,76 +464,7 @@ const MemberStatistics = () => {
                   Array(5).fill(<LoadingRow />)
                 ) : members.length > 0 ? (
                   members.map((member, index) => (
-                    <motion.tr
-                      key={member.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                      className={`group hover:bg-gradient-to-r hover:from-gray-700/30 hover:via-gray-700/40 hover:to-gray-700/30 transition-all duration-300`}
-                    >
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/20 to-amber-600/20 flex items-center justify-center border border-amber-500/20">
-                            <span className="text-amber-500 font-medium">
-                              {member.full_name.charAt(0)}
-                            </span>
-                          </div>
-                          <span className="text-gray-200 font-medium">
-                            {member.full_name}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-gray-300">
-                          {member.chapter_name}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex px-3 py-1 rounded-lg text-xs font-medium bg-gradient-to-r ${getLevelColor(
-                            member.level
-                          )}`}
-                        >
-                          {member.level}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-gray-300">
-                          {member.total_points}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-gray-300">
-                          {member.attendance.total_meetings}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-gray-300">
-                          <div>G: {member.bdm.given.count}</div>
-                          <div>R: {member.bdm.received.count}</div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-gray-300">
-                          {formatIndianCurrency(member.business.total_amount)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-gray-300">
-                          {member.referrals.count}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-gray-300">
-                          {member.visitor_invited.count}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-gray-300">
-                          {member.social_training.count}
-                        </span>
-                      </td>
-                    </motion.tr>
+                    <MemberRow key={member.id} member={member} index={index} />
                   ))
                 ) : (
                   <tr>

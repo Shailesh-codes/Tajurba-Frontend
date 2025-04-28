@@ -46,11 +46,6 @@ export const navigationConfig = {
           icon: "MonthlyRewardIcon",
           label: "Monthly Reward",
         },
-        {
-          path: "/member-dashboard",
-          icon: "MemberDashboardIcon",
-          label: "Member Dashboard",
-        },
         { path: "/bdm", icon: "BDMIcon", label: "BDM's Done" },
         {
           path: "/business-given",
@@ -175,8 +170,8 @@ export const navigationConfig = {
       title: "Member Menu",
       items: [
         {
-          path: "/member-dashboard",
-          icon: "MemberDashboardIcon",
+          path: "/dashboard",
+          icon: "DashboardIcon",
           label: "Member Dashboard",
         },
         { path: "/bdm", icon: "BDMIcon", label: "BDM's Done" },

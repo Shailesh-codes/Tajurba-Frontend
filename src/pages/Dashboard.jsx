@@ -23,6 +23,7 @@ import {
   Legend,
 } from "chart.js";
 import axios from "axios";
+import api from "../hooks/api";
 
 // Register ChartJS components
 ChartJS.register(
@@ -50,7 +51,279 @@ const Dashboard = () => {
     )}`;
   });
 
+  const [referralData, setReferralData] = useState({
+    totalReferrals: 0,
+    referrals: [],
+    stats: {
+      totalReferrals: 0,
+      points: 0,
+      nextTierNeeded: 0,
+      nextTierPoints: 0,
+      maxPoints: 15,
+    },
+  });
 
+  const [dateRange, setDateRange] = useState({
+    startDate: new Date().toISOString().split("T")[0],
+    endDate: new Date().toISOString().split("T")[0],
+  });
+
+  const [bdmData, setBdmData] = useState({
+    totalBdms: 0,
+    recentBdms: [],
+    recentCount: 0,
+    memberStats: {},
+  });
+
+  const [allReferralsData, setAllReferralsData] = useState({
+    totalCount: 0,
+    memberStats: {},
+    recentReferrals: [],
+  });
+
+  const [visitorData, setVisitorData] = useState({
+    totalCount: 0,
+    recentCount: 0,
+    recentVisitors: [],
+  });
+
+  const [meetingData, setMeetingData] = useState({
+    totalCount: 0,
+    recentCount: 0,
+    attendance: {
+      present: 0,
+      absent: 0,
+      late: 0,
+    },
+  });
+
+  useEffect(() => {
+    const fetchReferralData = async () => {
+      try {
+        // First, get the auth token from localStorage
+        const token = localStorage.getItem("token"); // Make sure this matches how you store your auth token
+
+        const response = await api.get("/referrals/", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          params: {
+            startDate: dateRange.startDate,
+            endDate: dateRange.endDate,
+          },
+        });
+
+        console.log("Referral API Response:", response.data); // For debugging
+
+        if (response.data.success) {
+          setReferralData({
+            totalReferrals: response.data.data.length,
+            referrals: response.data.data,
+            stats: response.data.stats || {
+              totalReferrals: response.data.data.length,
+              points: calculatePoints(response.data.data.length),
+              nextTierNeeded: calculateNextTier(response.data.data.length),
+              maxPoints: 15,
+            },
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching referral data:", error);
+      }
+    };
+
+    // Helper function to calculate points based on referral count
+    const calculatePoints = (referralCount) => {
+      if (referralCount >= 5) return 15;
+      if (referralCount >= 3) return 10;
+      if (referralCount >= 1) return 5;
+      return 0;
+    };
+
+    const calculateNextTier = (referralCount) => {
+      if (referralCount < 1) return 1;
+      if (referralCount < 3) return 3 - referralCount;
+      if (referralCount < 5) return 5 - referralCount;
+      return 0;
+    };
+
+    fetchReferralData();
+  }, [dateRange]);
+
+  useEffect(() => {
+    const fetchBdmData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await api.get("/bdm/all", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          params: {
+            startDate: dateRange.startDate,
+            endDate: dateRange.endDate,
+          },
+        });
+
+        if (response.data && response.data.success) {
+          // Process BDMs to get member statistics
+          const memberStats = {};
+          response.data.data.forEach((bdm) => {
+            const giverName = bdm.givenByName || "Unknown";
+            if (!memberStats[giverName]) {
+              memberStats[giverName] = {
+                count: 0,
+                points: 0,
+              };
+            }
+            memberStats[giverName].count += 1;
+            // Calculate points (you can adjust the point calculation logic)
+            memberStats[giverName].points += 5; // Example: 5 points per BDM
+          });
+
+          setBdmData({
+            totalBdms: response.data.count,
+            recentBdms: response.data.data || [],
+            recentCount: (response.data.data || []).filter(
+              (bdm) =>
+                new Date(bdm.created_at) >=
+                new Date(Date.now() - 15 * 24 * 60 * 60 * 1000)
+            ).length,
+            memberStats: memberStats,
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching BDM data:", error);
+        setBdmData({
+          totalBdms: 0,
+          recentBdms: [],
+          recentCount: 0,
+          memberStats: {},
+        });
+      }
+    };
+
+    fetchBdmData();
+  }, [dateRange]);
+
+  useEffect(() => {
+    const fetchAllReferralsData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await api.get("/referrals/ref-all", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.data.success) {
+          setAllReferralsData(response.data);
+        }
+      } catch (error) {
+        console.error("Error fetching all referrals data:", error);
+      }
+    };
+
+    fetchAllReferralsData();
+  }, []);
+
+  useEffect(() => {
+    const fetchVisitorData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await api.get("/visitors/all-visitors", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.data.success) {
+          setVisitorData({
+            totalCount: response.data.totalCount,
+            recentCount: response.data.recentCount,
+            recentVisitors: response.data.recentVisitors,
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching visitor data:", error);
+      }
+    };
+
+    fetchVisitorData();
+  }, []);
+
+  useEffect(() => {
+    const fetchMeetingData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        // First, get all meetings
+        const response = await api.get("/attendance-venue-fee/meeting-stats", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          params: {
+            type: "meeting",
+          },
+        });
+
+        console.log("Meeting response:", response.data); // For debugging
+
+        if (response.data.success) {
+          const meetings = response.data.data || [];
+          const currentDate = new Date();
+          const fifteenDaysAgo = new Date(
+            currentDate - 15 * 24 * 60 * 60 * 1000
+          );
+
+          // Count recent meetings (last 15 days)
+          const recentMeetings = meetings.filter(
+            (meeting) => new Date(meeting.date) >= fifteenDaysAgo
+          );
+
+          // Get attendance stats for meetings
+          const attendanceResponse = await api.get(
+            "/attendance-venue-fee/meeting-stats",
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+              params: {
+                type: "meeting",
+              },
+            }
+          );
+
+          const attendanceStats = attendanceResponse.data.data?.attendance || {
+            present: 0,
+            absent: 0,
+            late_total: 0,
+          };
+
+          setMeetingData({
+            totalCount: meetings.length,
+            recentCount: recentMeetings.length,
+            attendance: {
+              present: attendanceStats.present || 0,
+              absent: attendanceStats.absent || 0,
+              late: attendanceStats.late_total || 0,
+            },
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching meeting data:", error);
+        setMeetingData({
+          totalCount: 0,
+          recentCount: 0,
+          attendance: {
+            present: 0,
+            absent: 0,
+            late: 0,
+          },
+        });
+      }
+    };
+
+    fetchMeetingData();
+  }, []);
 
   return (
     <div className="mt-32 lg:p-4 sm:p-6 space-y-6 sm:space-y-8 min-h-screen bg-gradient-to-b from-gray-900 via-gray-900/95 to-gray-950">
@@ -145,14 +418,49 @@ const Dashboard = () => {
 
             <div className="space-y-3 relative">
               <p className="text-4xl font-bold text-white group-hover:text-[#D4B86A] transition-colors duration-500">
-                6688
+                {allReferralsData.totalCount || 0}
               </p>
               <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1 text-emerald-400">
-                  <ArrowUpRight className="w-4 h-4" />
-                  <span>+0</span>
+                <div className="flex flex-col items-center gap-1 text-emerald-400">
+                  <div className="flex items-center gap-1">
+                    <ArrowUpRight className="w-4 h-4" />
+                    <span>
+                      {Object.values(allReferralsData.memberStats || {}).reduce(
+                        (total, member) => total + member.points,
+                        0
+                      )}{" "}
+                      total points
+                    </span>
+                  </div>
                 </div>
-                <span className="text-gray-400">last 15 days</span>
+              </div>
+
+              {/* Member Stats */}
+              <div className="mt-4 pt-4 border-t border-gray-800">
+                <h4 className="text-[#D4B86A] text-sm font-medium mb-2">
+                  Top Referral Givers
+                </h4>
+                <div className="space-y-2 max-h-40 overflow-y-auto scrollbar-thin scrollbar-thumb-[#D4B86A]/20 scrollbar-track-transparent">
+                  {Object.entries(allReferralsData.memberStats || {})
+                    .sort(([, a], [, b]) => b.count - a.count)
+                    .slice(0, 5)
+                    .map(([name, stats], index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between text-sm"
+                      >
+                        <span className="text-gray-400">{name}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[#D4B86A] text-xs">
+                            {stats.count} referrals
+                          </span>
+                          <span className="text-emerald-400 text-xs">
+                            {stats.points} points
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                </div>
               </div>
             </div>
           </div>
@@ -205,14 +513,42 @@ const Dashboard = () => {
 
             <div className="space-y-3 relative">
               <p className="text-4xl font-bold text-white group-hover:text-[#D4B86A] transition-colors duration-500">
-                2019
+                {bdmData.totalBdms}
               </p>
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1 text-emerald-400">
                   <ArrowUpRight className="w-4 h-4" />
-                  <span>+0</span>
+                  <span>+{bdmData.recentCount}</span>
                 </div>
                 <span className="text-gray-400">last 15 days</span>
+              </div>
+
+              {/* Top BDM Givers Section */}
+              <div className="mt-4 pt-4 border-t border-gray-800">
+                <h4 className="text-[#D4B86A] text-sm font-medium mb-2">
+                  Top BDM Givers
+                </h4>
+                <div className="space-y-2 max-h-40 overflow-y-auto scrollbar-thin scrollbar-thumb-[#D4B86A]/20 scrollbar-track-transparent">
+                  {Object.entries(bdmData.memberStats || {})
+                    .sort(([, a], [, b]) => b.count - a.count)
+                    .slice(0, 5)
+                    .map(([name, stats], index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between text-sm"
+                      >
+                        <span className="text-gray-400">{name}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[#D4B86A] text-xs">
+                            {stats.count} BDMs
+                          </span>
+                          <span className="text-emerald-400 text-xs">
+                            {stats.points} points
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                </div>
               </div>
             </div>
           </div>
@@ -235,12 +571,12 @@ const Dashboard = () => {
 
             <div className="space-y-3 relative">
               <p className="text-4xl font-bold text-white group-hover:text-[#D4B86A] transition-colors duration-500">
-                783
+                {visitorData.totalCount || 0}
               </p>
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1 text-emerald-400">
                   <ArrowUpRight className="w-4 h-4" />
-                  <span>+0</span>
+                  <span>+{visitorData.recentCount || 0}</span>
                 </div>
                 <span className="text-gray-400">last 15 days</span>
               </div>
@@ -275,26 +611,42 @@ const Dashboard = () => {
             <div className="space-y-4">
               <div className="flex flex-col">
                 <span className="text-3xl font-bold text-white group-hover:text-[#D4B86A] transition-colors duration-500">
-                  4
+                  {meetingData.totalCount}
                 </span>
                 <div className="flex items-center gap-2 mt-2">
                   <span className="text-emerald-400 text-xs flex items-center gap-1 bg-emerald-400/10 px-2 py-0.5 rounded-full">
-                    <ArrowUpRight className="w-3 h-3" />
-                    +0
+                    <ArrowUpRight className="w-3 h-3" />+
+                    {meetingData.recentCount}
                   </span>
-                  <span className="text-gray-400 text-xs">this month</span>
+                  <span className="text-gray-400 text-xs">total meetings</span>
                 </div>
               </div>
               <div className="flex flex-col pt-3 border-t border-gray-800">
-                <span className="text-2xl font-bold text-white group-hover:text-[#D4B86A] transition-colors duration-500">
-                  54.5%
-                </span>
-                <div className="flex items-center gap-2 mt-2">
-                  <span className="text-emerald-400 text-xs flex items-center gap-1 bg-emerald-400/10 px-2 py-0.5 rounded-full">
-                    <ArrowUpRight className="w-3 h-3" />
-                    +0%
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-400">Attendance Rate</span>
+                  <span className="text-2xl font-bold text-white group-hover:text-[#D4B86A] transition-colors duration-500">
+                    {meetingData.totalCount > 0
+                      ? Math.round(
+                          (meetingData.attendance.present /
+                            meetingData.totalCount) *
+                            100
+                        )
+                      : 0}
+                    %
                   </span>
-                  <span className="text-gray-400 text-xs">from last month</span>
+                </div>
+                <div className="flex items-center gap-2 mt-2">
+                  <div className="flex gap-2 text-xs">
+                    <span className="text-emerald-400">
+                      {meetingData.attendance.present} Present
+                    </span>
+                    <span className="text-yellow-400">
+                      {meetingData.attendance.late} Late
+                    </span>
+                    <span className="text-red-400">
+                      {meetingData.attendance.absent} Absent
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -460,11 +812,13 @@ const Dashboard = () => {
             <div className="h-[300px] sm:h-[400px] w-full">
               <Line
                 data={{
-                  labels: generateLabels(),
+                  labels: referralData.referrals.map((ref) =>
+                    new Date(ref.referral_date).toLocaleDateString()
+                  ),
                   datasets: [
                     {
                       label: "Referrals",
-                      data: generateData(),
+                      data: referralData.referrals.map((_, index) => index + 1), // Cumulative count
                       borderColor: "#D4B86A",
                       backgroundColor: "rgba(212, 184, 106, 0.15)",
                       fill: true,
@@ -475,40 +829,6 @@ const Dashboard = () => {
                       pointBorderColor: "#D4B86A",
                       pointHoverRadius: 6,
                       pointHoverBackgroundColor: "#D4B86A",
-                      pointHoverBorderColor: "#fff",
-                      pointHoverBorderWidth: 2,
-                      pointShadowBlur: 20,
-                    },
-                    {
-                      label: "Revenue",
-                      data: generateData(),
-                      borderColor: "#10B981",
-                      backgroundColor: "rgba(16, 185, 129, 0.15)",
-                      fill: true,
-                      tension: 0.3,
-                      borderWidth: 2.5,
-                      pointRadius: 2,
-                      pointBackgroundColor: "#10B981",
-                      pointBorderColor: "#10B981",
-                      pointHoverRadius: 6,
-                      pointHoverBackgroundColor: "#10B981",
-                      pointHoverBorderColor: "#fff",
-                      pointHoverBorderWidth: 2,
-                      pointShadowBlur: 20,
-                    },
-                    {
-                      label: "BDMs",
-                      data: generateData(),
-                      borderColor: "#3B82F6",
-                      backgroundColor: "rgba(59, 130, 246, 0.15)",
-                      fill: true,
-                      tension: 0.3,
-                      borderWidth: 2.5,
-                      pointRadius: 2,
-                      pointBackgroundColor: "#3B82F6",
-                      pointBorderColor: "#3B82F6",
-                      pointHoverRadius: 6,
-                      pointHoverBackgroundColor: "#3B82F6",
                       pointHoverBorderColor: "#fff",
                       pointHoverBorderWidth: 2,
                       pointShadowBlur: 20,
@@ -553,6 +873,8 @@ const Dashboard = () => {
                         font: {
                           size: 11,
                         },
+                        maxRotation: 45,
+                        minRotation: 45,
                       },
                       border: {
                         display: false,
