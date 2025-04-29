@@ -12,6 +12,8 @@ import visitorImage from "../Certificates/public/assets/visitorImage.jpg";
 import elevatorImage from "../Certificates/public/assets/elevatorImage.jpg";
 import refImage from "../Certificates/public/assets/refImage.jpg";
 import mdpImage from "../Certificates/public/assets/mdpImage.jpg";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 const CertificatesList = () => {
   const navigate = useNavigate();
@@ -141,134 +143,161 @@ const CertificatesList = () => {
 
   const handleDownload = async (certificate) => {
     try {
-      // Show the certificate view first
+      // Define the close function before showing the modal
+      window.closeCertificateModal = () => {
+        Swal.close();
+      };
+
       const modalResult = await Swal.fire({
         html: `
-          <div class="certificate-container bg-white p-4 rounded-lg">
-            <div class="relative">
-              <img 
-                src="/src/Certificates/public/assets/${
-                  certificate.certificate_type === "highest_business"
-                    ? "businessImage.jpg"
-                    : certificate.certificate_type === "highest_visitor"
-                    ? "visitorImage.jpg"
-                    : certificate.certificate_type === "best_elevator_pitch"
-                    ? "elevatorImage.jpg"
-                    : certificate.certificate_type === "maximum_referrals"
-                    ? "refImage.jpg"
-                    : "mdpImage.jpg"
-                }"
-                alt="Certificate"
-                class="w-full h-auto"
-              />
-              <div class="absolute inset-0">
-                <div class="font-greates" style="
-                  position: absolute;
-                  ${
-                    certificate.certificate_type === "mdp_attended"
-                      ? "top: 48%; left: 50%; transform: translateX(-50%); width: 60%;"
-                      : "top: 28%; left: 39%; transform: translateX(-50%); width: 60%;"
-                  }
-                  text-align: center;
-                  font-size: 32px;
-                  color: black;
-                  font-family: 'Greates-Draken', cursive;
-                  text-transform: capitalize;
-                ">
-                  ${certificate.member_name}
+          <div class="certificate-modal-container">
+            <!-- Decorative top border -->
+            <div class="h-1 w-full bg-gradient-to-r from-amber-500 via-amber-600 to-amber-500 rounded-t-xl"></div>
+            
+            <!-- Certificate title -->
+            <div class="bg-gradient-to-b from-gray-800 to-gray-900 px-6 py-4 border-b border-gray-700">
+              <h3 class="text-xl font-semibold text-amber-500">
+                ${formatCertificateType(certificate.certificate_type)}
+              </h3>
+              <p class="text-gray-400 text-sm mt-1">Issued on ${new Date(certificate.issued_date).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}</p>
+            </div>
+
+            <!-- Certificate container with enhanced styling -->
+            <div class="relative p-6 bg-gradient-to-b from-gray-800/50 to-gray-900/50">
+              <!-- Decorative corner elements -->
+              <div class="absolute top-0 left-0 w-16 h-16 border-t-2 border-l-2 border-amber-500/20 rounded-tl-xl"></div>
+              <div class="absolute top-0 right-0 w-16 h-16 border-t-2 border-r-2 border-amber-500/20 rounded-tr-xl"></div>
+              <div class="absolute bottom-0 left-0 w-16 h-16 border-b-2 border-l-2 border-amber-500/20 rounded-bl-xl"></div>
+              <div class="absolute bottom-0 right-0 w-16 h-16 border-b-2 border-r-2 border-amber-500/20 rounded-br-xl"></div>
+
+              <!-- Certificate content -->
+              <div class="certificate-container bg-white rounded-xl shadow-2xl transform transition-transform duration-300 hover:scale-[1.02]">
+                <div class="relative">
+                  <img 
+                    src="/src/Certificates/public/assets/${
+                      certificate.certificate_type === "highest_business"
+                        ? "businessImage.jpg"
+                        : certificate.certificate_type === "highest_visitor"
+                        ? "visitorImage.jpg"
+                        : certificate.certificate_type === "best_elevator_pitch"
+                        ? "elevatorImage.jpg"
+                        : certificate.certificate_type === "maximum_referrals"
+                        ? "refImage.jpg"
+                        : "mdpImage.jpg"
+                    }"
+                    alt="Certificate"
+                    class="w-full h-auto rounded-xl"
+                  />
+                  <div class="absolute inset-0">
+                    <div class="font-greates" style="
+                      position: absolute;
+                      ${
+                        certificate.certificate_type === "mdp_attended"
+                          ? "top: 48%; left: 50%; transform: translateX(-50%); width: 60%;"
+                          : "top: 28%; left: 39%; transform: translateX(-50%); width: 60%;"
+                      }
+                      text-align: center;
+                      font-size: 32px;
+                      color: black;
+                      font-family: 'Greates-Draken', cursive;
+                      text-transform: capitalize;
+                    ">
+                      ${certificate.member_name}
+                    </div>
+                    <div style="
+                      position: absolute;
+                      ${
+                        certificate.certificate_type === "mdp_attended"
+                          ? "top: 64%; left: 50%; transform: translateX(-50%); width: 120px;"
+                          : "top: 46%; left: 23%; width: 200px;"
+                      }
+                      text-align: center;
+                      font-size: 16px;
+                      color: black;
+                    ">
+                      ${new Date(certificate.issued_date).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                    </div>
+                  </div>
                 </div>
-                <div style="
-                  position: absolute;
-                  ${
-                    certificate.certificate_type === "mdp_attended"
-                      ? "top: 64%; left: 50%; transform: translateX(-50%); width: 120px;"
-                      : "top: 46%; left: 23%; width: 200px;"
-                  }
-                  text-align: center;
-                  font-size: 16px;
-                  color: black;
-                ">
-                  ${new Date(certificate.issued_date).toLocaleDateString(
-                    "en-US",
-                    {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    }
-                  )}
-                </div>
+              </div>
+            </div>
+
+            <!-- Footer with actions -->
+            <div class="bg-gradient-to-b from-gray-900 to-gray-800 px-6 py-4 rounded-b-xl border-t border-gray-700">
+              <div class="flex justify-end gap-4">
+                <button 
+                  onclick="window.closeCertificateModal()"
+                  class="px-6 py-2.5 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 
+                  text-white rounded-lg transition-all duration-300 flex items-center gap-2 font-medium"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                  Close
+                </button>
               </div>
             </div>
           </div>
         `,
-        width: 800,
+        width: 900,
+        padding: 0,
+        background: "#111827",
         showConfirmButton: false,
-        showCancelButton: false,
-        confirmButtonText: "Print",
-        cancelButtonText: "Close",
+        showCloseButton: true,
+        closeButtonHtml: `
+          <button class="p-2 hover:bg-gray-700 rounded-lg transition-colors duration-200">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        `,
         customClass: {
-          popup: "swal2-popup-large",
-          confirmButton: false,
-          cancelButton:
-            "px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700",
+          container: "certificate-modal-container",
+          popup: "rounded-xl border border-gray-700 shadow-2xl",
+          closeButton: "focus:outline-none text-gray-400 hover:text-white absolute top-3 right-3 z-10",
+          htmlContainer: "p-0 m-0",
         },
+        didOpen: () => {
+          // Add event listener for escape key
+          document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+              Swal.close();
+            }
+          });
+        }
       });
 
-      if (modalResult.isConfirmed) {
-        // Handle print
-        const element = document.querySelector(".certificate-container");
-        if (element) {
-          const printWindow = window.open("", "_blank");
-          printWindow.document.write(`
-            <html>
-              <head>
-                <title>${certificate.member_name} - Certificate</title>
-                <style>
-                  @page {
-                    margin: 0;
-                    size: A4 portrait;
-                  }
-                  body {
-                    margin: 0;
-                    padding: 0;
-                  }
-                  .print-container {
-                    width: 100%;
-                    height: 100vh;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                  }
-                  img {
-                    max-width: 100%;
-                    height: auto;
-                  }
-                  @media print {
-                    body {
-                      -webkit-print-color-adjust: exact;
-                      print-color-adjust: exact;
-                    }
-                  }
-                </style>
-              </head>
-              <body>
-                <div class="print-container">
-                  ${element.outerHTML}
-                </div>
-                <script>
-                  window.onload = () => {
-                    setTimeout(() => {
-                      window.print();
-                      setTimeout(() => window.close(), 500);
-                    }, 300);
-                  };
-                </script>
-              </body>
-            </html>
-          `);
-          printWindow.document.close();
+      // Add custom styles
+      const style = document.createElement("style");
+      style.textContent = `
+        .certificate-modal-container {
+          background: linear-gradient(to bottom, rgba(17, 24, 39, 0.9), rgba(17, 24, 39, 0.95));
+          backdrop-filter: blur(10px);
         }
-      }
+        @media print {
+          .certificate-container {
+            width: 100%;
+            height: 100%;
+          }
+          .swal2-close, .modal-footer {
+            display: none !important;
+          }
+        }
+      `;
+      document.head.appendChild(style);
+
+      // Clean up the window function when the modal is closed
+      return () => {
+        delete window.closeCertificateModal;
+      };
     } catch (error) {
       console.error("Error handling certificate:", error);
       Swal.fire({
@@ -372,7 +401,7 @@ const CertificatesList = () => {
       }
     } catch (error) {
       console.error("Error deleting certificate:", error);
-      
+
       // Show error message
       Swal.fire({
         icon: "error",

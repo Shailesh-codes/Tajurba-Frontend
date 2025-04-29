@@ -58,11 +58,6 @@ export const navigationConfig = {
           label: "Business Received",
         },
         {
-          path: "/member-certificate",
-          icon: "MemberCertificateIcon",
-          label: "Member Certificate",
-        },
-        {
           path: "/chapter-members",
           icon: "VisitorIcon",
           label: "Chapter Members",
@@ -207,15 +202,26 @@ export const navigationConfig = {
         },
         { path: "/ref-given", icon: "ReferralIcon", label: "Referral Given" },
         {
-          path: "/request-received",
+          path: "/bdm-request",
           icon: "RequestReceivedIcon",
-          label: "Request Received",
+          label: "BDM Request",
+        },
+        {
+          path: "/business-request",
+          icon: "RequestReceivedIcon",
+          label: "Business Request",
+        },
+        {
+          path: "/referral-request",
+          icon: "RequestReceivedIcon",
+          label: "Referral Request",
         },
         {
           path: "/visitors-invited",
           icon: "VisitorsInvitedIcon",
           label: "Visitors Invited",
         },
+
         { path: "/settings", icon: "IoSettingsOutline", label: "Settings" },
       ],
     },

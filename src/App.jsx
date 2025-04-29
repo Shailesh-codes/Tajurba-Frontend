@@ -55,6 +55,9 @@ import AddMeetings from "./pages/AddMeetings";
 import AddUser from "./pages/AddUser";
 import UsersList from "./pages/UsersList";
 import SuperAdminUsers from "./pages/SuperAdminUsers";
+import ReferralRequest from "./pages/ReferralRequest";
+import BdmRequest from "./pages/BdmRequest";
+import BusinessRequest from "./pages/BusinessGIvenRequests";
 
 function App() {
   return (
@@ -147,7 +150,7 @@ function App() {
           <Route path="view-ref-given/:id" element={<MemberReferView />} />
           <Route path="add-edit-ref-given" element={<MemberReferEditAdd />} />
           <Route
-            path="add-edit-ref-given/:id"
+            path="/add-edit-ref-given/:id"
             element={<MemberReferEditAdd />}
           />
           <Route path="request-received" element={<MemberReqReceived />} />
@@ -156,6 +159,9 @@ function App() {
           <Route path="edit-visitor/:id" element={<VisitorInviteAddEdit />} />
           <Route path="view-visitor/:id" element={<ViewMemberVisitor />} />
           <Route path="admin-settings" element={<AdminSettings />} />
+          <Route path="/referral-request" element={<ReferralRequest />} />
+          <Route path="/bdm-request" element={<BdmRequest />} />
+          <Route path="/business-request" element={<BusinessRequest />} />
         </Route>
 
         {/* Protected Member Routes */}
@@ -208,6 +214,9 @@ function App() {
           <Route path="/view-visitor/:id" element={<ViewMemberVisitor />} />
           <Route path="/settings" element={<Setting />} />
           {/* <Route path="/privacy-policy" element={<PrivacyPolicy />} /> */}
+          <Route path="/referral-request" element={<ReferralRequest />} />
+          <Route path="/bdm-request" element={<BdmRequest />} />
+          <Route path="/business-request" element={<BusinessRequest />} />
         </Route>
       </Routes>
     </AuthProvider>

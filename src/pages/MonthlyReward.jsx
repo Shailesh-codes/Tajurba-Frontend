@@ -142,6 +142,37 @@ const MonthlyReward = () => {
   const [loadingStats, setLoadingStats] = useState(true);
   const [statsError, setStatsError] = useState(null);
 
+  // Add this state for fortnight recognition data
+  const [fortnightRecognition, setFortnightRecognition] = useState([
+    {
+      emoji: "🌟",
+      title: "Highest Business Given",
+      type: "highest_business",
+      members: [],
+    },
+    {
+      emoji: "🎯",
+      title: "Highest Visitor Invited",
+      type: "highest_visitor",
+      members: [],
+    },
+    {
+      emoji: "🤝",
+      title: "Best Elevator Pitch",
+      type: "best_elevator_pitch",
+      members: [],
+    },
+    {
+      emoji: "📈",
+      title: "Maximum Referrals Given",
+      type: "maximum_referrals",
+      members: [],
+    },
+  ]);
+
+  // Add this state for chapters
+  const [chapters, setChapters] = useState([]);
+
   // Dummy data for demonstration
   const MEMBERSHIP_TIERS = {
     BRONZE: {
@@ -944,6 +975,105 @@ const MonthlyReward = () => {
     </div>
   );
 
+  // Add a function to fetch chapters
+  const fetchChapters = async () => {
+    try {
+      const response = await api.get("/chapters");
+      if (response.data.status === "success") {
+        setChapters(response.data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching chapters:", error);
+    }
+  };
+
+  // Update the fetchFortnightRecognition function
+  const fetchFortnightRecognition = async () => {
+    try {
+      setLoading(true);
+
+      // First, ensure we have chapters data
+      const chaptersResponse = await api.get("/chapters");
+      const chaptersData = chaptersResponse.data.data;
+      console.log("Chapters Data:", chaptersData);
+
+      const certificatesResponse = await api.get("/certificates");
+
+      if (certificatesResponse.data.status === "success") {
+        const certificates = certificatesResponse.data.data;
+        console.log("Certificates Data:", certificates);
+
+        // Get current date and date 15 days ago
+        const currentDate = new Date();
+        const fortnightAgo = new Date();
+        fortnightAgo.setDate(fortnightAgo.getDate() - 15);
+
+        // Filter and process certificates
+        const recentCertificates = certificates
+          .filter((cert) => {
+            const certDate = new Date(cert.issued_date);
+            return certDate >= fortnightAgo && certDate <= currentDate;
+          })
+          .map((cert) => {
+            // Find matching chapter using chapter_id
+            const chapterName =
+              chaptersData.find(
+                (ch) => ch.chapter_id === cert.chapter_id // Match using chapter_id
+              )?.chapter_name || "Unknown Chapter";
+
+            return {
+              ...cert,
+              chapter_name: chapterName,
+            };
+          });
+
+        // Group certificates by type
+        const groupedCertificates = {};
+        recentCertificates.forEach((cert) => {
+          if (!groupedCertificates[cert.certificate_type]) {
+            groupedCertificates[cert.certificate_type] = [];
+          }
+          groupedCertificates[cert.certificate_type].push(cert);
+        });
+
+        // Update fortnight recognition data
+        const updatedRecognition = fortnightRecognition.map((category) => {
+          const typeCertificates = groupedCertificates[category.type] || [];
+          const sortedMembers = typeCertificates
+            .sort((a, b) => new Date(b.issued_date) - new Date(a.issued_date))
+            .slice(0, 2)
+            .map((cert, idx) => ({
+              id: `${cert.certificate_id}-${idx}`,
+              name: cert.member_name,
+              chapter: cert.chapter_name,
+              date: new Date(cert.issued_date).toLocaleDateString("en-US", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+              }),
+            }));
+
+          return {
+            ...category,
+            members: sortedMembers,
+          };
+        });
+
+        console.log("Updated Recognition Data:", updatedRecognition);
+        setFortnightRecognition(updatedRecognition);
+      }
+    } catch (error) {
+      console.error("Error in fetchFortnightRecognition:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Update the useEffect to handle the data fetching
+  useEffect(() => {
+    fetchFortnightRecognition();
+  }, [selectedMonth]);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -1304,9 +1434,9 @@ const MonthlyReward = () => {
           <h4 className="text-xl font-semibold text-gray-100">
             Fortnight Recognition
           </h4>
-          <Link
-            to="/certificate-list"
-            className="text-sm text-gray-400 hover:text-white transition-colors duration-300 flex items-center gap-2"
+          <button
+            onClick={() => navigate("/certificate-list")}
+            className="text-sm text-gray-400 hover:text-white transition-colors duration-300 flex items-center gap-2 cursor-pointerc z-10"
           >
             View All
             <svg
@@ -1322,28 +1452,28 @@ const MonthlyReward = () => {
                 d="M9 5l7 7-7 7"
               />
             </svg>
-          </Link>
+          </button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {loading
             ? Array(4).fill(<LoadingCard />)
-            : data.fortnight_recognition.map((recognition, index) => (
+            : fortnightRecognition.map((recognition, index) => (
                 <motion.div
-                  key={recognition.title}
+                  key={recognition.type}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                   className="group p-4 rounded-xl bg-gray-800/50 backdrop-blur-xl 
-                          border border-gray-700 hover:border-purple-500/20
-                          shadow-lg hover:shadow-xl hover:shadow-purple-500/5
-                          transition-all duration-300 hover:-translate-y-1"
+                        border border-gray-700 hover:border-purple-500/20
+                        shadow-lg hover:shadow-xl hover:shadow-purple-500/5
+                        transition-all duration-300 hover:-translate-y-1"
                 >
                   <div className="flex items-center gap-3 mb-4">
                     <motion.div
                       whileHover={{ scale: 1.1, rotate: 5 }}
                       className="p-2 bg-gradient-to-r from-gray-700 to-gray-800 
-                              rounded-xl shadow-lg relative"
+                            rounded-xl shadow-lg relative"
                     >
                       <span className="text-xl">{recognition.emoji}</span>
                       <div className="absolute -top-1 -right-1 w-2 h-2 bg-purple-500 rounded-full animate-ping" />
@@ -1362,7 +1492,7 @@ const MonthlyReward = () => {
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: idx * 0.1 }}
                           className="bg-gray-900/50 p-3 rounded-lg hover:bg-gray-800/50 
-                                  transition-colors duration-300 group/member"
+                                transition-colors duration-300 group/member"
                         >
                           <div className="flex flex-col">
                             <span className="text-gray-100 font-medium group-hover/member:text-white transition-colors">
@@ -1382,7 +1512,7 @@ const MonthlyReward = () => {
                     ) : (
                       <div className="bg-gray-900/50 p-3 rounded-lg text-center">
                         <span className="text-gray-400 text-sm">
-                          No member assigned this certificate
+                          No certificates awarded in the last 15 days
                         </span>
                       </div>
                     )}

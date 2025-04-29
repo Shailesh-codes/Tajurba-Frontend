@@ -55,6 +55,8 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
       "/view-ref-given",
       "/add-edit-ref-given",
       "/request-received",
+      "/referral-request",
+      "/bdm-request",
       "/visitors-invited",
       "/add-visitor",
       "/edit-visitor",
@@ -62,6 +64,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
       "/settings",
       "/calendar",
       "/privacy-policy",
+      "/business-request",
     ];
 
     // Check if current path starts with any allowed path
@@ -213,10 +216,13 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
       "/view-ref-given",
       "/add-edit-ref-given",
       "/request-received",
+      "/bdm-request",
+      "/referral-request",
       "/visitors-invited",
       "/add-visitor",
       "/edit-visitor",
       "/view-visitor",
+      "/business-request",
     ];
 
     const isPathAllowed = superAdminAllowedPaths.some((path) => {
