@@ -67,11 +67,6 @@ export const navigationConfig = {
           icon: "MeetingsIcon",
           label: "Meetings / MDP / Socials",
         },
-        {
-          path: "/member-monthly-reward",
-          icon: "MonthlyRewardIcon",
-          label: "Member Monthly Reward",
-        },
         { path: "/ref-given", icon: "ReferralIcon", label: "Referral Given" },
         {
           path: "/request-received",
