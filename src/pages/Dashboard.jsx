@@ -9,6 +9,7 @@ import {
   Calendar,
   ArrowUpRight,
   TrendingUp,
+  IndianRupee,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Line } from "react-chartjs-2";
@@ -25,7 +26,6 @@ import {
 import axios from "axios";
 import api from "../hooks/api";
 
-// Register ChartJS components
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -63,9 +63,15 @@ const Dashboard = () => {
     },
   });
 
-  const [dateRange, setDateRange] = useState({
-    startDate: new Date().toISOString().split("T")[0],
-    endDate: new Date().toISOString().split("T")[0],
+  const [dateRange, setDateRange] = useState(() => {
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+    return {
+      startDate: firstDay.toISOString().split("T")[0],
+      endDate: lastDay.toISOString().split("T")[0],
+    };
   });
 
   const [bdmData, setBdmData] = useState({
@@ -136,11 +142,117 @@ const Dashboard = () => {
     topGivers: [],
   });
 
+  const [businessData, setBusinessData] = useState({
+    totalCount: 0,
+    totalAmount: 0,
+    averageAmount: 0,
+    recentCount: 0,
+    verifiedCount: 0,
+  });
+
+  const [referralCounts, setReferralCounts] = useState({
+    totalCount: 0,
+    verifiedCount: 0,
+    pendingCount: 0,
+  });
+
+  const handleDateRangeChange = async (startDate, endDate) => {
+    setDateRange({ startDate, endDate });
+
+    // Fetch all data with new date range
+    try {
+      const token = localStorage.getItem("token");
+
+      // Fetch referrals
+      const referralResponse = await api.get("/referrals/ref-all", {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { startDate, endDate },
+      });
+
+      if (referralResponse.data.success) {
+        const referrals = referralResponse.data.data || [];
+        setReferralData({
+          totalReferrals: referrals.length,
+          referrals: referrals,
+          stats: {
+            totalReferrals: referrals.length,
+            points: calculatePoints(referrals.length),
+            nextTierNeeded: calculateNextTier(referrals.length),
+            maxPoints: 15,
+          },
+        });
+      }
+
+      // Fetch BDMs
+      const bdmResponse = await api.get("/bdm/all", {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { startDate, endDate },
+      });
+
+      if (bdmResponse.data.success) {
+        const bdms = bdmResponse.data.data || [];
+        const memberStats = {};
+        bdms.forEach((bdm) => {
+          const giverName = bdm.givenByName || "Unknown";
+          if (!memberStats[giverName]) {
+            memberStats[giverName] = { count: 0, points: 0 };
+          }
+          memberStats[giverName].count += 1;
+          memberStats[giverName].points += 5;
+        });
+
+        setBdmData({
+          totalBdms: bdms.length,
+          recentBdms: bdms,
+          recentCount: bdms.filter(
+            (bdm) =>
+              new Date(bdm.created_at) >=
+              new Date(Date.now() - 15 * 24 * 60 * 60 * 1000)
+          ).length,
+          memberStats: memberStats,
+        });
+      }
+
+      // Fetch business data
+      const businessResponse = await api.get("/business", {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { startDate, endDate },
+      });
+
+      if (businessResponse.data) {
+        const businesses = businessResponse.data || [];
+        const verifiedBusinesses = businesses.filter(
+          (b) => b.status === "verified"
+        );
+        const totalAmount = verifiedBusinesses.reduce(
+          (sum, b) => sum + (parseFloat(b.amount) || 0),
+          0
+        );
+
+        setBusinessData({
+          totalCount: verifiedBusinesses.length,
+          totalAmount: totalAmount,
+          averageAmount:
+            verifiedBusinesses.length > 0
+              ? totalAmount / verifiedBusinesses.length
+              : 0,
+          recentCount: verifiedBusinesses.filter(
+            (b) =>
+              new Date(b.created_at) >=
+              new Date(Date.now() - 15 * 24 * 60 * 60 * 1000)
+          ).length,
+          verifiedCount: verifiedBusinesses.length,
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching data with date range:", error);
+    }
+  };
+
   useEffect(() => {
     const fetchReferralData = async () => {
       try {
-        // First, get the auth token from localStorage
-        const token = localStorage.getItem("token"); // Make sure this matches how you store your auth token
+        const token = localStorage.getItem("token");
 
         const response = await api.get("/referrals/ref-all", {
           headers: {
@@ -152,7 +264,7 @@ const Dashboard = () => {
           },
         });
 
-        console.log("Referral API Response:", response.data); // For debugging
+        console.log("Referral API Response:", response.data);
 
         if (response.data.success) {
           setReferralData({
@@ -171,7 +283,6 @@ const Dashboard = () => {
       }
     };
 
-    // Helper function to calculate points based on referral count
     const calculatePoints = (referralCount) => {
       if (referralCount >= 5) return 15;
       if (referralCount >= 3) return 10;
@@ -686,6 +797,97 @@ const Dashboard = () => {
     fetchReferralStats();
   }, []);
 
+  useEffect(() => {
+    const fetchBusinessData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        // Get total verified amount and count
+        const countResponse = await api.get("/business/count", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        // Get all businesses for recent count
+        const businessesResponse = await api.get("/business", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const totalAmount = countResponse.data.totalVerifiedBusinessAmount || 0;
+        const totalCount = countResponse.data.totalVerifiedCount || 0;
+        const allBusinesses = businessesResponse.data || [];
+
+        // Count recent businesses (last 15 days)
+        const recentBusinesses = allBusinesses.filter(
+          (business) =>
+            business.status === "verified" &&
+            new Date(business.created_at) >=
+              new Date(Date.now() - 15 * 24 * 60 * 60 * 1000)
+        );
+
+        console.log("Business data:", {
+          totalCount,
+          totalAmount,
+          recentCount: recentBusinesses.length,
+        });
+
+        // Update the business data state
+        setBusinessData({
+          totalCount: totalCount,
+          totalAmount: totalAmount,
+          averageAmount: totalCount > 0 ? totalAmount / totalCount : 0,
+          recentCount: recentBusinesses.length,
+          verifiedCount: totalCount,
+        });
+      } catch (error) {
+        console.error("Error fetching business data:", error);
+        setBusinessData({
+          totalCount: 0,
+          totalAmount: 0,
+          averageAmount: 0,
+          recentCount: 0,
+          verifiedCount: 0,
+        });
+      }
+    };
+
+    fetchBusinessData();
+  }, [dateRange]);
+
+  useEffect(() => {
+    const fetchReferralCounts = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await api.get("/referrals/counts", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (response.data.success) {
+          setReferralCounts(response.data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching referral counts:", error);
+        setReferralCounts({
+          totalCount: 0,
+          verifiedCount: 0,
+          pendingCount: 0,
+        });
+      }
+    };
+
+    fetchReferralCounts();
+  }, []);
+
+  // Update the initial data fetch useEffect
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      const startDate = dateRange.startDate;
+      const endDate = dateRange.endDate;
+      await handleDateRangeChange(startDate, endDate);
+    };
+
+    fetchInitialData();
+  }, []); // Run only on component mount
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mt-32 lg:p-4 sm:p-6 space-y-6 sm:space-y-8 min-h-screen bg-gradient-to-b from-gray-900 via-gray-900/95 to-gray-950">
@@ -724,10 +926,19 @@ const Dashboard = () => {
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                   <input
                     type="date"
+                    value={dateRange.startDate}
+                    onChange={(e) =>
+                      handleDateRangeChange(e.target.value, dateRange.endDate)
+                    }
                     className="flex-1 p-3 sm:p-4 bg-gray-800/50 rounded-lg sm:rounded-xl border border-[#D4B86A]/30 focus:border-[#D4B86A] focus:ring-2 focus:ring-[#D4B86A]/20 text-white transition-all duration-300 [color-scheme:dark] text-sm"
                   />
                   <input
                     type="date"
+                    value={dateRange.endDate}
+                    min={dateRange.startDate}
+                    onChange={(e) =>
+                      handleDateRangeChange(dateRange.startDate, e.target.value)
+                    }
                     className="flex-1 p-3 sm:p-4 bg-gray-800/50 rounded-lg sm:rounded-xl border border-[#D4B86A]/30 focus:border-[#D4B86A] focus:ring-2 focus:ring-[#D4B86A]/20 text-white transition-all duration-300 [color-scheme:dark] text-sm"
                   />
                 </div>
@@ -819,12 +1030,12 @@ const Dashboard = () => {
 
               <div className="space-y-3 relative">
                 <p className="text-4xl font-bold text-white group-hover:text-[#D4B86A] transition-colors duration-500">
-                  ₹95.59 CR
+                  ₹{(businessData.totalAmount || 0).toLocaleString("en-IN")}
                 </p>
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1 text-emerald-400">
                     <ArrowUpRight className="w-4 h-4" />
-                    <span>+0</span>
+                    <span>+{businessData.recentCount || 0}</span>
                   </div>
                   <span className="text-gray-400">last 15 days</span>
                 </div>
@@ -1069,7 +1280,7 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Card 4 - Total Members */}
+          {/* Card 4 - Total Referrals */}
           <div className="group relative overflow-hidden p-4 sm:p-6 rounded-lg sm:rounded-xl bg-gradient-to-br from-gray-900/90 via-gray-800/75 to-gray-900/90 border border-[#D4B86A]/30 hover:border-[#D4B86A]/50 transition-all duration-500 hover:transform hover:scale-[1.02]">
             <div className="absolute inset-0">
               <div className="absolute inset-0 bg-gradient-to-r from-[#D4B86A]/10 via-purple-500/5 to-[#D4B86A]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl" />
@@ -1081,23 +1292,23 @@ const Dashboard = () => {
                   <Users className="w-4 h-4 text-gray-900" />
                 </div>
                 <h3 className="text-[#D4B86A] font-medium text-sm">
-                  Total Members
+                  Total Referrals
                 </h3>
               </div>
 
               <div className="space-y-4">
-                <div className="flex flex-col">
+                <div className="flex flex-col gap-6">
                   <span className="text-3xl font-bold text-white group-hover:text-[#D4B86A] transition-colors duration-500">
-                    {memberStats.total}
+                    {referralCounts.totalCount}
                   </span>
                   <div className="flex items-center gap-2 mt-2">
                     <div className="flex gap-2">
                       <span className="text-emerald-400 text-xs flex items-center gap-1 bg-emerald-400/10 px-2 py-0.5 rounded-full">
                         <ArrowUpRight className="w-3 h-3" />
-                        Active: {memberStats.active}
+                        Verified: {referralCounts.verifiedCount}
                       </span>
-                      <span className="text-red-400 text-xs flex items-center gap-1 bg-red-400/10 px-2 py-0.5 rounded-full">
-                        Inactive: {memberStats.inactive}
+                      <span className="text-amber-400 text-xs flex items-center gap-1 bg-red-400/10 px-2 py-0.5 rounded-full">
+                        Pending: {referralCounts.pendingCount}
                       </span>
                     </div>
                   </div>
@@ -1174,55 +1385,6 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              {/* Referral Stats */}
-              <div className="bg-gray-900/60 rounded-lg p-4 relative overflow-hidden">
-                <div
-                  className="absolute bottom-0 left-0 h-1.5 bg-green-500"
-                  style={{
-                    width: `${
-                      (referralStats.total /
-                        (bdmStats.total + referralStats.total)) *
-                        100 || 0
-                    }%`,
-                  }}
-                ></div>
-                <h4 className="text-white text-lg mb-2">Referral Activity</h4>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-3xl font-bold text-white">
-                      {referralStats.total}
-                    </p>
-                    <p className="text-sm text-gray-400">Total Referrals</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xl font-bold text-emerald-400">
-                      +{referralStats.recent}
-                    </p>
-                    <p className="text-sm text-gray-400">Recent (15d)</p>
-                  </div>
-                </div>
-
-                {/* Mini Bar Chart for Referrals */}
-                <div className="mt-4 h-10 flex items-end gap-1">
-                  {referralStats.topGivers.slice(0, 5).map((giver, index) => (
-                    <div
-                      key={index}
-                      className="bg-green-500/80 hover:bg-green-400 transition-all rounded-t w-full flex flex-col justify-end"
-                      style={{
-                        height: `${
-                          (giver.count /
-                            Math.max(
-                              ...referralStats.topGivers.map((g) => g.count)
-                            )) *
-                          100
-                        }%`,
-                      }}
-                      title={`${giver.name}: ${giver.count} Referrals`}
-                    ></div>
-                  ))}
-                </div>
-              </div>
-
               {/* Member Stats */}
               <div className="bg-gray-900/60 rounded-lg p-4 relative overflow-hidden">
                 <div
@@ -1289,6 +1451,59 @@ const Dashboard = () => {
                     <span className="text-gray-300">
                       {memberStats.inactive} Inactive
                     </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Business Activity */}
+              <div className="bg-gray-900/60 rounded-lg p-4 relative overflow-hidden">
+                <div
+                  className="absolute bottom-0 left-0 h-1.5 bg-amber-500"
+                  style={{
+                    width: "100%",
+                  }}
+                ></div>
+                <h4 className="text-white text-lg mb-2">Business Activity</h4>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-3xl font-bold text-white">
+                      {businessData.totalCount || 0}
+                    </p>
+                    <p className="text-sm text-gray-400">
+                      Total Business Given
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xl font-bold text-amber-400">
+                      ₹{(businessData.totalAmount || 0).toLocaleString("en-IN")}
+                    </p>
+                    <p className="text-sm text-gray-400">Verified Amount</p>
+                  </div>
+                </div>
+
+                {/* Business Stats */}
+                <div className="mt-4 flex flex-col">
+                  <div className="w-full bg-gray-800 h-2 rounded-full overflow-hidden">
+                    <div
+                      className="bg-amber-500 h-full"
+                      style={{
+                        width: `${businessData.totalCount > 0 ? 100 : 0}%`,
+                      }}
+                    ></div>
+                  </div>
+                  <div className="mt-2 flex justify-between items-center text-xs">
+                    <div className="text-gray-400">
+                      <span className="text-amber-400 font-medium">
+                        {businessData.recentCount || 0}
+                      </span>{" "}
+                      in last 15 days
+                    </div>
+                    <div className="text-amber-400 font-medium">
+                      Avg: ₹
+                      {(businessData.averageAmount || 0).toLocaleString(
+                        "en-IN"
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1528,7 +1743,7 @@ const StatisticsOverview = () => {
                   {performer.totalPoints} pts
                 </span>
                 <span className="text-xs text-gray-400">
-                  {performer.bdms} BDMs | {performer.referrals} Refs
+                  {performer.count} {performer.type}
                 </span>
               </div>
             </div>
